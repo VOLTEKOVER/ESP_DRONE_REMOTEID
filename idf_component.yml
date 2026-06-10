@@ -6,7 +6,6 @@ repository: "https://github.com/VOLTEKOVER/ESP32_DRONE_ID.git"
 
 dependencies:
   idf: ">=5.0"
-  mdns: "^1.4.0"
 
 tags:
   - "drone"
