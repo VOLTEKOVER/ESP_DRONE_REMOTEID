@@ -11,13 +11,12 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-env:
-  ESP_IDF_VERSION: v6.0.1
-
 jobs:
   build:
     name: ${{ matrix.target }}
     runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.0.1
     strategy:
       fail-fast: false
       matrix:
@@ -31,11 +30,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Setup ESP-IDF ${{ env.ESP_IDF_VERSION }}
-        uses: espressif/esp-idf-action@v1
-        with:
-          esp_idf_version: ${{ env.ESP_IDF_VERSION }}
 
       - name: Set target and build
         run: |

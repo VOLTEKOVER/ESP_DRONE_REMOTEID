@@ -9,6 +9,8 @@ jobs:
   build:
     name: ${{ matrix.target }}
     runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.0.1
     strategy:
       fail-fast: false
       matrix:
@@ -22,11 +24,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Setup ESP-IDF v6.0.1
-        uses: espressif/esp-idf-action@v1
-        with:
-          esp_idf_version: v6.0.1
 
       - name: Set target and build
         run: |
@@ -111,8 +108,8 @@ jobs:
           See https://valeriocomo.github.io/ESP32_DRONE_ID/ for flashing instructions.
 
           **Downloads:**
-          - `firmware-${{ env.VERSION }}.zip` — all targets (ESP32, ESP32-S3, ESP32-C3)
-          - `manifest.json` — esptool-web installer manifest
+          - `firmware-${{ env.VERSION }}.zip` — all targets
+          - `manifest.json` — esptool-web installer
 
           ### Changes
           EOF
