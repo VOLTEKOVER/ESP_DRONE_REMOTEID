@@ -126,7 +126,7 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
 {
     if (!g_initialized || !gps || !identity) return false;
 
-#ifdef CONFIG_BT_BLUEDROID_ENABLED
+#if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(CONFIG_BT_BLE_50_EXTEND_ADV_EN)
     uint16_t len;
     build_legacy_adv(gps, identity, g_adv_data, &len);
 
