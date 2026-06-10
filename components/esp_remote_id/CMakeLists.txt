@@ -1,0 +1,31 @@
+idf_component_register(
+    SRCS
+        "src/protocol_detect.c"
+        "src/nmea_parser.c"
+        "src/msp_parser.c"
+        "src/mavlink_parser.c"
+        "src/mav2odid.c"
+        "src/opendroneid.c"
+        "src/wifi.c"
+        "src/wifi_tx.c"
+        "src/ble_tx.c"
+        "src/web_config.c"
+        "src/nvs_storage.c"
+        "src/esp_remote_id.c"
+    INCLUDE_DIRS
+        "include"
+    PRIVATE_INCLUDE_DIRS
+        "mavlink"
+    REQUIRES
+        esp_wifi
+        bt
+        nvs_flash
+        esp_event
+        esp_system
+        freertos
+        esp_http_server
+        driver
+        mdns
+    EMBED_TXTFILES
+        "webui/config.html"
+)

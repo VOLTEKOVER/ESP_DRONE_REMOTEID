@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP Remote ID — Configuration</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#fff;color:#222;padding:20px}
+.logo-svg{width:38px;height:38px;flex-shrink:0}
+.hdr{background:#f5f5f5;border-radius:12px;margin:0 auto 20px;max-width:1100px;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid #e0e0e0}
+.hdr .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#000}
+.hdr .brand h1{font-size:1.15em;font-weight:600;letter-spacing:-.3px}
+.hdr .brand span{font-size:.55em;color:#999;font-weight:400;margin-left:6px}
+.hdr .badge{background:#eee;color:#555;padding:4px 12px;border-radius:12px;font-size:.76em;border:1px solid #ddd}
+.row{display:flex;gap:20px;max-width:1100px;margin:0 auto;flex-wrap:wrap}
+.card{background:#fff;border-radius:12px;padding:24px;flex:1;min-width:340px;border:1px solid #e0e0e0;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card h2{font-size:.95em;color:#000;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid #222;display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.3px}
+.card h2 .ico{width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;background:#f5f5f5;color:#222;flex-shrink:0}
+label{display:block;font-size:.74em;color:#666;margin:12px 0 3px;letter-spacing:.3px;text-transform:uppercase;font-weight:500}
+input,select{width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:6px;background:#fff;color:#222;font-size:.88em;outline:0;transition:border .2s}
+input:focus,select:focus{border-color:#000}
+.hint{font-size:.72em;color:#999;margin:3px 0 0}
+.btn{background:#222;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;width:100%;font-size:.88em;font-weight:500;margin-top:16px;transition:background .2s;letter-spacing:.3px}
+.btn:hover{background:#444}
+.btn-sm{background:#f0f0f0;color:#333;border:1px solid #d0d0d0;padding:6px 14px;border-radius:5px;cursor:pointer;font-size:.78em;margin-top:10px;width:auto;transition:background .2s}
+.btn-sm:hover{background:#e0e0e0}
+.btn-danger{background:#fff;color:#c00;border:1px solid #ecc;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.82em;margin-top:12px;width:100%;transition:background .2s;text-align:center}
+.btn-danger:hover{background:#fee}
+.chk{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chk label{display:inline-flex;align-items:center;gap:6px;font-size:.82em;width:auto;margin:0;cursor:pointer;background:#f5f5f5;padding:6px 12px;border-radius:5px;border:1px solid #e0e0e0;text-transform:none;color:#444;transition:background .2s}
+.chk label:hover{background:#eee}
+.chk input{width:auto}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;width:100%;pointer-events:none}
+.toast{padding:14px 18px;border-radius:8px;font-size:.85em;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.12);pointer-events:auto;transform:translateX(120%);opacity:0;transition:transform .3s ease,opacity .3s ease}
+.toast.show{transform:translateX(0);opacity:1}
+.toast.ok{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
+.toast.err{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a}
+pre{background:#fafafa;padding:16px;border-radius:6px;font-size:.78em;overflow-x:auto;line-height:1.6;margin-top:8px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;border:1px solid #eee}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:750px){.row{padding:0}.card{min-width:100%}.grid2{grid-template-columns:1fr}}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.82em}
+.status-grid .sg-label{color:#888}
+.status-grid .sg-val{color:#222;text-align:right;font-weight:500}
+.guide{font-size:.76em;color:#666;line-height:1.6;margin:10px 0;padding:12px;background:#fafafa;border-radius:6px;border-left:3px solid #222}
+.guide a{color:#222;text-decoration:none;font-weight:500}
+.guide a:hover{text-decoration:underline}
+.ota-zone{border:2px dashed #d0d0d0;border-radius:8px;padding:24px;text-align:center;transition:border-color .2s}
+.ota-zone:hover{border-color:#999}
+.ota-zone .ico-big{font-size:2em;color:#bbb;margin-bottom:10px}
+hr{border:none;border-top:1px solid #eee;margin:14px 0}
+.footer{text-align:center;margin-top:24px;font-size:.75em;color:#aaa}
+.footer a{color:#888;text-decoration:none}
+.footer a:hover{color:#222;text-decoration:underline}
+code{background:#f5f5f5;padding:2px 6px;border-radius:3px;font-size:.9em;color:#333}
+.tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.65em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
+.tag-stable{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
+.tag-beta{background:#fff8e1;color:#f57f17;border:1px solid #ffe082}
+.tag-warning{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a}
+fieldset{border:1px solid #e0e0e0;border-radius:6px;padding:14px;margin:10px 0;position:relative}
+fieldset legend{font-size:.74em;color:#888;padding:0 6px;font-weight:500}
+fieldset.beta legend{color:#f57f17}
+fieldset.beta{opacity:.6;border-color:#ffe082}
+fieldset.beta input,fieldset.beta select{pointer-events:auto}
+fieldset.disabled{opacity:.4;pointer-events:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{font-size:1.05em;color:#c62828;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.modal p{font-size:.85em;color:#555;line-height:1.6;margin-bottom:18px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-actions button{padding:9px 20px;border-radius:6px;border:none;font-size:.85em;cursor:pointer;font-weight:500;transition:background .2s}
+.modal-actions .btn-cancel{background:#f0f0f0;color:#444}
+.modal-actions .btn-cancel:hover{background:#e0e0e0}
+.modal-actions .btn-danger{background:#c62828;color:#fff}
+.modal-actions .btn-danger:hover{background:#e53935}
+.disclaimer{text-align:center;margin-top:20px;padding:14px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:.74em;color:#b76e00;line-height:1.6;max-width:1100px;margin-left:auto;margin-right:auto}
+.disclaimer strong{color:#c62828}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="hdr">
+<a href="https://github.com/valeriocomo/ESP32_DRONE_ID" target="_blank" class="brand">
+<svg class="logo-svg" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="38" height="38" rx="8" fill="#222"/>
+<ellipse cx="19" cy="20" rx="1.6" ry="9" fill="#fff"/>
+<ellipse cx="12" cy="15.5" rx="8" ry="2.5" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(-12 12 15.5)"/>
+<ellipse cx="26" cy="15.5" rx="8" ry="2.5" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(12 26 15.5)"/>
+<ellipse cx="13" cy="22.5" rx="7" ry="2.2" fill="none" stroke="#fff" stroke-width="1.3" transform="rotate(8 13 22.5)"/>
+<ellipse cx="25" cy="22.5" rx="7" ry="2.2" fill="none" stroke="#fff" stroke-width="1.3" transform="rotate(-8 25 22.5)"/>
+<circle cx="17.5" cy="12.5" r="2.2" fill="#fff"/>
+<circle cx="20.5" cy="12.5" r="2.2" fill="#fff"/>
+</svg>
+<h1>ESP Remote ID <span>v1.0.0</span></h1>
+</a>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div class="badge">&#x26a1; 192.168.4.1</div>
+<a href="https://github.com/valeriocomo/ESP32_DRONE_ID" target="_blank" style="color:#888;font-size:.8em;text-decoration:none">GitHub</a>
+</div>
+</div>
+
+<div class="row">
+
+<!-- IDENTITY -->
+<div class="card">
+<h2><span class="ico">&#x1f464;</span> Identity <span class="tag tag-stable">Stable</span></h2>
+<form id="f1">
+<div class="guide">
+<b>Basic ID</b> &mdash; The UAS ID identifies your drone to receivers. Use a serial number (ANSI/CTA-2063) or your CAA registration number, max 20 characters. The UA Type must match your aircraft.
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+
+<label>UAS ID</label>
+<input id="uas_id" maxlength="20" placeholder="e.g. RID-12345678 or serial number">
+<div class="hint">Max 20 chars. Serial number (recommended) or CAA registration.</div>
+
+<div class="grid2">
+<div>
+<label>ID Type</label>
+<select id="id_type">
+<option value="1">Serial Number (ANSI/CTA-2063)</option>
+<option value="2">CAA Registration</option>
+<option value="3">UTM UUID</option>
+<option value="4">Session ID</option>
+</select>
+</div>
+<div>
+<label>UA Type</label>
+<select id="ua_type">
+<option value="0">None</option><option value="1">Aeroplane</option><option value="2" selected>Helicopter / Multirotor</option>
+<option value="3">Gyroplane</option><option value="4">Hybrid Lift</option><option value="5">Ornithopter</option>
+<option value="6">Glider</option><option value="7">Kite</option><option value="8">Free Balloon</option>
+<option value="9">Captive Balloon</option><option value="10">Airship</option><option value="11">Free Fall</option>
+<option value="12">Rocket</option><option value="13">Tethered Aircraft</option><option value="14">Ground Obstacle</option>
+<option value="15">Other</option>
+</select>
+</div>
+</div>
+
+<label>Operator ID</label>
+<input id="op_id" maxlength="20" placeholder="e.g. OP-MARIO-12345">
+
+<hr>
+
+<h3 style="color:#888;font-size:.82em;margin:0 0 4px">Second Basic ID <span style="color:#aaa;font-weight:400">(optional)</span></h3>
+<div class="grid2">
+<div><label>UAS ID 2</label><input id="uas_id2" maxlength="20" placeholder="Secondary ID"></div>
+<div><label>ID Type 2</label><select id="id_type2"><option value="0">None</option><option value="1">Serial</option><option value="2">CAA</option><option value="3">UTM</option><option value="4">Session</option></select></div>
+</div>
+<label>UA Type 2</label>
+<select id="ua_type2">
+<option value="0">None</option><option value="1">Aeroplane</option><option value="2">Multirotor</option><option value="3">Gyroplane</option>
+<option value="4">Hybrid</option><option value="5">Ornithopter</option><option value="6">Glider</option><option value="15">Other</option>
+</select>
+<button class="btn" type="submit">Save Identity</button>
+</form>
+</div>
+
+<!-- TRANSMISSION -->
+<div class="card">
+<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span></h2>
+<form id="f2">
+<div class="guide">
+<b>Tx Modes</b> &mdash; Select which radio technologies to broadcast on. WiFi Beacon is the most compatible. BLE 5.0 Coded PHY offers longer range. Rates are in Hz (packets per second).
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+
+<label>Enabled Channels</label>
+<div class="chk">
+    <label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
+<label style="opacity:.5;pointer-events:none"><input type="checkbox" id="tx_wifi_nan" disabled> WiFi NAN <span class="tag tag-beta">Beta</span></label>
+<label><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
+<label style="opacity:.5;pointer-events:none"><input type="checkbox" id="tx_ble5" checked disabled> BLE 5.0 LR <span class="tag tag-beta">Beta</span></label>
+</div>
+<div class="hint">WiFi NAN and BLE 5.0 LR are in beta and may require ESP32-S3/C3.</div>
+
+<div class="grid2">
+<div>
+<label>WiFi Channel</label>
+<select id="wifi_ch">
+<option value="1">1 &mdash; 2412 MHz</option><option value="2">2 &mdash; 2417 MHz</option><option value="3">3 &mdash; 2422 MHz</option>
+<option value="4">4 &mdash; 2427 MHz</option><option value="5">5 &mdash; 2432 MHz</option><option value="6" selected>6 &mdash; 2437 MHz</option>
+<option value="7">7 &mdash; 2442 MHz</option><option value="8">8 &mdash; 2447 MHz</option><option value="9">9 &mdash; 2452 MHz</option>
+<option value="10">10 &mdash; 2457 MHz</option><option value="11">11 &mdash; 2462 MHz</option><option value="12">12 &mdash; 2467 MHz</option>
+<option value="13">13 &mdash; 2472 MHz</option>
+</select>
+</div>
+<div>
+<label>WiFi Power (dBm)</label>
+<input id="wifi_pwr" type="number" min="2" max="20" step=".5" value="20">
+</div>
+</div>
+
+<div class="grid2">
+<div><label>WiFi Beacon Rate (Hz)</label><input id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
+</div>
+<div class="grid2">
+<div><label>BLE 4.0 Rate (Hz)</label><input id="bt4_rate" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label>BLE 4.0 Power (dBm)</label><input id="bt4_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
+</div>
+<div class="grid2">
+<div><label>BLE 5.0 Rate (Hz)</label><input id="bt5_rate" type="number" min="0" max="5" step=".1" value="1"></div>
+<div><label>BLE 5.0 Power (dBm)</label><input id="bt5_pwr" type="number" min="-27" max="18" step="1" value="18"></div>
+</div>
+<button class="btn" type="submit">Save Transmission</button>
+</form>
+</div>
+
+<!-- WIFI AP & SERIAL -->
+<div class="card">
+<h2><span class="ico">&#x1f4f6;</span> WiFi AP &amp; Serial <span class="tag tag-stable">Stable</span></h2>
+<form id="f3">
+<div class="guide">
+<b>Access Point</b> &mdash; Configure the ESP32's management WiFi network. After connecting to <code>ESP-RID</code>, open <code>http://192.168.4.1</code> in your browser. Set the UART baud rate to match your flight controller.
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+
+<label>WiFi SSID</label>
+<input id="wifi_ssid" maxlength="20" value="ESP-RID">
+<div class="hint">Network name for the configuration access point.</div>
+
+<label>WiFi Password</label>
+<input id="wifi_pass" type="password" maxlength="20" placeholder="Leave empty for open network">
+
+<div style="margin:10px 0">
+<label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+<input type="checkbox" id="websrv_en" checked> Web Server Enabled
+</label>
+</div>
+
+<label>UART Baud Rate</label>
+<select id="baud">
+<option value="9600">9600</option><option value="19200">19200</option>
+<option value="38400">38400</option><option value="57600" selected>57600</option>
+<option value="115200">115200</option><option value="230400">230400</option>
+<option value="460800">460800</option><option value="921600">921600</option>
+</select>
+<div class="hint">Must match your flight controller serial port speed.</div>
+
+<div class="grid2">
+<div><label>MAVLink SysID</label><input id="mav_sysid" type="number" min="0" max="254" value="0"><div class="hint">0 = auto-detect</div></div>
+<div style="display:flex;align-items:flex-end;padding-bottom:8px">
+<label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+<input type="checkbox" id="bcast_pwr" checked> Broadcast without GPS
+</label>
+</div>
+</div>
+<button class="btn" type="submit">Save AP &amp; Serial</button>
+</form>
+</div>
+
+<!-- SYSTEM -->
+<div class="card">
+<h2><span class="ico">&#x1f512;</span> System <span class="tag tag-warning">Warning</span></h2>
+<form id="f4">
+<div class="guide">
+<b>Security &amp; Options</b> &mdash; Lock level 0 is normal. Level 1 restricts to signed commands. Level 2 burns efuses permanently. Public keys enable signed command authentication.
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+
+<label>Lock Level <span class="tag tag-warning">Dangerous</span></label>
+<select id="lock_lvl" onchange="lockLevelWarn(this)">
+<option value="0">0 &mdash; Normal</option>
+<option value="1">1 &mdash; Locked (signed commands only)</option>
+<option value="2">2 &mdash; eFuse permanent (IRREVERSIBLE)</option>
+</select>
+<div class="hint" style="color:#c62828">&#x26a0; Level 2 burns eFuses permanently. This cannot be undone!</div>
+
+<label>Options</label>
+<div class="chk">
+<label><input type="checkbox" id="opt_arm"> Force ARM OK</label>
+<label><input type="checkbox" id="opt_nosave"> Don't save BasicID to NVS</label>
+<label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
+</div>
+
+<label>Public Key 1</label><input id="pubkey1" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Public Key 2</label><input id="pubkey2" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Public Key 3</label><input id="pubkey3" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Public Key 4</label><input id="pubkey4" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Public Key 5</label><input id="pubkey5" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+
+<button class="btn" type="submit">Save System</button>
+</form>
+<button class="btn-danger" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
+</div>
+
+<!-- STATUS -->
+<div class="card">
+<h2><span class="ico">&#x1f4ca;</span> Status <span class="tag tag-stable">Stable</span></h2>
+<div class="guide">
+Live telemetry from the ESP Remote ID. Refreshes every 2 seconds. GPS fix is required before broadcasting starts.
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+<pre id="status">Loading...</pre>
+</div>
+
+<!-- OTA -->
+<div class="card">
+<h2><span class="ico">&#x1f4e4;</span> Firmware Update <span class="tag tag-warning">Warning</span></h2>
+<div class="guide" style="border-left-color:#c62828">
+&#x26a0; Upload a firmware <code>.bin</code> file to update over-the-air. <strong>Do NOT disconnect power during the update.</strong> The device reboots automatically. Use the correct .bin for your ESP32 model.
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/" target="_blank">Wiki &rarr;</a>
+</div>
+<div class="ota-zone">
+<div class="ico-big">&#x1f4c1;</div>
+<input type="file" id="fwfile" accept=".bin" style="display:none">
+<button class="btn-sm" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
+<span id="fw_name" style="font-size:.8em;color:#999;display:block;margin-top:8px">No file selected</span>
+<button class="btn" onclick="showModal('ota')" style="margin-top:12px">Upload Firmware</button>
+<div id="ota_progress" style="margin-top:10px;font-size:.82em;color:#888"></div>
+</div>
+</div>
+
+</div>
+
+<div class="overlay" id="modal">
+<div class="modal">
+<h3 id="modal-icon">&#x26a0;</h3>
+<h3 id="modal-title">Warning</h3>
+<p id="modal-text">Are you sure?</p>
+<div class="modal-actions">
+<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+<button class="btn-danger" id="modal-confirm" onclick="closeModal()">Confirm</button>
+</div>
+</div>
+</div>
+
+<div class="disclaimer">
+<strong>&#x26a0; Disclaimer:</strong> This firmware is provided as-is. The creators are <strong>not responsible</strong> for any fines, penalties, accidents, damage to equipment, personal injury, or any other liability arising from the use of this device. It is your responsibility to ensure compliance with local regulations regarding drone Remote ID. Use at your own risk.
+</div>
+
+<div class="footer">
+ESP Remote ID v1.0.0 &mdash; <a href="https://github.com/valeriocomo/ESP32_DRONE_ID">GitHub</a> &mdash; <a href="https://valeriocomo.github.io/ESP32_DRONE_ID/">Wiki</a>
+</div>
+
+<script>
+function $(id){return document.getElementById(id)}
+function showMsg(t,e){
+var c=$('toast-container');
+var el=document.createElement('div');
+el.className='toast '+(e?'err':'ok');
+el.textContent=t;
+c.appendChild(el);
+requestAnimationFrame(()=>{el.classList.add('show')});
+setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},e?6e3:2500)
+}
+
+var modalAction = null;
+
+function showModal(type){
+var m = $('modal');
+var icon = $('modal-icon');
+var title = $('modal-title');
+var text = $('modal-text');
+var confirmBtn = $('modal-confirm');
+if(type==='reset'){
+icon.textContent = '&#x26a0;';
+title.textContent = 'Factory Reset';
+text.textContent = 'All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
+confirmBtn.textContent = 'Reset';
+confirmBtn.className = 'btn-danger';
+modalAction = function(){fetch('/api/reset',{method:'POST'}).then(r=>showMsg('Factory reset OK, rebooting...'))};
+}else if(type==='ota'){
+icon.textContent = '&#x26a0;';
+title.textContent = 'Firmware Update';
+text.textContent = 'Upload a new firmware binary. The device will reboot after the update. Do NOT disconnect power during the process. Ensure the .bin file is for your ESP32 model.';
+confirmBtn.textContent = 'Upload';
+confirmBtn.className = 'btn-danger';
+modalAction = function(){otaUpdate()};
+}else if(type==='efuse'){
+icon.textContent = '&#x26a0;&#xfe0f;';
+title.textContent = 'eFuse Permanent Lock';
+text.textContent = 'Lock level 2 burns eFuses and is IRREVERSIBLE. The device will be permanently locked. This can brick your device if you lose the signing keys. Are you absolutely sure?';
+confirmBtn.textContent = 'I Understand, Lock';
+confirmBtn.className = 'btn-danger';
+modalAction = function(){return true};
+}else if(type==='danger'){
+icon.textContent = '&#x26a0;';
+title.textContent = 'Dangerous Setting';
+text.textContent = 'You are about to apply settings that could cause issues. The creators of this firmware are not responsible for any fines, damage, or accidents. Do you want to proceed?';
+confirmBtn.textContent = 'Proceed';
+confirmBtn.className = 'btn-danger';
+modalAction = function(){doSave()};
+}
+m.classList.add('show');
+}
+
+function closeModal(){var m=$('modal');m.classList.remove('show');modalAction=null}
+
+$('modal-confirm').onclick=function(){
+var action = modalAction;
+closeModal();
+if(action) action();
+}
+
+function lockLevelWarn(sel){
+if(parseInt(sel.value)===2){
+showModal('efuse');
+}
+}
+
+$('fwfile').onchange=function(){var f=this.files[0];$('fw_name').textContent=f?f.name:'No file selected'}
+
+function getCfg(){
+fetch('/api/config').then(r=>r.json()).then(c=>{
+$('uas_id').value=c.uas_id||''
+$('id_type').value=c.id_type||1
+$('ua_type').value=c.ua_type||1
+$('op_id').value=c.operator_id||''
+$('uas_id2').value=c.uas_id_2||''
+$('id_type2').value=c.id_type_2||0
+$('ua_type2').value=c.ua_type_2||0
+$('wifi_ch').value=c.wifi_channel||6
+$('wifi_pwr').value=c.wifi_power_dbm||20
+$('wifi_bcn').value=c.wifi_bcn_rate_hz||1
+$('wifi_nan').value=c.wifi_nan_rate_hz||0
+$('bt4_rate').value=c.ble4_rate_hz||1
+$('bt4_pwr').value=c.ble4_power_dbm||18
+$('bt5_rate').value=c.ble5_rate_hz||1
+$('bt5_pwr').value=c.ble5_power_dbm||18
+$('wifi_ssid').value=c.wifi_ssid||'ESP-RID'
+$('wifi_pass').value=c.wifi_password||''
+$('websrv_en').checked=!!c.webserver_en
+$('baud').value=c.baud_rate||57600
+$('mav_sysid').value=c.mavlink_sysid||0
+$('bcast_pwr').checked=!!c.bcast_powerup
+$('lock_lvl').value=c.lock_level||0
+$('opt_arm').checked=!!(c.options&1)
+$('opt_nosave').checked=!!(c.options&2)
+$('opt_print').checked=!!(c.options&4)
+for(var i=1;i<=5;i++){$('pubkey'+i).value=c['public_key_'+i]||''}
+$('tx_wifi_bcn').checked=!!(c.tx_modes&1)
+$('tx_wifi_nan').checked=!!(c.tx_modes&2)
+$('tx_ble4').checked=!!(c.tx_modes&4)
+$('tx_ble5').checked=!!(c.tx_modes&8)
+})}
+
+function collectForm(){return{
+uas_id:$('uas_id').value,
+id_type:parseInt($('id_type').value),
+ua_type:parseInt($('ua_type').value),
+operator_id:$('op_id').value,
+uas_id_2:$('uas_id2').value,
+id_type_2:parseInt($('id_type2').value),
+ua_type_2:parseInt($('ua_type2').value),
+wifi_channel:parseInt($('wifi_ch').value),
+wifi_power_dbm:parseFloat($('wifi_pwr').value),
+wifi_bcn_rate_hz:parseFloat($('wifi_bcn').value),
+wifi_nan_rate_hz:parseFloat($('wifi_nan').value),
+ble4_rate_hz:parseFloat($('bt4_rate').value),
+ble4_power_dbm:parseFloat($('bt4_pwr').value),
+ble5_rate_hz:parseFloat($('bt5_rate').value),
+ble5_power_dbm:parseFloat($('bt5_pwr').value),
+wifi_ssid:$('wifi_ssid').value,
+wifi_password:$('wifi_pass').value,
+webserver_en:$('websrv_en').checked?1:0,
+baud_rate:parseInt($('baud').value),
+mavlink_sysid:parseInt($('mav_sysid').value),
+bcast_powerup:$('bcast_pwr').checked?1:0,
+lock_level:parseInt($('lock_lvl').value),
+options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0),
+public_key_1:$('pubkey1').value,
+public_key_2:$('pubkey2').value,
+public_key_3:$('pubkey3').value,
+public_key_4:$('pubkey4').value,
+public_key_5:$('pubkey5').value,
+tx_modes:($('tx_wifi_bcn').checked?1:0)|($('tx_wifi_nan').checked?2:0)|($('tx_ble4').checked?4:0)|($('tx_ble5').checked?8:0)
+}}
+
+function doSave(){
+fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectForm())})
+.then(r=>r.json()).then(j=>showMsg('Configuration saved! Check the Status panel to confirm.')).catch(e=>showMsg('Error saving configuration',1))
+}
+
+function saveForm(){
+var c = collectForm();
+if(c.lock_level===2 || c.options&1){
+showModal('danger');
+}else{
+doSave();
+}
+}
+
+getCfg()
+;['f1','f2','f3','f4'].forEach(id=>{$(id).onsubmit=function(e){e.preventDefault();saveForm()}})
+
+function otaUpdate(){
+var f=$('fwfile').files[0]
+if(!f){showMsg('Select a .bin file first',1);return}
+var r=new FileReader()
+r.onload=function(e){
+$('ota_progress').textContent='Uploading... ('+(f.size/1024).toFixed(0)+' KB)'
+fetch('/ota',{method:'POST',body:e.target.result})
+.then(r=>r.text()).then(t=>{$('ota_progress').textContent=t;showMsg('OTA complete, rebooting...')})
+.catch(e=>{$('ota_progress').textContent='';showMsg('OTA failed',1)})}
+r.readAsArrayBuffer(f)
+}
+
+setInterval(function(){
+fetch('/api/status').then(r=>r.json()).then(s=>{
+var h=''
+h+='<div class="status-grid">'
+h+='<div class="sg-label">Protocol</div><div class="sg-val">'+['Unknown','MAVLink','MSP','NMEA','None'][s.protocol]+'</div>'
+h+='<div class="sg-label">GPS</div><div class="sg-val">'+(s.gps_valid?'&#x2705; OK':'&#x274c; No fix')+'</div>'
+h+='<div class="sg-label">Latitude</div><div class="sg-val">'+s.lat.toFixed(6)+'</div>'
+h+='<div class="sg-label">Longitude</div><div class="sg-val">'+s.lon.toFixed(6)+'</div>'
+h+='<div class="sg-label">Altitude</div><div class="sg-val">'+s.alt.toFixed(1)+' m</div>'
+h+='<div class="sg-label">Speed</div><div class="sg-val">'+s.speed.toFixed(1)+' m/s</div>'
+h+='<div class="sg-label">Heading</div><div class="sg-val">'+s.heading+'&deg;</div>'
+h+='<div class="sg-label">Satellites</div><div class="sg-val">'+s.satellites+'</div>'
+h+='<div class="sg-label">Fix Type</div><div class="sg-val">'+s.fix_type+'</div>'
+h+='<div class="sg-label">Tx Total</div><div class="sg-val">'+s.tx_total+'</div>'
+h+='<div class="sg-label">WiFi BCN</div><div class="sg-val">'+s.tx_wifi_bcn+'</div>'
+h+='<div class="sg-label">BLE 4.0</div><div class="sg-val">'+s.tx_ble4+'</div>'
+h+='</div>'
+$('status').innerHTML=h
+}).catch(()=>{$('status').textContent='Waiting for connection...'})
+},2000)
+</script>
+</body>
+</html>

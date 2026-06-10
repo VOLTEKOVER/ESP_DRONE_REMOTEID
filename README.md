@@ -1,150 +1,73 @@
-# ESP32 Drone ID
+# ESP Remote ID
 
-Sistema di identificazione remota per droni (Remote ID) basato su **ESP32** e **OpenDroneID**, conforme ai standard internazionali EU/US. 
+Universal **ASTM F3411-22a / ASD-STAN prEN 4709-002** Open DroneID transmitter for ESP32.
+Reads GPS data from any flight controller (MAVLink, MSP, NMEA) and broadcasts via **WiFi Beacon** and **BLE 4.0/5.0**.
 
-**Progetto in riscrittura con ESP-IDF** per:
-- Migliore performance e stabilità
-- Compatibilità universale con tutti i flight controller
-- Configurazione grafica via interfaccia web
-- Flashing firmware diretto dal browser
+> **Full documentation and web installer:** https://valeriocomo.github.io/ESP32_DRONE_ID/
 
-Il sistema trasmette l'identità del drone via Bluetooth, WiFi Beacon e NAN, consentendo il rilevamento remoto da dispositivi mobili e stazioni di controllo.
+[![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32%2FS3%2FC3-green.svg)](https://www.espressif.com/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32-green.svg)
-![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
+## Quick Start
 
-## 🎯 Features
+1. Connect ESP32 to your computer via USB
+2. Open https://valeriocomo.github.io/ESP32_DRONE_ID/
+3. Click **Install** and select the serial port
+4. Power from battery, connect to WiFi **ESP-RID**
+5. Configure at **http://192.168.4.1**
 
-- **OpenDroneID Support**
-  - Full EU/US compatible implementation
-  - Multi-region regulatory support
-  - Extensible architecture for additional standards
+## Features
 
-- **Multi-Protocol Broadcasting**
-  - Bluetooth Low Energy (BLE) 4.0
-  - WiFi Beacon
-  - WiFi Neighbor Awareness Networking (NAN)
+- **Triple protocol support** — MAVLink (ArduPilot), MSP (Betaflight/INAV), NMEA (any GPS)
+- **Auto-detect** — protocol detected automatically on UART within 50 ms
+- **Dual radio** — WiFi Beacon + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3)
+- **No second GPS** — reuses existing flight controller GPS data
+- **Web configuration** — built-in WiFi AP at 192.168.4.1 with REST API
+- **26 parameters** — all ArduRemoteID equivalents (UAS ID, rates, power, keys, etc.)
+- **OTA updates** — firmware update via browser, no USB needed
+- **Browser flashing** — WebSerial, no toolchain required
 
-- **Web-Based Configuration Tool**
-  - Graphical GUI for easy ID setup
-  - Real-time firmware flashing via USB
-  - No external tools needed (Chrome/Edge compatible)
-  - Configuration save/load support
+## Hardware
 
-- **Hardware Optimized**
-  - Runs on affordable ESP32 dev boards
-  - Dual-core processing support
-  - Minimal power consumption
+| ESP32 Pin | Connect To |
+|-----------|-----------|
+| GPIO16 (UART2 RX) | FC TX |
+| GND | FC GND |
+| 5V | FC BEC or USB |
 
-- **Flexible Configuration**
-  - Easy ID parameter setup
-  - Support for multiple transmission modes simultaneously
+For NMEA clone (tap GPS TX), add a **1 kΩ series resistor** on the line.
 
-## 🚀 Quick Start
+## Building from Source
 
-### Requirements
-- ESP32 Development Board
-- Platform.io or Arduino IDE
-- OpenDroneID core library (for id_open module)
+Requires ESP-IDF v6.0.1:
 
-### Installation
+```bash
+git clone https://github.com/valeriocomo/ESP32_DRONE_ID.git
+cd ESP32_DRONE_ID
+. $HOME/esp/v6.0.1/esp-idf/export.sh
+idf.py set-target esp32
+idf.py build
+idf.py -p /dev/ttyUSB0 flash monitor
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/VOLTEKOVER/ESP32_DRONE_ID.git
-   cd ESP32_DRONE_ID
-   ```
+## Project Structure
 
-2. **Install dependencies**
-   ```bash
-   # For id_open module, download opendroneid core files
-   # Copy opendroneid.c, opendroneid.h, odid_wifi.h, and wifi.c
-   # from https://github.com/opendroneid/opendroneid-core-c
-   # into the id_open/ directory
-   ```
+```
+ESP32_DRONE_ID/
+├── main/                    # Entry point
+├── components/
+│   └── esp_remote_id/       # Main component
+│       ├── include/         # Headers
+│       ├── src/             # Core, parsers, TX, web server
+│       ├── mavlink/         # MAVLink C library
+│       └── webui/           # Embedded config HTML
+├── docs/                    # GitHub Pages site
+│   ├── index.html           # Wiki + installer
+│   ├── config.html          # Config page (identical to webui)
+│   └── manifest.json        # WebSerial manifest
+└── images/                  # Logo files
+```
 
-3. **Compile and upload**
-   ```bash
-   # Using Arduino IDE or Platform.io
-   ```
+## License
 
-## 📦 Project Structure
-
-### id_open
-Complete OpenDroneID implementation wrapper for ESP32.
-
-**Supported Protocols:**
-- BLE 4.0
-- WiFi Beacon
-- WiFi NAN
-
-**Compatibility:** OpenDroneID release 2.0+
-
-**Note:** Known ESP32 limitation - some devices may experience reboots when both WiFi and Bluetooth are enabled simultaneously. If this occurs, use one protocol at a time.
-
-## 🛠️ Web Flasher & Configuration Tool
-
-Use `web_flasher.html` for a complete graphical interface to:
-- Configure drone IDs and parameters
-- Flash firmware directly from your browser
-- Monitor flashing progress
-- Save/load configurations
-
-**See [WEB_FLASHER_README.md](WEB_FLASHER_README.md) for detailed instructions.**
-
-## ⚠️ Regulatory Compliance Notice
-
-When developing remote IDs for use in regulated airspace:
-
-1. **ANSI/CTA Serial Numbers** - US and EU regulations require specific serial number formats
-2. **Tamper Resistance** - FAA and EASA mandate tamper-resistant implementations
-3. **Local Regulations** - Always verify compliance with your local aviation authority
-
-Refer to:
-- [OpenDroneID Regulatory Overview](https://github.com/opendroneid/opendroneid-core-c)
-- [FAA Remote ID Requirements](https://www.faa.gov/uas/remote_id/)
-- [EASA Remote ID Guidelines](https://www.easa.europa.eu/)
-
-## 📚 Documentation
-
-- [OpenDroneID Specification](https://github.com/opendroneid/opendroneid-core-c)
-- [ESP32 Hardware Documentation](https://docs.espressif.com/projects/esp-idf/en/latest/)
-- Module-specific READMEs in respective directories
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas needing help:
-
-- [ ] ESP-IDF migration and testing
-- [ ] Graphical configuration tool development
-- [ ] Regional regulatory compliance modules
-- [ ] Hardware compatibility testing
-- [ ] Documentation and examples
-
-## 📋 Supported Hardware
-
-- **ESP32-WROOM** (Recommended)
-- **ESP32-WROVER**
-- Any standard ESP32 dev board with WiFi + Bluetooth
-
-## 📄 License
-
-This project is licensed under the MIT License - see LICENSE file for details.
-
-## 🔗 Related Projects
-
-- [OpenDroneID Core (C)](https://github.com/opendroneid/opendroneid-core-c)
-- [Gendarmerie Nationale Drone Reception System](https://github.com/GendarmerieNationale/ReceptionInfoDrone)
-- [nRF52840 Remote ID (Bluetooth 5)](https://github.com/sxjack/remote_id_bt5)
-
-## 📞 Support & Issues
-
-- Report bugs and issues via GitHub Issues
-- Check existing documentation and issues before submitting
-- Provide hardware details and reproduction steps with bug reports
-
----
-
-**Last Updated:** 2026
-**Maintainer:** VOLTEKOVER
+GNU General Public License v3.0 - see [LICENSE](LICENSE).

@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP Remote ID — Open DroneID Transmitter</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#fff;color:#333;line-height:1.6}
+.wrap{max-width:1260px;margin:0 auto;padding:0 24px}
+.logo-svg{width:56px;height:56px;flex-shrink:0}
+header{background:#fafafa;border-bottom:1px solid #e8e8e8;padding:14px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+header .wrap{display:flex;align-items:center;justify-content:space-between}
+header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#000}
+header .brand span{font-size:1.1em;font-weight:600;letter-spacing:-.3px}
+header nav{display:flex;gap:6px;flex-wrap:wrap}
+header nav a{color:#666;text-decoration:none;font-size:.82em;padding:6px 14px;border-radius:5px;transition:all .15s}
+header nav a:hover{background:#eee;color:#000}
+.hero{text-align:center;padding:50px 0 30px}
+.hero .logo-svg{width:72px;height:72px;margin:0 auto 16px}
+.hero h1{font-size:2.4em;font-weight:700;color:#000;letter-spacing:-1px;line-height:1.15}
+.hero p{color:#888;font-size:1.05em;max-width:640px;margin:10px auto 0}
+.main-grid{display:grid;grid-template-columns:380px 1fr;gap:36px;padding:10px 0 50px;align-items:start}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;gap:28px}}
+.build-col{position:sticky;top:90px}
+@media(max-width:900px){.build-col{position:static}}
+.build-col h2{font-size:1.2em;font-weight:700;color:#000;margin-bottom:4px;letter-spacing:-.3px}
+.build-col > p{color:#888;font-size:.85em;margin-bottom:20px}
+.install-box{background:#fafafa;border:2px solid #e0e0e0;border-radius:10px;padding:28px 24px;text-align:center}
+.install-box .mini-logo .logo-svg{width:40px;height:40px;margin:0 auto}
+.install-box h3{font-size:1.1em;color:#000;margin:8px 0 2px}
+.install-box .sub{color:#999;font-size:.82em;margin-bottom:16px}
+esp-web-install-button{display:block;margin:0 auto;max-width:340px}
+esp-web-install-button::part(button){background:#000;color:#fff;border:none;padding:13px 26px;border-radius:7px;font-size:.95em;cursor:pointer;width:100%;font-weight:600;transition:background .15s}
+esp-web-install-button::part(button):hover{background:#333}
+esp-web-install-button::part(unsupported){background:#f5f5f5;color:#999;padding:13px 18px;border-radius:7px;font-size:.82em}
+.steps-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px 20px;margin-top:16px}
+.steps-box h4{font-size:.82em;color:#222;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.steps-box ol{counter-reset:s;list-style:none;padding:0}
+.steps-box li{counter-increment:s;padding:7px 0 7px 32px;position:relative;font-size:.82em;color:#555;border-bottom:1px solid #f0f0f0}
+.steps-box li:last-child{border-bottom:none}
+.steps-box li::before{content:counter(s);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:#222;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:600}
+.fw-info{font-size:.78em;color:#aaa;text-align:center;margin-top:12px}
+.fw-info a{color:#888}
+/* ------------------ GUIDE (right column) ------------------ */
+.guide-col h2{font-size:1.2em;font-weight:700;color:#000;margin-bottom:14px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.guide-section{border:1px solid #e8e8e8;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.guide-section .gs-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#fafafa;transition:background .15s;user-select:none}
+.guide-section .gs-header:hover{background:#f0f0f0}
+.guide-section .gs-header h3{font-size:.85em;font-weight:600;color:#222;display:flex;align-items:center;gap:7px;line-height:1.3}
+.guide-section .gs-header .arrow{color:#bbb;font-size:.7em;transition:transform .2s;flex-shrink:0}
+.guide-section.open .gs-header .arrow{transform:rotate(180deg)}
+.guide-section .gs-body{padding:0 18px 16px;display:none;color:#555;font-size:.84em;line-height:1.65}
+.guide-section.open .gs-body{display:block}
+.gs-body h4{font-size:1em;font-weight:600;color:#222;margin:18px 0 8px}
+.gs-body h5{font-size:.92em;font-weight:600;color:#333;margin:14px 0 6px}
+.gs-body p{margin:8px 0}
+.gs-body ul,.gs-body ol{margin:6px 0 6px 18px}
+.gs-body li{margin:3px 0}
+.gs-body code{background:#f5f5f5;padding:1px 6px;border-radius:3px;font-size:.9em;color:#222}
+.gs-body pre{background:#fafafa;padding:12px 14px;border-radius:6px;font-size:.8em;overflow-x:auto;margin:10px 0;border:1px solid #eee;font-family:'Cascadia Code','Consolas',monospace;line-height:1.5}
+.gs-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.95em}
+.gs-body th,.gs-body td{padding:7px 10px;text-align:left;border-bottom:1px solid #eee}
+.gs-body th{background:#fafafa;font-weight:600;color:#222}
+.gs-body td{color:#555}
+.gs-body tr:hover td{background:#fafafa}
+.gs-body .callout{background:#f8f8f8;border-left:3px solid #222;padding:10px 14px;border-radius:0 5px 5px 0;margin:10px 0;font-size:.95em}
+.gs-body .callout strong{color:#222}
+.gs-body a{color:#222;text-decoration:underline}
+.gs-body a:hover{color:#000}
+.gs-body hr{border:none;border-top:1px solid #eee;margin:16px 0}
+.gs-body .tag{display:inline-block;background:#eee;color:#555;padding:1px 8px;border-radius:3px;font-size:.78em;font-weight:500}
+.gs-body .tag-blue{background:#e8f0fe;color:#1a56db}
+.gs-body .tag-green{background:#e6f7e6;color:#1a7d2e}
+.gs-body .tag-red{background:#fde8e8;color:#c62828}
+footer{text-align:center;padding:20px 0;border-top:1px solid #eee;color:#aaa;font-size:.76em}
+footer a{color:#888;text-decoration:none}
+footer a:hover{color:#222;text-decoration:underline}
+footer .sep{color:#ddd;margin:0 6px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+<a href="#" class="brand">
+<svg class="logo-svg" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="56" height="56" rx="12" fill="#222"/>
+<ellipse cx="28" cy="29" rx="2.2" ry="13" fill="#fff"/>
+<ellipse cx="18" cy="22" rx="12" ry="3.5" fill="none" stroke="#fff" stroke-width="1.8" transform="rotate(-12 18 22)"/>
+<ellipse cx="38" cy="22" rx="12" ry="3.5" fill="none" stroke="#fff" stroke-width="1.8" transform="rotate(12 38 22)"/>
+<ellipse cx="19" cy="32" rx="10" ry="3" fill="none" stroke="#fff" stroke-width="1.6" transform="rotate(8 19 32)"/>
+<ellipse cx="37" cy="32" rx="10" ry="3" fill="none" stroke="#fff" stroke-width="1.6" transform="rotate(-8 37 32)"/>
+<circle cx="26.5" cy="18" r="3" fill="#fff"/>
+<circle cx="29.5" cy="18" r="3" fill="#fff"/>
+</svg>
+<span>ESP Remote ID</span>
+</a>
+<nav>
+<a href="#build">Install</a>
+<a href="#guide">Guide</a>
+<a href="https://github.com/valeriocomo/ESP32_DRONE_ID">GitHub</a>
+<a href="config.html">Demo</a>
+</nav>
+</div>
+</header>
+
+<div class="wrap">
+<div class="hero">
+<svg class="logo-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="72" height="72" rx="16" fill="#000"/>
+<ellipse cx="36" cy="38" rx="2.6" ry="16" fill="#fff"/>
+<ellipse cx="23" cy="28" rx="15" ry="4.5" fill="none" stroke="#fff" stroke-width="2" transform="rotate(-12 23 28)"/>
+<ellipse cx="49" cy="28" rx="15" ry="4.5" fill="none" stroke="#fff" stroke-width="2" transform="rotate(12 49 28)"/>
+<ellipse cx="24" cy="41" rx="13" ry="3.6" fill="none" stroke="#fff" stroke-width="1.8" transform="rotate(8 24 41)"/>
+<ellipse cx="48" cy="41" rx="13" ry="3.6" fill="none" stroke="#fff" stroke-width="1.8" transform="rotate(-8 48 41)"/>
+<circle cx="33.5" cy="23" r="3.6" fill="#fff"/>
+<circle cx="38.5" cy="23" r="3.6" fill="#fff"/>
+</svg>
+<h1>ESP Remote ID</h1>
+<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA</p>
+</div>
+
+<div class="main-grid">
+<div class="build-col" id="build">
+<h2>&#x1f4e4; Flash Firmware</h2>
+<p>Install via browser &mdash; no tools required.</p>
+<div class="install-box">
+<div class="mini-logo">
+<svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="40" height="40" rx="9" fill="#000"/>
+<ellipse cx="20" cy="21" rx="1.6" ry="9" fill="#fff"/>
+<ellipse cx="13" cy="16" rx="8" ry="2.5" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(-12 13 16)"/>
+<ellipse cx="27" cy="16" rx="8" ry="2.5" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(12 27 16)"/>
+<ellipse cx="14" cy="24" rx="7" ry="2.2" fill="none" stroke="#fff" stroke-width="1.3" transform="rotate(8 14 24)"/>
+<ellipse cx="26" cy="24" rx="7" ry="2.2" fill="none" stroke="#fff" stroke-width="1.3" transform="rotate(-8 26 24)"/>
+<circle cx="18.5" cy="13" r="2.2" fill="#fff"/>
+<circle cx="21.5" cy="13" r="2.2" fill="#fff"/>
+</svg>
+</div>
+<h3>ESP Remote ID v1.0.0</h3>
+<p class="sub">ESP32 &middot; ESP32-S3 &middot; ESP32-C3</p>
+<esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+</div>
+<div class="steps-box">
+<h4>Quick Start</h4>
+<ol>
+<li>Connect ESP32 to computer via USB</li>
+<li>Click install &amp; select serial port</li>
+<li>Wait for flash to complete</li>
+<li>Power from battery or USB</li>
+<li>Connect to WiFi <strong>ESP-RID</strong></li>
+<li>Configure at <strong>http://192.168.4.1</strong></li>
+</ol>
+</div>
+<div class="fw-info">Requires Chrome/Edge &mdash; <a href="#guide-install">Manual flashing &rarr;</a></div>
+</div>
+
+<div class="guide-col" id="guide">
+<h2>&#x1f4d6; Complete Guide</h2>
+
+<!-- 1. INTRODUCTION -->
+<div class="guide-section open">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>1. Introduction</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>What is ESP Remote ID?</h4>
+<p>ESP Remote ID is an open-source firmware that transforms any ESP32 microcontroller into a universal Remote ID transmitter compliant with <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It reads GPS position data from your existing flight controller via UART and broadcasts ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
+
+<h4>Key Features</h4>
+<ul>
+<li><b>Triple protocol support:</b> MAVLink (ArduPilot), MSP (Betaflight/INAV), NMEA (any GPS)</li>
+<li><b>Automatic protocol detection</b> on boot &mdash; no manual switching</li>
+<li><b>Dual radio broadcast:</b> WiFi Beacon (802.11) + BLE 4.0 + BLE 5.0 Long Range</li>
+<li><b>No second GPS required</b> &mdash; reuses the drone's existing GPS data</li>
+<li><b>Built-in WiFi Access Point</b> with web configuration at 192.168.4.1</li>
+<li><b>Over-the-Air (OTA) updates</b> through the web interface</li>
+<li><b>26 configurable parameters</b> matching ArduRemoteID feature set</li>
+<li><b>Browser-based flashing</b> via WebSerial &mdash; no toolchain needed</li>
+<li><b>All ESP32 variants</b> supported: ESP32, ESP32-S3, ESP32-C3</li>
+</ul>
+
+<h4>Regulatory Compliance</h4>
+<p>The firmware implements the full ASTM F3411-22a Open Drone ID (ODID) message set:</p>
+<ul>
+<li><b>Basic ID Message</b> &mdash; UAS ID, ID type, UA type</li>
+<li><b>Location/Vector Message</b> &mdash; latitude, longitude, altitude, speed, heading</li>
+<li><b>System Message</b> &mdash; operator ID, timestamps</li>
+<li><b>Self-ID Message</b> &mdash; additional operator information</li>
+</ul>
+<p>These messages satisfy Remote ID requirements mandated by FAA Part 89, EASA Implementing Regulation 2021/664, and similar regulations worldwide.</p>
+
+<h4>Technical Specifications</h4>
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>MCU</td><td>ESP32, ESP32-S3, ESP32-C3 (Xtensa / RISC-V)</td></tr>
+<tr><td>Radio</td><td>2.4 GHz WiFi + BLE 4.0/5.0</td></tr>
+<tr><td>WiFi Beacon</td><td>IEEE 802.11 b/g/n, 1-13 channels, configurable power 2-20 dBm</td></tr>
+<tr><td>BLE 4.0</td><td>Legacy advertising, configurable rate 0-5 Hz</td></tr>
+<tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C3 only</td></tr>
+<tr><td>UART</td><td>UART2 (GPIO16 RX), baud 9600-921600</td></tr>
+<tr><td>Protocols</td><td>MAVLink v1/v2, MSP v1, NMEA 0183</td></tr>
+<tr><td>Config</td><td>WiFi AP + REST API on port 80</td></tr>
+<tr><td>Persistence</td><td>NVS flash memory (17 keys, 26 params)</td></tr>
+<tr><td>Power</td><td>5V via USB or FC BEC (~150 mA)</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 2. HARDWARE -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>2. Hardware Setup</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Pinout</h4>
+<table>
+<tr><th>ESP32 Pin</th><th>Function</th><th>Connect To</th><th>Notes</th></tr>
+<tr><td><code>GPIO16</code></td><td>UART2 RX</td><td>FC TX (output)</td><td>Primary data line from flight controller</td></tr>
+<tr><td><code>GND</code></td><td>Ground</td><td>FC GND</td><td>Must be common ground</td></tr>
+<tr><td><code>5V</code> (VIN)</td><td>Power in</td><td>FC 5V BEC or USB</td><td>3.3V also works on some boards</td></tr>
+<tr><td><code>GPIO2</code></td><td>Status LED</td><td>Optional LED + resistor</td><td>Blinks on GPS fix</td></tr>
+<tr><td><code>EN</code></td><td>Reset</td><td>Optional button</td><td>Pull-up to 3.3V</td></tr>
+<tr><td><code>GPIO0</code></td><td>Boot mode</td><td>Optional button</td><td>Hold for flash mode</td></tr>
+</table>
+
+<h4>Wiring by Flight Controller</h4>
+<h5>ArduPilot (Pixhawk, Cube, Matek)</h5>
+<p>Connect to any unused serial port (e.g. SERIAL4 or SERIAL5). Configure the port in Mission Planner or ArduPilot parameters:</p>
+<pre>SERIAL4_PROTOCOL = 1  (MAVLink1)
+SERIAL4_BAUD = 57     (57600 baud)
+SERIAL4_OPTIONS = 0</pre>
+<p>Wire: FC TX (Serial4) &rarr; ESP32 GPIO16 (UART2 RX). GND &rarr; GND.</p>
+
+<h5>Betaflight / INAV</h5>
+<p>Use a free UART (e.g. UART3). Enable MSP on that port in the Ports tab:</p>
+<pre>set serialrx_provider = MSP
+set serial_baudrate = 57600
+Save &amp; Reboot</pre>
+<p>Wire: FC TX3 &rarr; ESP32 GPIO16. GND &rarr; GND.</p>
+
+<h5>NMEA Clone Method</h5>
+<p>Tap directly into the GPS module's TX line (shared with the FC). The GPS sends NMEA 0183 sentences at 9600 or 115200 baud. Add a <b>1 k&Omega; series resistor</b> on the tap line to prevent signal degradation:</p>
+<pre>GPS TX &rarr; [1k&Omega;] &rarr; ESP32 GPIO16
+GPS TX &rarr; FC RX (unchanged)
+FC TX &rarr; (optional, not used by NMEA mode)</pre>
+<p>This method works with <b>any</b> flight controller that uses a standard NMEA GPS module (e.g. BN-880, BN-220, M8N, M10).</p>
+
+<h4>Power Options</h4>
+<ul>
+<li><b>From FC BEC:</b> Connect to the 5V pad on your flight controller's servo rail or BEC output. Most BECs provide 5V @ 2-3A, sufficient for the ESP32 (~150 mA).</li>
+<li><b>From USB:</b> Power via the ESP32's USB port during configuration and testing.</li>
+<li><b>From battery:</b> Use a 5V step-down regulator (e.g. Matek 5V bec) connected to the main battery.</li>
+</ul>
+<p>The ESP32 draws approximately 150 mA with WiFi Beacon + BLE active. Ensure your BEC or regulator can supply this.</p>
+
+<h4>Antenna Selection</h4>
+<div class="callout"><strong>&#x26a0; Important:</strong> Carbon fiber drone frames are conductive and will <b>severely attenuate</b> the ESP32's built-in PCB antenna. Use a board with a <b>U.FL/IPEX connector</b> for an external antenna.</div>
+<ul>
+<li><b>PCB antenna:</b> Suitable for glass fiber, plastic, or open frames. Range ~50-100 m.</li>
+<li><b>External antenna (U.FL):</b> Required for carbon fiber frames. Range ~200-500 m with 2 dBi antenna.</li>
+<li><b>Recommended:</b> ESP32-S3-DevKitC-1 with U.FL, or TTGO T-Internet-POE with external antenna.</li>
+</ul>
+
+<h4>Voltage Levels</h4>
+<p>The ESP32 GPIO pins are <b>5V tolerant</b> but the UART RX pin (GPIO16) uses 3.3V logic levels. Most flight controllers use 3.3V UART (Pixhawk, Matek, Betaflight boards). If your FC uses 5V UART (some older ArduPilot boards), use a <b>level shifter</b> or a voltage divider (1 k&Omega; + 2.2 k&Omega;) on the RX line.</p>
+</div>
+</div>
+
+<!-- 3. PROTOCOLS -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>3. Protocol Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Protocol Auto-Detection</h4>
+<p>On boot, the ESP Remote ID listens to the UART for 50 ms and identifies the protocol by looking for specific headers. The detection logic runs in this order:</p>
+<ol>
+<li><b>MAVLink:</b> Looks for <code>0xFE</code> (MAVLink v1 start byte) followed by a valid payload length.</li>
+<li><b>MSP:</b> Looks for <code>$M&lt;</code> or <code>$M&gt;</code> header (MSP v1).</li>
+<li><b>NMEA:</b> Looks for <code>$G</code> sentence prefix.</li>
+<li>If no protocol is detected within 50 ms, the system continues listening and retries indefinitely.</li>
+</ol>
+<p>Once detected, the protocol is stored and used until the next reboot. You can force re-detection by resetting the ESP32.</p>
+
+<h4>MAVLink (ArduPilot)</h4>
+<p>The firmware parses the following MAVLink v1/v2 messages:</p>
+<table>
+<tr><th>Message</th><th>ID</th><th>Data Used</th><th>Frequency</th></tr>
+<tr><td><code>GLOBAL_POSITION_INT</code></td><td>33</td><td>Latitude, longitude, altitude (MSL + relative), heading, relative alt</td><td>~5 Hz</td></tr>
+<tr><td><code>GPS_RAW_INT</code></td><td>24</td><td>Latitude, longitude, altitude (MSL), ground speed, satellites, fix type</td><td>~5 Hz</td></tr>
+<tr><td><code>VFR_HUD</code></td><td>74</td><td>Ground speed, heading, altitude (baro), climb rate</td><td>~5 Hz</td></tr>
+<tr><td><code>ATTITUDE</code></td><td>30</td><td>Roll, pitch, yaw (heading)</td><td>~10 Hz</td></tr>
+<tr><td><code>HEARTBEAT</code></td><td>0</td><td>System ID, vehicle type (for auto-detection)</td><td>1 Hz</td></tr>
+<tr><td><code>SYS_STATUS</code></td><td>1</td><td>Battery voltage, error flags</td><td>~1 Hz</td></tr>
+</table>
+<p>The MAVLink parser handles both v1 (0xFE start byte) and v2 (0xFD start byte) protocols. The system ID from the first HEARTBEAT message is used if <code>mavlink_sysid = 0</code> (auto-detect).</p>
+
+<h5>MAVLink Configuration Tips</h5>
+<ul>
+<li>Set the baud rate to match your ArduPilot serial port (57600 is common).</li>
+<li>If using MAVLink v2, ensure the port is configured for MAVLink1 or MAVLink2.</li>
+<li>The firmware only <b>listens</b> &mdash; it does not send any MAVLink messages, so it will not interfere with your existing telemetry link.</li>
+</ul>
+
+<h4>MSP (Betaflight / INAV)</h4>
+<p>The firmware parses the following MSP v1 messages:</p>
+<table>
+<tr><th>Message</th><th>ID</th><th>Data Used</th><th>Notes</th></tr>
+<tr><td><code>MSP_RAW_GPS</code></td><td>106</td><td>Latitude, longitude, altitude, speed, ground course, satellites, fix type</td><td>Primary GPS data source</td></tr>
+<tr><td><code>MSP_ATTITUDE</code></td><td>108</td><td>Roll, pitch, yaw (heading in degrees)</td><td>Heading for ODID message</td></tr>
+</table>
+<p>The MSP parser expects the standard MSP v1 framing: <code>$M&lt;</code> header, size byte, command byte, data payload, checksum. It does not require sending any request to the FC &mdash; it passively listens to the FC's MSP response stream (typically from the FC's telemetry output).</p>
+
+<h5>MSP Configuration Tips</h5>
+<ul>
+<li>Enable MSP on the desired UART in the Betaflight Configurator Ports tab.</li>
+<li>Set baud rate to match (57600 is common for MSP).</li>
+<li>INAV sends MSP_RAW_GPS automatically at ~5 Hz when armed.</li>
+<li>Betaflight may require setting <code>serialrx_provider = MSP</code> for continuous GPS output.</li>
+</ul>
+
+<h4>NMEA 0183</h4>
+<p>The firmware parses the following NMEA 0183 sentences:</p>
+<table>
+<tr><th>Sentence</th><th>Type</th><th>Data Used</th></tr>
+<tr><td><code>$GPGGA</code></td><td>Global Positioning System Fix Data</td><td>Latitude, longitude, altitude (MSL), fix quality (0/1/2), satellites, HDOP</td></tr>
+<tr><td><code>$GPRMC</code></td><td>Recommended Minimum Specific GNSS Data</td><td>Speed over ground (knots &rarr; m/s), ground course, date, status (A=valid)</td></tr>
+<tr><td><code>$GPVTG</code></td><td>Course Over Ground and Ground Speed</td><td>Ground speed (km/h &rarr; m/s), course over ground (true)</td></tr>
+</table>
+<p>The NMEA parser handles both <code>$GP</code> (GPS) and <code>$GN</code> (GNSS) prefixes. It uses the AIVDM checksum validation and silently discards malformed sentences.</p>
+
+<h5>NMEA Configuration Tips</h5>
+<ul>
+<li>GPS modules typically output NMEA at 9600 or 115200 baud. Set the baud rate accordingly.</li>
+<li>The NMEA mode requires the <b>1 k&Omega; series resistor</b> on the TX tap line (see Hardware section).</li>
+<li>NMEA mode works with any GPS module: BN-880, BN-220, M8N, M10, NEO-6M, NEO-8M, and many others.</li>
+<li>The ESP32 can share the GPS TX line with the FC &mdash; the resistor prevents the ESP32's input capacitance from degrading the signal to the FC.</li>
+</ul>
+</div>
+</div>
+
+<!-- 4. INSTALLATION -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>4. Installation Methods</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Method 1: WebSerial (Browser) &mdash; Recommended</h4>
+<p>The easiest method. Requires Chrome or Edge on Windows, macOS, or Linux. No Python or toolchain needed.</p>
+<ol>
+<li>Connect the ESP32 to your computer via USB.</li>
+<li>Install the CP2102 or CH340 driver if prompted (Windows usually auto-installs).</li>
+<li>Click the <b>install</b> button in the left column of this page.</li>
+<li>A browser dialog will appear showing available serial ports. Select your ESP32 (usually labeled <code>CP2102 USB to UART Bridge</code> or <code>CH340</code>).</li>
+<li>Click <b>Connect</b>. The firmware will download and flash automatically.</li>
+<li>Wait for the progress bar to complete and the "Done" message.</li>
+<li>Disconnect USB and power the ESP32 from your flight controller's BEC or a USB power bank.</li>
+</ol>
+<div class="callout"><strong>&#x26a0; Note:</strong> WebSerial requires HTTPS (this page is served via GitHub Pages which is HTTPS). If running locally, use <code>localhost</code> or enable HTTPS.</div>
+
+<h4>Method 2: ESP-IDF (Manual Build)</h4>
+<p>For developers or users who want to customize the firmware.</p>
+<h5>Prerequisites</h5>
+<ul>
+<li>ESP-IDF v6.0.1 installed at <code>C:\esp\v6.0.1\esp-idf</code> (Windows) or <code>$HOME/esp/v6.0.1/esp-idf</code> (Linux/Mac)</li>
+<li>Python 3.10+</li>
+<li>Git</li>
+</ul>
+<h5>Build Steps</h5>
+<pre>git clone https://github.com/valeriocomo/ESP32_DRONE_ID.git
+cd ESP32_DRONE_ID
+
+# Set up ESP-IDF environment (Windows PowerShell)
+C:\esp\v6.0.1\esp-idf\export.ps1
+
+# Set target (esp32, esp32s3, or esp32c3)
+idf.py set-target esp32
+
+# Build
+idf.py build
+
+# Flash
+idf.py -p COM3 flash
+
+# Monitor
+idf.py -p COM3 monitor</pre>
+<p>To change the target to ESP32-S3 or ESP32-C3:</p>
+<pre>idf.py set-target esp32s3
+idf.py set-target esp32c3</pre>
+
+<h4>Method 3: esptool.py</h4>
+<p>For users who prefer a command-line tool without the full ESP-IDF:</p>
+<pre>pip install esptool
+
+# For ESP32
+esptool.py --chip esp32 --port COM3 --baud 921200 \
+  --before default_reset --after hard_reset write_flash \
+  0x1000 bootloader.bin \
+  0x8000 partition-table.bin \
+  0x10000 esp-remote-id.bin
+
+# For ESP32-S3
+esptool.py --chip esp32s3 --port COM3 --baud 921200 \
+  --before default_reset --after hard_reset write_flash \
+  0x0 bootloader.bin \
+  0x8000 partition-table.bin \
+  0x10000 esp-remote-id.bin</pre>
+<p>The <code>.bin</code> files are generated by <code>idf.py build</code> and can be found in the <code>build/</code> directory. Pre-built binaries are also available in this project's releases.</p>
+
+<h4>Method 4: Docker</h4>
+<pre>docker run --rm -v $(pwd):/project -w /project \
+  espressif/idf:v6.0.1 idf.py build</pre>
+
+<h4>Troubleshooting Flash Issues</h4>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Serial port not found</td><td>Install CP2102/CH340 driver, check device manager</td></tr>
+<tr><td>Brownout error during flash</td><td>Use a high-quality USB cable, connect to USB 2.0 port, reduce flash baud rate</td></tr>
+<tr><td>Timeout waiting for header</td><td>Hold GPIO0 while connecting, or press reset button with GPIO0 grounded</td></tr>
+<tr><td>A fatal error occurred: Failed to connect</td><td>Check USB connection, install drivers, try different USB port</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 5. CONFIGURATION -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>5. Configuration Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Accessing the Web UI</h4>
+<ol>
+<li>Connect to the WiFi network <code>ESP-RID</code> (password: none by default).</li>
+<li>Open a browser and navigate to <code>http://192.168.4.1</code>.</li>
+<li>The web configuration page loads automatically.</li>
+</ol>
+<p>All settings can be also accessed via the REST API (see section below).</p>
+
+<h4>Parameter Reference (26 Parameters)</h4>
+<table>
+<tr><th>#</th><th>Parameter</th><th>JSON Key</th><th>Type</th><th>Range</th><th>Default</th><th>Description</th></tr>
+<tr><td>1</td><td>UAS ID</td><td><code>uas_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Serial number or CAA registration. Example: <code>RID-12345678</code></td></tr>
+<tr><td>2</td><td>ID Type</td><td><code>id_type</code></td><td>uint8</td><td>1-4</td><td>1</td><td>1=Serial, 2=CAA, 3=UTM UUID, 4=Session ID</td></tr>
+<tr><td>3</td><td>UA Type</td><td><code>ua_type</code></td><td>uint8</td><td>0-15</td><td>2</td><td>0=None, 1=Aeroplane, 2=Multirotor, 3=Gyroplane, 4=Hybrid, ... 15=Other</td></tr>
+<tr><td>4</td><td>Operator ID</td><td><code>operator_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Operator registration number (e.g., <code>OP-MARIO-12345</code>)</td></tr>
+<tr><td>5</td><td>UAS ID 2</td><td><code>uas_id_2</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>Secondary Basic ID (optional)</td></tr>
+<tr><td>6</td><td>ID Type 2</td><td><code>id_type_2</code></td><td>uint8</td><td>0-4</td><td>0</td><td>0=None, 1=Serial, 2=CAA, 3=UTM, 4=Session</td></tr>
+<tr><td>7</td><td>UA Type 2</td><td><code>ua_type_2</code></td><td>uint8</td><td>0-15</td><td>0</td><td>Secondary aircraft type</td></tr>
+<tr><td>8</td><td>Tx Modes</td><td><code>tx_modes</code></td><td>bitmask</td><td>0-15</td><td>13</td><td>Bitmask: 1=WiFi BCN, 2=WiFi NAN, 4=BLE4, 8=BLE5</td></tr>
+<tr><td>9</td><td>WiFi Channel</td><td><code>wifi_channel</code></td><td>uint8</td><td>1-13</td><td>6</td><td>2.4 GHz channel for WiFi Beacon broadcasts</td></tr>
+<tr><td>10</td><td>WiFi Power</td><td><code>wifi_power_dbm</code></td><td>float</td><td>2-20 dBm</td><td>20</td><td>WiFi transmit power (dBm)</td></tr>
+<tr><td>11</td><td>WiFi Beacon Rate</td><td><code>wifi_bcn_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>WiFi Beacon packets per second. 1 Hz = one packet per second</td></tr>
+<tr><td>12</td><td>WiFi NAN Rate</td><td><code>wifi_nan_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>0</td><td>WiFi NAN packets per second. 0 = disabled</td></tr>
+<tr><td>13</td><td>BLE 4.0 Rate</td><td><code>ble4_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>BLE 4.0 advertising rate</td></tr>
+<tr><td>14</td><td>BLE 4.0 Power</td><td><code>ble4_power_dbm</code></td><td>float</td><td>-27-18 dBm</td><td>18</td><td>BLE 4.0 transmit power</td></tr>
+<tr><td>15</td><td>BLE 5.0 Rate</td><td><code>ble5_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>BLE 5.0 Coded PHY advertising rate</td></tr>
+<tr><td>16</td><td>BLE 5.0 Power</td><td><code>ble5_power_dbm</code></td><td>float</td><td>-27-18 dBm</td><td>18</td><td>BLE 5.0 transmit power</td></tr>
+<tr><td>17</td><td>WiFi SSID</td><td><code>wifi_ssid</code></td><td>string</td><td>1-20 chars</td><td>"ESP-RID"</td><td>Access point SSID for configuration</td></tr>
+<tr><td>18</td><td>WiFi Password</td><td><code>wifi_password</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>AP password. Empty = open network</td></tr>
+<tr><td>19</td><td>Web Server</td><td><code>webserver_en</code></td><td>bool</td><td>0/1</td><td>1</td><td>Enable the web configuration server</td></tr>
+<tr><td>20</td><td>Baud Rate</td><td><code>baud_rate</code></td><td>uint32</td><td>9600-921600</td><td>57600</td><td>UART baud rate (must match FC)</td></tr>
+<tr><td>21</td><td>MAVLink SysID</td><td><code>mavlink_sysid</code></td><td>uint8</td><td>0-254</td><td>0</td><td>MAVLink system ID filter. 0 = auto-detect</td></tr>
+<tr><td>22</td><td>Broadcast without GPS</td><td><code>bcast_powerup</code></td><td>bool</td><td>0/1</td><td>1</td><td>Send ID messages even without GPS fix</td></tr>
+<tr><td>23</td><td>Lock Level</td><td><code>lock_level</code></td><td>int8</td><td>0-2</td><td>0</td><td>0=Normal, 1=Signed cmds, 2=eFuse permanent</td></tr>
+<tr><td>24</td><td>Options</td><td><code>options</code></td><td>bitmask</td><td>0-7</td><td>0</td><td>1=Force ARM, 2=No save BasicID, 4=Print MAVLink RID</td></tr>
+<tr><td>25</td><td>Public Keys</td><td><code>public_key_1-5</code></td><td>string</td><td>0-64 chars</td><td>""</td><td>Up to 5 public keys for command authentication</td></tr>
+</table>
+
+<h4>REST API</h4>
+<p>The web server exposes a JSON REST API at <code>http://192.168.4.1</code>:</p>
+<table>
+<tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+<tr><td><code>/</code></td><td>GET</td><td>Web configuration page (HTML)</td></tr>
+<tr><td><code>/api/config</code></td><td>GET</td><td>Get current configuration as JSON</td></tr>
+<tr><td><code>/api/config</code></td><td>POST</td><td>Set configuration. Send JSON body with parameters to update</td></tr>
+<tr><td><code>/api/status</code></td><td>GET</td><td>Get live telemetry status as JSON (protocol, GPS, counters)</td></tr>
+<tr><td><code>/api/reset</code></td><td>POST</td><td>Factory reset all settings to defaults, then reboot</td></tr>
+<tr><td><code>/ota</code></td><td>POST</td><td>Upload firmware binary for OTA update</td></tr>
+</table>
+
+<h5>Example: Get Config</h5>
+<pre>curl http://192.168.4.1/api/config</pre>
+
+<h5>Example: Set Config</h5>
+<pre>curl -X POST http://192.168.4.1/api/config \
+  -H "Content-Type: application/json" \
+  -d '{"uas_id":"RID-12345678","ua_type":2,"baud_rate":115200}'</pre>
+
+<h4>NVS Persistence</h4>
+<p>All configuration parameters are stored in the ESP32's Non-Volatile Storage (NVS) flash memory under the namespace <code>esp_rid</code>. Settings persist across power cycles, reboots, and OTA updates. A factory reset erases the <code>esp_rid</code> namespace and restores defaults.</p>
+</div>
+</div>
+
+<!-- 6. BUILDING -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>6. Building from Source</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Prerequisites</h4>
+<ul>
+<li><b>ESP-IDF v6.0.1</b> &mdash; Install from <a href="https://docs.espressif.com/projects/esp-idf/en/v6.0.1/esp32/get-started/">Espressif's documentation</a></li>
+<li><b>Python 3.10+</b> &mdash; Required by ESP-IDF</li>
+<li><b>Git</b> &mdash; For cloning the repository</li>
+</ul>
+
+<h4>Installing ESP-IDF</h4>
+<h5>Windows</h5>
+<pre># Download ESP-IDF v6.0.1
+git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git C:\esp\v6.0.1\esp-idf
+
+# Run the installer (creates Python venv and downloads toolchains)
+C:\esp\v6.0.1\esp-idf\install.ps1
+
+# Set up environment (run before building each time)
+C:\esp\v6.0.1\esp-idf\export.ps1</pre>
+
+<h5>Linux / macOS</h5>
+<pre>git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git $HOME/esp/v6.0.1/esp-idf
+cd $HOME/esp/v6.0.1/esp-idf
+./install.sh
+. ./export.sh</pre>
+
+<h4>Clone and Build</h4>
+<pre>git clone https://github.com/valeriocomo/ESP32_DRONE_ID.git
+cd ESP32_DRONE_ID
+
+# Set environment (Windows)
+C:\esp\v6.0.1\esp-idf\export.ps1
+
+# Choose target
+idf.py set-target esp32       # ESP32 (original)
+idf.py set-target esp32s3     # ESP32-S3
+idf.py set-target esp32c3     # ESP32-C3
+
+# Build
+idf.py build
+
+# Flash to device
+idf.py -p COM3 flash
+
+# Monitor serial output
+idf.py -p COM3 monitor</pre>
+
+<h4>Project Structure</h4>
+<pre>ESP32_DRONE_ID/
+&#x251c;&#x2500;&#x2500; CMakeLists.txt                  # IDF top-level build file
+&#x251c;&#x2500;&#x2500; main/                          # Application entry point
+&#x2502;   &#x251c;&#x2500;&#x2500; main.c                     # Initialization and main loop
+&#x2502;   &#x2514;&#x2500;&#x2500; CMakeLists.txt
+&#x251c;&#x2500;&#x2500; components/
+&#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id/              # Main component
+&#x2502;       &#x251c;&#x2500;&#x2500; include/                   # Header files
+&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Main public API
+&#x2502;       &#x251c;&#x2500;&#x2500; src/
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Core logic
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Parameter persistence
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server &amp; REST API
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; protocol_parser.c     # Protocol detection &amp; dispatch
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink message parser
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP message parser
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA sentence parser
+&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon transmitter
+&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; ble_tx.c             # BLE 4.0/5.0 transmitter
+&#x2502;       &#x251c;&#x2500;&#x2500; mavlink/
+&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; ...                    # MAVLink C library
+&#x2502;       &#x2514;&#x2500;&#x2500; webui/
+&#x2502;           &#x2514;&#x2500;&#x2500; config.html            # Embedded web UI
+&#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # This wiki + installer
+&#x2502;   &#x251c;&#x2500;&#x2500; config.html                # Standalone config page
+&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo images
+&#x2514;&#x2500;&#x2500; images/                        # Root logo images</pre>
+</div>
+</div>
+
+<!-- 7. WEB UI -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>7. Web Interface Guide</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Accessing the Web UI</h4>
+<ol>
+<li>Power the ESP Remote ID (USB or battery).</li>
+<li>On your phone, tablet, or PC, scan for WiFi networks.</li>
+<li>Connect to <b>ESP-RID</b> (no password by default).</li>
+<li>Open a browser and navigate to <b>http://192.168.4.1</b>.</li>
+</ol>
+<div class="callout"><strong>&#x26a0; Note:</strong> The ESP32 creates its own WiFi network. You will lose internet connectivity while connected to it. This is normal.</div>
+
+<h4>Interface Sections</h4>
+<h5>Identity</h5>
+<p>Configure your drone's UAS ID, operator information, and aircraft type. The Basic ID is mandatory for ASTM compliance. The second Basic ID is optional and can be used for dual-purpose aircraft or additional identifiers.</p>
+<ul>
+<li><b>UAS ID:</b> Your drone's serial number (ANSI/CTA-2063 format) or CAA registration number. Max 20 characters.</li>
+<li><b>ID Type:</b> Select the type of identifier. Serial Number (1) is recommended for most users.</li>
+<li><b>UA Type:</b> Match your aircraft type. Multirotor (2) is the default for most drones.</li>
+<li><b>Operator ID:</b> Your national aviation authority registration number.</li>
+</ul>
+
+<h5>Transmission</h5>
+<p>Control which radio technologies are used for broadcasting and their parameters.</p>
+<ul>
+<li><b>WiFi Beacon:</b> IEEE 802.11 beacon frames containing ODID packets. Most compatible with receivers.</li>
+<li><b>WiFi NAN:</b> Neighborhood Area Networking. Less common, but supported by some Android devices.</li>
+<li><b>BLE 4.0:</b> Legacy Bluetooth Low Energy advertising. Compatible with most phones and ODID receivers.</li>
+<li><b>BLE 5.0 LR:</b> BLE 5.0 Coded PHY long range mode. Requires ESP32-S3 or ESP32-C3. Increased range at lower data rate.</li>
+</ul>
+<p>Rates are in Hz (packets per second). The ASTM standard recommends at least 1 Hz. Higher rates increase compatibility but consume more power.</p>
+
+<h5>WiFi AP &amp; Serial</h5>
+<p>Configure the management WiFi network and UART connection to your flight controller.</p>
+<ul>
+<li><b>SSID:</b> The name of the ESP32's WiFi network. Default: <code>ESP-RID</code>.</li>
+<li><b>Password:</b> Optional password (max 20 chars). Empty = open network.</li>
+<li><b>Baud Rate:</b> Must match your flight controller's serial port speed. Common: 57600, 115200.</li>
+<li><b>MAVLink SysID:</b> Set to 0 for auto-detect, or enter a specific system ID to filter messages.</li>
+</ul>
+
+<h5>System</h5>
+<p>Security settings and advanced options.</p>
+<ul>
+<li><b>Lock Level:</b> 0 = normal operation. 1 = signed commands only. 2 = permanent eFuse (irreversible!).</li>
+<li><b>Public Keys:</b> Up to 5 public keys (base64-encoded) for authenticating signed configuration commands.</li>
+<li><b>Options:</b> Force ARM status, disable NVS saving of BasicID, enable MAVLink RID message printing.</li>
+</ul>
+
+<h5>Status</h5>
+<p>Real-time telemetry dashboard showing:</p>
+<ul>
+<li>Detected protocol (MAVLink, MSP, NMEA, or None)</li>
+<li>GPS fix status (valid/invalid)</li>
+<li>Latitude, longitude, altitude, speed, heading</li>
+<li>Satellite count and fix type</li>
+<li>Transmission counters (total, WiFi, BLE)</li>
+</ul>
+<p>The status page refreshes automatically every 2 seconds.</p>
+
+<h5>Firmware Update (OTA)</h5>
+<p>Upload a new firmware <code>.bin</code> file to update the ESP32 over-the-air. The device reboots automatically after a successful update. Keep the device powered during the update process.</p>
+
+<h4>Factory Reset</h4>
+<p>Click the "Factory Reset" button in the System section to restore all settings to defaults. The device will reboot immediately.</p>
+</div>
+</div>
+
+<!-- 8. OTA -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>8. OTA Updates</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Over-the-Air Firmware Update</h4>
+<p>The ESP Remote ID supports updating firmware wirelessly through the web interface. No USB cable is needed once the initial firmware is flashed.</p>
+
+<h4>Prerequisites</h4>
+<ul>
+<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S3, or ESP32-C3).</li>
+<li>The ESP32 must be powered and connected to its WiFi network (you connected to ESP-RID).</li>
+<li>Your phone/PC must be connected to the ESP32's WiFi network.</li>
+</ul>
+
+<h4>Step-by-Step</h4>
+<ol>
+<li>Build the firmware (see section 6) or download a pre-built <code>.bin</code> from the project's releases.</li>
+<li>Open the Web UI at <code>http://192.168.4.1</code>.</li>
+<li>Scroll to the <b>Firmware Update</b> section.</li>
+<li>Click <b>Select .bin file</b> and choose your firmware binary.</li>
+<li>Click <b>Upload Firmware</b>.</li>
+<li>Wait for the upload to complete (~30 seconds for a 1 MB firmware). The progress text will update.</li>
+<li>On success, the device reboots automatically into the new firmware.</li>
+</ol>
+
+<h4>How It Works</h4>
+<p>The OTA mechanism uses ESP-IDF's built-in OTA API:</p>
+<ol>
+<li>The web server receives the firmware binary in an HTTP POST to <code>/ota</code>.</li>
+<li>It writes the binary to the OTA partition (the inactive slot in a dual-OTA partition scheme).</li>
+<li>On success, it sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
+<li>The ESP32 boots from the new firmware. If the update fails, it falls back to the previous firmware.</li>
+</ol>
+
+<h4>Safety</h4>
+<ul>
+<li>The ESP32 has two OTA partitions and one factory partition. If an OTA update fails, the device will fall back to the previous firmware.</li>
+<li>Always use a firmware built for your specific ESP32 target. Flashing an ESP32-S3 binary to an ESP32 will fail.</li>
+<li>Keep the device powered during the update. Do not disconnect or reset.</li>
+<li>If the update fails, you can always recover via USB serial flashing.</li>
+</ul>
+
+<h4>Troubleshooting OTA</h4>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>"OTA begin failed"</td><td>The OTA partition may be corrupted. Reflash via USB and try again.</td></tr>
+<tr><td>Upload stalls</td><td>Move closer to the ESP32 for better WiFi signal, or use USB flashing.</td></tr>
+<tr><td>Device does not reboot</td><td>Power-cycle the device manually.</td></tr>
+<tr><td>Firmware does not work after OTA</td><td>The binary may be for the wrong target. Flash the correct binary via USB.</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 9. SECURITY -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>9. Security</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Lock Levels</h4>
+<p>The firmware supports three lock levels to prevent unauthorized configuration changes:</p>
+<table>
+<tr><th>Level</th><th>Name</th><th>Effect</th></tr>
+<tr><td>0</td><td>Normal</td><td>All configuration changes are allowed via web UI and REST API. No authentication required.</td></tr>
+<tr><td>1</td><td>Locked</td><td>Configuration changes require signed commands authenticated with a configured public key. Unsigned POST requests to <code>/api/config</code> are rejected.</td></tr>
+<tr><td>2</td><td>eFuse Permanent</td><td>Same as Level 1, but the lock level is burned into eFuse and cannot be changed. This is an <b>irreversible</b> operation. Only use when the device is in its final deployment configuration.</td></tr>
+</table>
+
+<h4>Public Key Authentication</h4>
+<p>Up to 5 public keys can be configured (in PEM or raw base64 format). These keys are used to verify signed configuration commands when lock level 1 or 2 is active.</p>
+<p>To generate a key pair:</p>
+<pre># Generate private key
+openssl ecparam -name prime256v1 -genkey -out private.pem
+
+# Extract public key
+openssl ec -in private.pem -pubout -out public.pem
+
+# The public key content (base64) goes into the public_key fields
+cat public.pem</pre>
+
+<h4>Signed Commands</h4>
+<p>When lock level &ge; 1, any POST to <code>/api/config</code> must include a signature header:</p>
+<pre>curl -X POST http://192.168.4.1/api/config \
+  -H "Content-Type: application/json" \
+  -H "X-Signature: &lt;base64-signature&gt;" \
+  -d '{"uas_id":"RID-12345678"}'</pre>
+<p>The signature is an ECDSA signature over the SHA-256 hash of the JSON body, using the P-256 (secp256r1) curve.</p>
+
+<h4>WiFi Security</h4>
+<p>The configuration access point can be password-protected. Set a WiFi password in the Web UI to prevent unauthorized access to the configuration interface. The password is stored in NVS and can be up to 20 characters.</p>
+<div class="callout"><strong>&#x26a0; Note:</strong> The AP uses WPA2-PSK encryption when a password is set. Without a password, the network is open and anyone within range can access the configuration page.</div>
+</div>
+</div>
+
+<!-- 10. ANTENNA -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>10. Antenna Guide</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Choosing the Right Antenna</h4>
+<p>Antenna selection is critical for Remote ID performance. The ESP32 operates in the 2.4 GHz ISM band and the antenna must be well-matched to achieve reliable broadcast range.</p>
+
+<h5>PCB Antenna (On-Board)</h5>
+<ul>
+<li><b>Pros:</b> Low cost, no additional hardware, compact.</li>
+<li><b>Cons:</b> Vulnerable to shielding by carbon fiber frames, sensitive to placement within the drone.</li>
+<li><b>Range:</b> ~50-100 m in open air with clear line of sight.</li>
+<li><b>Best for:</b> Glass fiber, plastic, or 3D-printed frames. Open-frame builds.</li>
+</ul>
+
+<h5>External Antenna (U.FL / IPEX)</h5>
+<ul>
+<li><b>Pros:</b> Can be placed away from shielding frame, better range, replaceable.</li>
+<li><b>Cons:</b> Requires board with U.FL connector, additional cost, mounting required.</li>
+<li><b>Range:</b> ~200-500 m with a 2 dBi dipole antenna.</li>
+<li><b>Best for:</b> Carbon fiber frames, long-range applications, professional use.</li>
+</ul>
+
+<h4>Carbon Fiber Frames</h4>
+<div class="callout"><strong>&#x26a0; Critical:</strong> Carbon fiber is conductive and acts as a <b>Faraday cage</b> for 2.4 GHz signals. An internal PCB antenna placed inside a carbon fiber frame will have severely degraded range (&lt;10 m). An external antenna is <b>mandatory</b> for carbon fiber frames.</div>
+<p>Mount the external antenna so that it protrudes from the frame, ideally on a landing skid or a dedicated 3D-printed mount. Keep the antenna away from carbon fiber plates by at least 10 mm.</p>
+
+<h4>Antenna Placement Tips</h4>
+<ul>
+<li>Keep the antenna away from metal objects, batteries, and power cables.</li>
+<li>Orient the antenna vertically for omnidirectional coverage (most drone receivers are also vertical).</li>
+<li>Do not route the antenna coax cable parallel to power wires &mdash; cross them at 90&deg; if necessary.</li>
+<li>Do not coil or bundle excess antenna cable &mdash; it acts as a counterpoise and affects tuning.</li>
+<li>Use a cable with a U.FL to SMA pigtail if your antenna uses SMA connectors.</li>
+</ul>
+
+<h4>Range Optimization</h4>
+<table>
+<tr><th>Factor</th><th>Impact</th><th>Recommendation</th></tr>
+<tr><td>Antenna type</td><td>High</td><td>External 2 dBi dipole</td></tr>
+<tr><td>Frame material</td><td>High</td><td>External antenna for carbon fiber</td></tr>
+<tr><td>WiFi TX power</td><td>Medium</td><td>Set to 20 dBm (max)</td></tr>
+<tr><td>WiFi channel</td><td>Low</td><td>Use least congested channel (scan with phone)</td></tr>
+<tr><td>Receiver sensitivity</td><td>Medium</td><td>Use a dedicated ODID receiver for best results</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 11. ESP32 VARIANTS -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>11. ESP32 Variants</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Comparison Table</h4>
+<table>
+<tr><th>Feature</th><th>ESP32 (Original)</th><th>ESP32-S3</th><th>ESP32-C3</th></tr>
+<tr><td>CPU</td><td>2x Xtensa LX6 @ 240 MHz</td><td>2x Xtensa LX7 @ 240 MHz</td><td>1x RISC-V @ 160 MHz</td></tr>
+<tr><td>BLE</td><td>4.0 + 4.2</td><td>5.0 (Coded PHY S=2, S=8)</td><td>5.0 (Coded PHY S=2, S=8)</td></tr>
+<tr><td>WiFi</td><td>802.11 b/g/n</td><td>802.11 b/g/n (better RF)</td><td>802.11 b/g/n</td></tr>
+<tr><td>Flash</td><td>4-16 MB</td><td>8-16 MB</td><td>4-8 MB</td></tr>
+<tr><td>RAM</td><td>520 KB SRAM</td><td>512 KB SRAM + 2M PSRAM</td><td>400 KB SRAM</td></tr>
+<tr><td>GPIO</td><td>34</td><td>45</td><td>22</td></tr>
+<tr><td>BLE 5.0 LR</td><td>&#x274c; No</td><td>&#x2705; Yes</td><td>&#x2705; Yes</td></tr>
+<tr><td>Power consumption</td><td>~150 mA</td><td>~130 mA</td><td>~100 mA</td></tr>
+<tr><td>Price (module)</td><td>~$2-4</td><td>~$3-6</td><td>~$2-4</td></tr>
+<tr><td><b>Recommendation</b></td><td><b>Good</b></td><td><b>Best</b></td><td><b>Good</b></td></tr>
+</table>
+
+<h4>Which One to Choose?</h4>
+<ul>
+<li><b>ESP32-S3 (Recommended):</b> Best balance of features and power. BLE 5.0 Coded PHY (S=8) provides significantly longer range than BLE 4.0. The PSRAM is useful for future feature expansion. Best for production builds.</li>
+<li><b>ESP32-C3:</b> Good budget option with BLE 5.0 support. Single-core RISC-V is sufficient for the firmware's needs. Slightly lower power consumption. Good for compact builds where size matters.</li>
+<li><b>ESP32 (Original):</b> Works well but lacks BLE 5.0 Coded PHY. BLE 4.0 range is shorter. The firmware is thoroughly tested on ESP32. Good for existing hardware or hobbyist use.</li>
+</ul>
+
+<h4>Pin Compatibility</h4>
+<table>
+<tr><th>Function</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C3</th></tr>
+<tr><td>UART2 RX (default)</td><td>GPIO16</td><td>GPIO16</td><td>GPIO7</td></tr>
+<tr><td>Alternative UART RX</td><td>GPIO4, GPIO26</td><td>GPIO4, GPIO5</td><td>GPIO0, GPIO1</td></tr>
+<tr><td>Status LED</td><td>GPIO2</td><td>GPIO2</td><td>GPIO8</td></tr>
+<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td></tr>
+</table>
+<p>To use a different UART or pin configuration, modify the <code>esp_remote_id.h</code> header and rebuild.</p>
+</div>
+</div>
+
+<!-- 12. TROUBLESHOOTING -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>12. Troubleshooting</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>No GPS Fix Shown in Status</h4>
+<table>
+<tr><th>Symptom</th><th>Check</th></tr>
+<tr><td>Protocol shows "Unknown"</td><td>UART wiring incorrect, baud rate mismatch, or FC not sending data. Verify with a logic analyzer or serial terminal.</td></tr>
+<tr><td>Protocol detected but GPS invalid</td><td>The FC does not have a GPS fix. Check FC GPS status LED. Wait for more satellites.</td></tr>
+<tr><td>Intermittent GPS data</td><td>Loose wiring, electrical noise, or baud rate mismatch. Check solder joints and cable shielding.</td></tr>
+<tr><td>NMEA mode: no data</td><td>Check the 1 k&Omega; resistor on the GPS TX tap. Verify GPS module is outputting NMEA (some modules need configuration).</td></tr>
+</table>
+
+<h4>Cannot Find ESP-RID WiFi</h4>
+<ul>
+<li>Wait 10-15 seconds after powering the ESP32 for it to boot and start the AP.</li>
+<li>Check that the ESP32 is powered correctly (LED should be on if connected via status LED).</li>
+<li>If you changed the SSID previously, scan all nearby networks.</li>
+<li>Factory reset: connect via serial and erase NVS, or re-flash the firmware.</li>
+<li>If the AP starts but you can't connect, try forgetting the network and reconnecting.</li>
+</ul>
+
+<h4>No Remote ID Signal Detected</h4>
+<ul>
+<li><b>GPS fix is required</b> (unless "Broadcast without GPS" is enabled). Check the Status page.</li>
+<li>Verify that transmission modes are enabled in the Web UI (WiFi Beacon, BLE).</li>
+<li>If using a phone as a receiver, use a dedicated ODID app (e.g., Drone Scanner, OpenDroneID Viewer).</li>
+<li>WiFi Beacon requires the phone to be in range and scanning. Some phones do not passively scan WiFi beacons.</li>
+<li>BLE 4.0 is more universally detectable than BLE 5.0 LR. Enable BLE 4.0 if BLE 5.0 is not detected.</li>
+<li>Carbon fiber frame with internal antenna will have very short range. Use an external antenna.</li>
+</ul>
+
+<h4>WiFi AP Disconnects</h4>
+<ul>
+<li>The ESP32 can handle ~4-5 simultaneous WiFi clients. Too many clients may cause disconnections.</li>
+<li>Move closer to the ESP32 (within 5 m for reliable connection).</li>
+<li>Avoid interference from other 2.4 GHz devices (WiFi routers, Bluetooth, microwaves).</li>
+<li>Try a different WiFi channel (1 or 11 are usually less congested).</li>
+</ul>
+
+<h4>Build Errors</h4>
+<table>
+<tr><th>Error</th><th>Solution</th></tr>
+<tr><td><code>esp_remote_id.h: No such file or directory</code></td><td>Run <code>idf.py reconfigure</code> to generate build files. Ensure CMakeLists.txt includes the component.</td></tr>
+<tr><td><code>undefined reference to 'odid_wifi_...'</code></td><td>The opendroneid library is not linked. Check components/esp_remote_id/CMakeLists.txt for the REQUIRES directive.</td></tr>
+<tr><td><code>Python venv not found</code></td><td>Run <code>install.ps1</code> (Windows) or <code>install.sh</code> (Linux/Mac) in the ESP-IDF directory.</td></tr>
+<tr><td><code>No such file or directory: '.../python.exe'</code></td><td>Run <code>export.ps1</code> (Windows) or <code>export.sh</code> (Linux/Mac) to set up the Python environment.</td></tr>
+<tr><td><code>Failed to connect to ESP32: ...</code></td><td>Hold GPIO0 while connecting, check USB driver, reduce baud rate to 115200.</td></tr>
+</table>
+
+<h4>Protocol Detection Fails</h4>
+<ul>
+<li><b>MAVLink:</b> Ensure the FC is configured for MAVLink on the serial port. Verify baud rate matches. Try MAVLink v1 if v2 fails.</li>
+<li><b>MSP:</b> Enable MSP on the FC's serial port in the configurator. Betaflight may need <code>serialrx_provider = MSP</code>.</li>
+<li><b>NMEA:</b> GPS modules typically output at 9600 or 115200 baud. Try both. Use a serial terminal to verify the GPS is sending NMEA sentences.</li>
+</ul>
+
+<h4>Boot Loop / Continuous Restart</h4>
+<ul>
+<li>Check power supply (brownout detection can cause reboots). Use a quality USB cable or BEC.</li>
+<li>Re-flash the firmware via USB (serial flashing always works even with bad config).</li>
+<li>Erase NVS before flashing: <code>idf.py -p COM3 erase-flash</code> then re-flash.</li>
+</ul>
+
+<h4>OTA Update Fails</h4>
+<ul>
+<li>Keep the ESP32 powered via USB during OTA (battery power may drop during the erase/write cycle).</li>
+<li>Ensure the firmware <code>.bin</code> is built for the correct ESP32 target.</li>
+<li>The OTA partition must be at least as large as the firmware binary. Default partition table supports ~1.5 MB firmware.</li>
+</ul>
+</div>
+</div>
+
+<!-- 13. TECHNICAL REFERENCE -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>13. Technical Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>NVS Key Layout</h4>
+<p>All configuration is stored in NVS namespace <code>esp_rid</code>:</p>
+<table>
+<tr><th>NVS Key</th><th>Type</th><th>Parameter</th></tr>
+<tr><td><code>cfg_ver</code></td><td>uint8</td><td>Configuration version (for migration)</td></tr>
+<tr><td><code>uas_id</code></td><td>string</td><td>UAS ID (max 20 chars)</td></tr>
+<tr><td><code>id_type</code></td><td>uint8</td><td>ID type</td></tr>
+<tr><td><code>ua_type</code></td><td>uint8</td><td>UA type</td></tr>
+<tr><td><code>op_id</code></td><td>string</td><td>Operator ID</td></tr>
+<tr><td><code>uas_id2</code></td><td>string</td><td>Secondary UAS ID</td></tr>
+<tr><td><code>id_type2</code></td><td>uint8</td><td>Secondary ID type</td></tr>
+<tr><td><code>ua_type2</code></td><td>uint8</td><td>Secondary UA type</td></tr>
+<tr><td><code>tx_modes</code></td><td>uint8</td><td>Transmission mode bitmask</td></tr>
+<tr><td><code>wifi_ch</code></td><td>uint8</td><td>WiFi channel</td></tr>
+<tr><td><code>wifi_pwr</code></td><td>float</td><td>WiFi TX power (dBm)</td></tr>
+<tr><td><code>rates</code></td><td>struct</td><td>Four rate values (wifi_bcn, wifi_nan, ble4, ble5) + two power values (ble4, ble5)</td></tr>
+<tr><td><code>wifi_ap</code></td><td>struct</td><td>SSID + password</td></tr>
+<tr><td><code>serial</code></td><td>struct</td><td>Baud rate + MAVLink sysid + bcast_powerup + webserver_en</td></tr>
+<tr><td><code>system</code></td><td>struct</td><td>Lock level + options</td></tr>
+<tr><td><code>key_1</code>...<code>key_5</code></td><td>string</td><td>Public keys</td></tr>
+</table>
+
+<h4>Status JSON Schema</h4>
+<pre>{
+  "protocol":     int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
+  "gps_valid":    bool,   // true if GPS has valid fix
+  "lat":          float,  // decimal degrees
+  "lon":          float,  // decimal degrees
+  "alt":          float,  // meters MSL
+  "speed":        float,  // m/s
+  "heading":      int,    // degrees (0-360)
+  "satellites":   int,    // number of satellites
+  "fix_type":     int,    // 0=None, 2=2D, 3=3D
+  "tx_total":     int,    // total transmissions since boot
+  "tx_wifi_bcn":  int,    // WiFi beacon packets sent
+  "tx_wifi_nan":  int,    // WiFi NAN packets sent
+  "tx_ble4":      int,    // BLE 4.0 packets sent
+  "tx_ble5":      int,    // BLE 5.0 packets sent
+  "uptime_ms":    int     // milliseconds since boot
+}</pre>
+
+<h4>Config JSON Schema</h4>
+<pre>{
+  "uas_id":           string,
+  "id_type":          int,     // 1-4
+  "ua_type":          int,     // 0-15
+  "operator_id":      string,
+  "uas_id_2":         string,
+  "id_type_2":        int,     // 0-4
+  "ua_type_2":        int,     // 0-15
+  "tx_modes":         int,     // bitmask
+  "wifi_channel":     int,     // 1-13
+  "wifi_power_dbm":   float,   // 2-20
+  "wifi_bcn_rate_hz": float,   // 0-5
+  "wifi_nan_rate_hz": float,   // 0-5
+  "ble4_rate_hz":     float,   // 0-5
+  "ble4_power_dbm":   float,   // -27-18
+  "ble5_rate_hz":     float,   // 0-5
+  "ble5_power_dbm":   float,   // -27-18
+  "wifi_ssid":        string,
+  "wifi_password":    string,
+  "webserver_en":     int,     // 0/1
+  "baud_rate":        int,     // 9600-921600
+  "mavlink_sysid":    int,     // 0-254
+  "bcast_powerup":    int,     // 0/1
+  "lock_level":       int,     // 0-2
+  "options":          int,     // bitmask
+  "public_key_1":     string,
+  "public_key_2":     string,
+  "public_key_3":     string,
+  "public_key_4":     string,
+  "public_key_5":     string
+}</pre>
+
+<h4>ODID Message Structure</h4>
+<p>Each transmission (WiFi Beacon or BLE advertisement) contains an ASTM F3411-22a message pack with up to 3 ODID messages:</p>
+<ol>
+<li><b>Basic ID Message</b> (Message Type 0): UAS ID, ID type, UA type</li>
+<li><b>Location / Vector Message</b> (Message Type 1): Latitude, longitude, altitude, speed, heading, timestamp</li>
+<li><b>System Message</b> (Message Type 2): Operator ID, area count, area radius, etc.</li>
+</ol>
+<p>The messages are packed into a single payload according to the ASTM F3411-22a specification and transmitted as:</p>
+<ul>
+<li><b>WiFi Beacon:</b> 802.11 beacon frame with OUI-based IE (Element ID 221, OUI: 0xFA 0x0B 0xBC)</li>
+<li><b>BLE 4.0:</b> Advertising packet with standard ODID AD structure</li>
+<li><b>BLE 5.0:</b> Extended advertising with ODID AD structure, Coded PHY (S=8) for long range</li>
+</ul>
+</div>
+</div>
+
+<!-- 14. REGULATORY -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>14. Regulatory Information</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Standards Compliance</h4>
+<p>ESP Remote ID implements the following standards:</p>
+<ul>
+<li><b>ASTM F3411-22a</b> &mdash; Standard Specification for Remote ID and Tracking. This is the US FAA-accepted standard that also forms the basis for many international regulations.</li>
+<li><b>ASD-STAN prEN 4709-002</b> &mdash; European standard for direct Remote ID, adopted by EASA and EU member states.</li>
+</ul>
+
+<h4>FAA (United States)</h4>
+<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. ESP Remote ID helps drone operators comply with this requirement by:</p>
+<ul>
+<li>Broadcasting ASTM F3411-22a Standard Remote ID messages via WiFi Beacon and BLE</li>
+<li>Transmitting at 1 Hz (meeting the minimum requirement)</li>
+<li>Including all required data: drone ID, location, altitude, speed, operator ID</li>
+</ul>
+
+<h4>EASA (European Union)</h4>
+<p>EU Implementing Regulation 2021/664 (U-Space) and 2019/947 require Remote ID for most drone operations in the Open and Specific categories. ESP Remote ID supports compliance by broadcasting Direct Remote ID (prEN 4709-002) over WiFi and BLE.</p>
+
+<h4>Other Countries</h4>
+<p>Many countries (UK, Canada, Japan, South Korea, Australia, Brazil) are adopting Remote ID regulations based on ASTM F3411. ESP Remote ID's compliance with ASTM F3411-22a should satisfy these requirements as they come into effect.</p>
+
+<div class="callout"><strong>&#x26a0; Disclaimer:</strong> This firmware is a tool to assist with Remote ID compliance. It is your responsibility to verify that your specific configuration meets local regulations. The authors are not liable for any regulatory violations or penalties.</div>
+
+<h4>FCC / CE Compliance</h4>
+<p>ESP Remote ID operates in the 2.4 GHz ISM band. The ESP32's WiFi and BLE transmitters are certified under FCC Part 15 and CE RED when used with Espressif's reference modules. Using external antennas may affect compliance. Ensure your antenna setup complies with local radio regulations.</p>
+
+<h4>Recommended Practices</h4>
+<ul>
+<li>Set your correct UAS ID (serial number or CAA registration).</li>
+<li>Set your correct Operator ID.</li>
+<li>Keep the firmware updated for regulatory changes.</li>
+<li>Test that your Remote ID signal is receivable by standard ODID receiver apps before operational use.</li>
+<li>Register your drone with your national aviation authority if required.</li>
+</ul>
+</div>
+</div>
+
+<!-- 15. CONTRIBUTING -->
+<div class="guide-section">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>15. Contributing</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>How to Contribute</h4>
+<p>Contributions are welcome! Here are ways you can help:</p>
+<ul>
+<li><b>Report bugs:</b> Open an issue on <a href="https://github.com/valeriocomo/ESP32_DRONE_ID/issues">GitHub Issues</a></li>
+<li><b>Feature requests:</b> Open an issue or discussion with your proposal.</li>
+<li><b>Code contributions:</b> Fork the repository, create a branch, and submit a Pull Request.</li>
+<li><b>Documentation:</b> Improve the wiki, this guide, or add translations.</li>
+<li><b>Testing:</b> Test the firmware on different flight controllers and report results.</li>
+</ul>
+
+<h4>Code Style</h4>
+<ul>
+<li>C code: ESP-IDF coding style, 4-space indentation, descriptive variable names.</li>
+<li>HTML/CSS: Clean, minimal, responsive. The web UI is embedded and must be compact.</li>
+<li>No comments in code unless the logic is non-obvious.</li>
+</ul>
+
+<h4>Development Workflow</h4>
+<pre>git clone https://github.com/YOUR_USERNAME/ESP32_DRONE_ID.git
+cd ESP32_DRONE_ID
+git checkout -b my-feature-branch
+# Make changes
+idf.py build
+idf.py -p COM3 flash monitor
+# Commit and push
+git push -u origin my-feature-branch</pre>
+
+<h4>Adding a New Protocol</h4>
+<p>To add support for a new protocol:</p>
+<ol>
+<li>Create a new parser file in <code>components/esp_remote_id/src/</code></li>
+<li>Implement the parser function matching the signature <code>bool parse_xxx(uint8_t byte, rid_gps_t *gps)</code></li>
+<li>Register the parser in <code>protocol_parser.c</code> auto-detection sequence</li>
+<li>Add a new enum value to <code>rid_protocol_t</code> in <code>esp_remote_id.h</code></li>
+<li>Update the status string array in <code>web_config.c</code></li>
+<li>Test with your hardware and submit a PR</li>
+</ol>
+
+<h4>Disclaimer &amp; Acknowledgments</h4>
+<p>This is a <b>personal open-source project</b> made public for educational and research purposes. It is <b>not affiliated with, endorsed by, or derived from ArduPilot</b>. The project takes <b>inspiration</b> from the functionality of ArduPilot's ArduRemoteID system and implements a compatible Remote ID transmitter using independent code written from scratch for the ESP32 platform using ESP-IDF.</p>
+<p>The author respects all intellectual property rights. No ArduPilot source code has been copied or incorporated. The implementation follows the open ASTM F3411-22a standard and uses the independently developed <b>opendroneid-core-c</b> library (BSD-3-Clause) for ODID message packing.</p>
+<p>Technologies and protocols referenced:</p>
+<ul>
+<li><b>ArduRemoteID</b> &mdash; functional inspiration from ArduPilot's Remote ID implementation</li>
+<li><b>Open Drone ID Core C</b> &mdash; Intel's open-source ODID library (BSD-3-Clause)</li>
+<li><b>MAVLink</b> &mdash; lightweight communication protocol (MIT)</li>
+<li><b>MSP</b> &mdash; MultiWii Serial Protocol</li>
+<li><b>ESP-IDF</b> &mdash; Espressif's IoT Development Framework (Apache 2.0)</li>
+</ul>
+
+<h4>License</h4>
+<p>This project is released under the <b>GNU General Public License v3.0</b> (GPL-3.0). See the <code>LICENSE</code> file in the repository for details.</p>
+</div>
+</div>
+
+</div> <!-- end guide-col -->
+</div> <!-- end main-grid -->
+</div> <!-- end wrap -->
+
+<footer>
+ESP Remote ID v1.0.0
+<span class="sep">|</span>
+<a href="https://github.com/valeriocomo/ESP32_DRONE_ID">GitHub</a>
+<span class="sep">|</span>
+<a href="https://valeriocomo.github.io/ESP32_DRONE_ID/">Wiki</a>
+<span class="sep">|</span>
+<a href="config.html">Demo Config</a>
+</footer>
+
+<script>
+var first = document.querySelector('.guide-section');
+if (first) first.classList.add('open');
+</script>
+
+</body>
+</html>
