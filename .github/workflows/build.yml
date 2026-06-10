@@ -40,6 +40,9 @@ jobs:
           echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
           echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
           echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
+          if [ "${{ matrix.target }}" != "esp32" ]; then
+            echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
+          fi
           idf.py build
         shell: bash
 
