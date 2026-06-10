@@ -131,7 +131,7 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
     build_legacy_adv(gps, identity, g_adv_data, &len);
 
     esp_ble_gap_ext_adv_params_t ext_params = {
-        .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_NONCONN_NONSCANABLE,
+        .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED,
         .interval_min = 0x100,
         .interval_max = 0x100,
         .channel_map = ADV_CHNL_ALL,
@@ -143,8 +143,14 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
 
     uint8_t inst = 0;
     esp_ble_gap_ext_adv_set_params(inst, &ext_params);
-    esp_ble_gap_ext_adv_send_data(inst, len, g_adv_data, 0, NULL);
-    esp_ble_gap_ext_adv_start(1, &inst, 3000);
+    esp_ble_gap_config_ext_adv_data_raw(inst, len, g_adv_data);
+
+    esp_ble_gap_ext_adv_t ext_adv = {
+        .instance = inst,
+        .duration = 0,
+        .max_events = 0,
+    };
+    esp_ble_gap_ext_adv_start(1, &ext_adv);
 
     return true;
 #else
