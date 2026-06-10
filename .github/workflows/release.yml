@@ -28,7 +28,12 @@ jobs:
       - name: Set target and build
         run: |
           . /opt/esp/idf/export.sh > /dev/null 2>&1
+          git config --global --add safe.directory "$(pwd)" > /dev/null 2>&1
           idf.py set-target ${{ matrix.target }}
+          echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
+          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
+          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
+          idf.py add-dependency "mdns^*"
           idf.py build
         shell: bash
 
@@ -56,6 +61,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -98,7 +105,7 @@ jobs:
             ]
           }
           EOF
-          cd release && 7z a firmware-${{ env.VERSION }}.zip firmware/
+          cd release && zip -r firmware-${{ env.VERSION }}.zip firmware/
         shell: bash
 
       - name: Generate release notes

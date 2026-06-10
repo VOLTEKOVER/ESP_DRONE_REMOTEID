@@ -8,6 +8,7 @@ repository:
 
 dependencies:
   idf: ">=5.0"
+  mdns: "^1.4.0"
 
 tags:
   - "drone"
