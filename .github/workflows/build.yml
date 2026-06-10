@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    name: Build for ${{ matrix.target }}
+    name: ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -33,35 +33,25 @@ jobs:
           submodules: recursive
 
       - name: Setup ESP-IDF ${{ env.ESP_IDF_VERSION }}
-        uses: espressif/esp-idf-cargo-action@v1
+        uses: espressif/esp-idf-action@v1
         with:
           esp_idf_version: ${{ env.ESP_IDF_VERSION }}
 
-      - name: Set build target
-        run: idf.py set-target ${{ matrix.target }}
-        shell: bash
-
-      - name: Configure partition table for OTA
+      - name: Set target and build
         run: |
-          idf.py menuconfig -s
-          echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
+          idf.py set-target ${{ matrix.target }}
+          idf.py build
         shell: bash
 
-      - name: Build firmware
-        run: idf.py build
-        shell: bash
-
-      - name: Collect build artifacts
+      - name: Collect artifacts
         run: |
           mkdir -p artifacts/${{ matrix.target }}
           cp build/bootloader/bootloader.bin artifacts/${{ matrix.target }}/
           cp build/partition_table/partition-table.bin artifacts/${{ matrix.target }}/
-          cp build/*.bin artifacts/${{ matrix.target }}/
+          cp build/esp32-remote-id-scanner.bin artifacts/${{ matrix.target }}/
         shell: bash
 
-      - name: Upload artifacts
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.target }}

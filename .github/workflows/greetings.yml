@@ -8,6 +8,7 @@ on:
 
 jobs:
   greeting:
+    if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]' }}
     name: Welcome
     runs-on: ubuntu-latest
     permissions:
@@ -20,9 +21,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-message: >
-            👋 Thanks for opening your first issue in ESP Remote ID!
-            Please make sure to include relevant details like your ESP32 model,
-            flight controller, and the steps to reproduce the issue.
+            Thanks for opening your first issue in ESP Remote ID!
+            Please include your ESP32 model, flight controller, and steps to reproduce.
           pr-message: >
-            🎉 Thanks for your first pull request! We'll review it as soon as possible.
-            Make sure your code follows the project conventions and compiles cleanly.
+            Thanks for your first pull request! We'll review it as soon as possible.
