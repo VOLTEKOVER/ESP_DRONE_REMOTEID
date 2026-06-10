@@ -14,7 +14,6 @@ idf_component_register(
         "src/esp_remote_id.c"
     INCLUDE_DIRS
         "include"
-    PRIVATE_INCLUDE_DIRS
         "mavlink"
     REQUIRES
         esp_wifi
