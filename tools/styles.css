@@ -1,6 +1,6 @@
 /* ==================== CSS VARIABLES ==================== */
 :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-gradient: linear-gradient(135deg, #1135d8 0%, #764ba2 100%);
     --primary: #667eea;
     --secondary: #764ba2;
     --success: #11998e;

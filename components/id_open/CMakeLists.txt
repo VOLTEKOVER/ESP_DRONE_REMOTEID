@@ -6,10 +6,17 @@ idf_component_register(
         "alt_unix_time.c"
     INCLUDE_DIRS 
         "."
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../id_open"
     PUBLIC_INCLUDE_DIRS 
         "."
+    REQUIRES 
+        esp_wifi
+        bt
+        esp_event
+        nvs_flash
+        esp_system
+        freertos
+        driver
 )
 
 # Link C++ standard library
-target_link_libraries(${COMPONENT_LIB} PUBLIC stdc++)
+target_link_libraries(${COMPONENT_LIB} PUBLIC stdc++ m)

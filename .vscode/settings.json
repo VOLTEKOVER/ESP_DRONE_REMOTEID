@@ -1,23 +1,17 @@
 {
-  "idf.currentSetup": "C:\\esp\\v6.0.1\\esp-idf",
-  "idf.projectPath": "${workspaceFolder}/firmware/ESP32_DRONE_ID",
-  "idf.pythonPath": "C:\\esp\\v6.0.1\\esp-idf\\tools\\python_env\\idf5.2_py3.11_env\\Scripts\\python.exe",
   "C_Cpp.intelliSenseEngine": "default",
-  "[cpp]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
+  "idf.extensionActivationMode": "always",
+  "idf.openOcdConfigs": [
+    "board/esp32-wrover-kit-3.3v.cfg"
+  ],
+  "idf.currentSetup": "C:\\esp\\v6.0.1\\esp-idf",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32"
   },
-  "[c]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
-  },
-  "files.exclude": {
-    "**/build": true,
-    "**/sdkconfig": true,
-    "**/.clangd": true,
-    "**/__pycache__": true
-  },
-  "search.exclude": {
-    "**/build": true,
-    "**/managed_components": true,
-    "**/node_modules": true
-  }
+  "clangd.path": "C:\\Espressif\\tools\\esp-clang\\esp-20.1.1_20250829\\esp-clang\\bin\\clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=c:\\Users\\valer\\Documents\\GitHub\\ESP32_DRONE_ID\\firmware\\ESP32_DRONE_ID\\build"
+  ]
 }
