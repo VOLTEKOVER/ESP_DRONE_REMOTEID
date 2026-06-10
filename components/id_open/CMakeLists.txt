@@ -6,8 +6,6 @@ idf_component_register(
         "alt_unix_time.c"
     INCLUDE_DIRS 
         "."
-    PUBLIC_INCLUDE_DIRS 
-        "."
     REQUIRES 
         esp_wifi
         bt
