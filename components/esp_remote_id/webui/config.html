@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ESP Remote ID [BETA] — Configuration</title>
 <style>
-:root{--bg:#fafafa;--card-bg:#fff;--card-border:#e0e0e0;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.04);--accent:#222}
+:root{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
 @media(prefers-color-scheme:dark){
 :root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 }
+[data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);padding:20px}
 .logo-img{height:50px;flex-shrink:0}
-@media(prefers-color-scheme:dark){.logo-img{filter:invert(1)}}
+@media(prefers-color-scheme:dark){.logo-img{filter:invert(1)}}[data-theme="dark"] .logo-img{filter:invert(1)}
+@media(prefers-color-scheme:dark){.tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}}[data-theme="dark"] .tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}
+@media(prefers-color-scheme:dark){.tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}}[data-theme="dark"] .tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}
+@media(prefers-color-scheme:dark){.tag-na{background:#1e1e1e;color:#666;border-color:#333}}[data-theme="dark"] .tag-na{background:#1e1e1e;color:#666;border-color:#333}
 .hdr{background:var(--card-bg);border-radius:12px;margin:0 auto 20px;max-width:1100px;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
 .hdr .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt)}
 .hdr .brand h1{font-size:1.15em;font-weight:600;letter-spacing:-.3px}
@@ -27,6 +31,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .btn-save-all{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;letter-spacing:.3px;transition:background .2s;white-space:nowrap}
 .btn-save-all:hover{opacity:.8}
 .btn-save-all.loading{opacity:.6;pointer-events:none}
+[data-theme="dark"] .btn-save-all{background:#333;color:#fff}
 @media(max-width:600px){.hdr-actions .btn-save-all{font-size:.7em;padding:5px 10px}}
 .row{display:flex;gap:20px;max-width:1100px;margin:0 auto;flex-wrap:wrap}
 .card{background:var(--card-bg);border-radius:12px;padding:24px;flex:1;min-width:340px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
@@ -43,9 +48,10 @@ input.error+.errmsg,select.error+.errmsg{display:block}
 .btn:hover{opacity:.85}
 .btn:active{transform:scale(.98)}
 .btn.loading{opacity:.7;pointer-events:none}
+[data-theme="dark"] .btn{background:#333;color:#fff}
 .btn-sm{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:6px 14px;border-radius:5px;cursor:pointer;font-size:.78em;margin-top:10px;width:auto;transition:background .2s}
 .btn-sm:hover{background:var(--card-border)}
-.btn-danger{background:transparent;color:#c00;border:1px solid #ecc;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.82em;margin-top:12px;width:100%;transition:background .2s;text-align:center}
+.btn-danger{background:transparent;color:#c00;border:1px solid rgba(198,40,40,.2);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.82em;margin-top:12px;width:100%;transition:background .2s;text-align:center}
 .btn-danger:hover{background:rgba(198,40,40,.08)}
 .chk{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .chk label{display:inline-flex;align-items:center;gap:6px;font-size:.82em;width:auto;margin:0;cursor:pointer;background:var(--hover);padding:6px 12px;border-radius:5px;border:1px solid var(--line);text-transform:none;color:var(--txt-sec);transition:background .2s}
@@ -75,10 +81,12 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .hdr-btn.github:hover{color:var(--txt);background:transparent}
 .hdr-btn.danger{color:#c62828}
 .hdr-btn.danger:hover{background:#fbe9e7;border-color:#ef9a9a}
+[data-theme="dark"] .hdr-btn.danger:hover{background:#2d1515;border-color:#c66}
 code{background:var(--hover);padding:2px 6px;border-radius:3px;font-size:.9em;color:var(--txt)}
 .tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.65em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
 .tag-stable{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
 .tag-beta{background:#fff8e1;color:#f57f17;border:1px solid #ffe082}
+.tag-na{background:#f5f5f5;color:#999;border:1px solid #ddd}
 .tag-warning{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a}
 fieldset{border:1px solid var(--line);border-radius:6px;padding:14px;margin:10px 0;position:relative}
 fieldset legend{font-size:.74em;color:var(--txt-muted);padding:0 6px;font-weight:500}
@@ -99,7 +107,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .modal-actions .btn-danger{background:#c62828;color:#fff}
 .modal-actions .btn-danger:hover{background:#e53935}
 .disclaimer{text-align:center;margin-top:20px;padding:14px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:.74em;color:#b76e00;line-height:1.6;max-width:1100px;margin-left:auto;margin-right:auto}
-@media(prefers-color-scheme:dark){.disclaimer{background:#2a2000;border-color:#665000;color:#e0b000}}
+@media(prefers-color-scheme:dark){.disclaimer{background:#2a2000;border-color:#665000;color:#e0b000}}[data-theme="dark"] .disclaimer{background:#2a2000;border-color:#665000;color:#e0b000}
 .disclaimer strong{color:#c62828}
 .toast-overlay{display:none;position:fixed;inset:0;z-index:9998}
 .toast-overlay.show{display:block}
@@ -117,12 +125,12 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .toast{position:relative;overflow:hidden}
 
 /* ---------- Terminal ---------- */
-.term-container{border:1px solid #333;border-radius:8px;overflow:hidden;background:#1e1e1e;margin-top:10px}
-.term-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#252525;color:#aaa;font-size:.78em}
-.term-title{font-weight:500;color:#ccc}
+.term-container{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card-bg);margin-top:10px}
+.term-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--hover);color:var(--txt-sec);font-size:.78em}
+.term-title{font-weight:500;color:var(--txt)}
 .term-toolbar{display:flex;gap:4px}
-.term-toolbar .btn-sm{background:none;border:1px solid #444;color:#999;padding:2px 10px;font-size:.75em;margin:0}
-.term-toolbar .btn-sm:hover{background:#333;color:#eee}
+.term-toolbar .btn-sm{background:none;border:1px solid var(--line);color:var(--txt-muted);padding:2px 10px;font-size:.75em;margin:0}
+.term-toolbar .btn-sm:hover{background:var(--hover);color:var(--txt)}
 .term-output{height:260px;overflow-y:auto;padding:8px 12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.75em;line-height:1.5;background:#1e1e1e;color:#ccc}
 .term-output .line{padding:1px 0;white-space:pre-wrap;word-break:break-all}
 .term-output .line.lv-I{color:#8bc34a}
@@ -132,9 +140,18 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .term-output .line.lv-V{color:#aaa}
 .term-output .line .ts{color:#666;margin-right:8px}
 .term-placeholder{color:#555;font-style:italic;padding:20px 0;text-align:center}
-.term-input-row{display:flex;gap:4px;padding:6px 8px;background:#252525;border-top:1px solid #333}
-.term-input-row input{flex:1;background:#1a1a1a;border:1px solid #444;color:#ddd;padding:7px 10px;border-radius:4px;font-size:.78em;font-family:inherit;outline:0}
-.term-input-row input:focus{border-color:#666}
+.term-input-row{display:flex;gap:4px;padding:6px 8px;background:var(--hover);border-top:1px solid var(--line)}
+.term-input-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--txt);padding:7px 10px;border-radius:4px;font-size:.78em;font-family:inherit;outline:0}
+.term-input-row input:focus{border-color:var(--accent)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#f5f5f5}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#aaa}
+[data-theme="dark"] ::-webkit-scrollbar-track{background:#1e1e1e}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#444}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:#555}
+[data-theme="dark"] .term-output::-webkit-scrollbar-track{background:#252525}
 .term-input-row input::placeholder{color:#555}
 
 /* ---------- View modes ---------- */
@@ -220,6 +237,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <button class="hdr-btn" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCfg(this)">
 <a href="https://github.com/valeriocomo/ESP32_DRONE_ID" target="_blank" class="hdr-btn github">GitHub</a>
+<button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" style="font-size:.9em;padding:4px 8px" title="Toggle dark mode">&#x263e;</button>
 </div>
 </div>
 </div>
@@ -352,11 +370,11 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <label>Enabled Channels</label>
 <div class="chk">
     <label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
-<label style="opacity:.6"><input type="checkbox" id="tx_wifi_nan"> WiFi NAN <span class="tag tag-beta">Beta</span></label>
+<label style="opacity:.4"><input type="checkbox" id="tx_wifi_nan" disabled> WiFi NAN <span class="tag tag-na">N/A</span></label>
 <label><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
 <label style="opacity:.6"><input type="checkbox" id="tx_ble5"> BLE 5.0 LR <span class="tag tag-beta">Beta</span></label>
 </div>
-<div class="hint">WiFi NAN and BLE 5.0 LR are experimental. BLE 5.0 requires ESP32-S3 or ESP32-C3.</div>
+<div class="hint">BLE 5.0 LR is experimental. Requires ESP32-S3 or ESP32-C3. WiFi NAN is not yet implemented.</div>
 <div id="tx-mode-hint" class="hint" style="color:#2e7d32;margin-top:4px"></div>
 
 <div class="grid2">
@@ -378,7 +396,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 
 <div class="grid2">
 <div><label>WiFi Beacon Rate (Hz)</label><input id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
-<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
+<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0" disabled></div>
 </div>
 <div class="grid2">
 <div><label>BLE 4.0 Rate (Hz)</label><input id="bt4_rate" type="number" min="0" max="5" step=".1" value="1"></div>
@@ -1081,6 +1099,24 @@ if(savedView && savedView!=='dashboard'){
     }).catch(function(){});
   },2000);
   setTimeout(function(){clearInterval(iv);if(currentView==='dashboard'){setView('advanced')}},6000);
+}
+
+/* ---------- Dark mode toggle ---------- */
+(function(){
+  var t=localStorage.getItem('rid_theme');
+  if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){
+    document.documentElement.setAttribute('data-theme','dark');
+  }
+})();
+function toggleDark(){
+  var d=document.documentElement;
+  if(d.getAttribute('data-theme')==='dark'){
+    d.removeAttribute('data-theme');
+    localStorage.setItem('rid_theme','light');
+  }else{
+    d.setAttribute('data-theme','dark');
+    localStorage.setItem('rid_theme','dark');
+  }
 }
 </script>
 </body>

@@ -23,7 +23,7 @@ html{scroll-behavior:smooth}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#fff;color:#333;line-height:1.6}
 .wrap{max-width:1260px;margin:0 auto;padding:0 24px}
 .logo-img{height:56px;flex-shrink:0}
-header{background:#fafafa;border-bottom:1px solid #e8e8e8;padding:14px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+header{background:#f2f2f2;border-bottom:1px solid #ddd;padding:14px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
 header .wrap{display:flex;align-items:center;justify-content:space-between}
 header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#000}
 header nav{display:flex;gap:6px;flex-wrap:wrap}
@@ -33,7 +33,7 @@ header nav a:hover{background:#eee;color:#000}
 .logo-hero{width:72px;height:72px;margin:0 auto 16px}
 .hero h1{font-size:2.4em;font-weight:700;color:#000;letter-spacing:-1px;line-height:1.15}
 .hero p{color:#888;font-size:1.05em;max-width:640px;margin:10px auto 0}
-.hero .version-bar{font-size:.8em;color:#aaa;margin-top:14px;background:#fafafa;border:1px solid #eee;border-radius:6px;padding:6px 16px;display:inline-block}
+.hero .version-bar{font-size:.8em;color:#aaa;margin-top:14px;background:#f2f2f2;border:1px solid #e0e0e0;border-radius:6px;padding:6px 16px;display:inline-block}
 .hero .version-bar a{color:#888}
 .hero .gh-btns{margin-top:18px;display:flex;gap:10px;justify-content:center}
 .main-grid{display:grid;grid-template-columns:380px 1fr;gap:36px;padding:10px 0 50px;align-items:start}
@@ -83,7 +83,7 @@ header nav a:hover{background:#eee;color:#000}
 }
 .build-col h2{font-size:1.2em;font-weight:700;color:#000;margin-bottom:4px;letter-spacing:-.3px}
 .build-col > p{color:#888;font-size:.85em;margin-bottom:20px}
-.install-box{background:#fafafa;border:2px solid #e0e0e0;border-radius:10px;padding:28px 24px;text-align:center}
+.install-box{background:#f2f2f2;border:2px solid #d4d4d4;border-radius:10px;padding:28px 24px;text-align:center}
 .logo-mini{width:40px;height:40px;margin:0 auto}
 .install-box h3{font-size:1.1em;color:#000;margin:8px 0 2px}
 .install-box .sub{color:#999;font-size:.82em;margin-bottom:16px}
@@ -91,7 +91,7 @@ esp-web-install-button{display:block;margin:0 auto;max-width:340px}
 esp-web-install-button::part(button){background:#000;color:#fff;border:none;padding:13px 26px;border-radius:7px;font-size:.95em;cursor:pointer;width:100%;font-weight:600;transition:background .15s}
 esp-web-install-button::part(button):hover{background:#333}
 esp-web-install-button::part(unsupported){background:#f5f5f5;color:#999;padding:13px 18px;border-radius:7px;font-size:.82em}
-.steps-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px 20px;margin-top:16px}
+.steps-box{background:#f2f2f2;border:1px solid #e0e0e0;border-radius:8px;padding:16px 20px;margin-top:16px}
 .steps-box h4{font-size:.82em;color:#222;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
 .steps-box ol{counter-reset:s;list-style:none;padding:0}
 .steps-box li{counter-increment:s;padding:7px 0 7px 32px;position:relative;font-size:.82em;color:#555;border-bottom:1px solid #f0f0f0}
@@ -101,9 +101,9 @@ esp-web-install-button::part(unsupported){background:#f5f5f5;color:#999;padding:
 .fw-info a{color:#888}
 /* ------------------ GUIDE (right column) ------------------ */
 .guide-col h2{font-size:1.2em;font-weight:700;color:#000;margin-bottom:14px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
-.guide-section{border:1px solid #e8e8e8;border-radius:8px;margin-bottom:8px;overflow:hidden}
-.guide-section .gs-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#fafafa;transition:background .15s;user-select:none}
-.guide-section .gs-header:hover{background:#f0f0f0}
+.guide-section{border:1px solid #ddd;border-radius:8px;margin-bottom:8px;overflow:hidden}
+.guide-section .gs-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#f2f2f2;transition:background .15s;user-select:none}
+.guide-section .gs-header:hover{background:#e8e8e8}
 .guide-section .gs-header h3{font-size:.85em;font-weight:600;color:#222;display:flex;align-items:center;gap:7px;line-height:1.3}
 .guide-section .gs-header .arrow{color:#bbb;font-size:.7em;transition:transform .2s;flex-shrink:0}
 .guide-section.open .gs-header .arrow{transform:rotate(180deg)}
@@ -131,7 +131,7 @@ esp-web-install-button::part(unsupported){background:#f5f5f5;color:#999;padding:
 .gs-body .tag-blue{background:#e8f0fe;color:#1a56db}
 .gs-body .tag-green{background:#e6f7e6;color:#1a7d2e}
 .gs-body .tag-red{background:#fde8e8;color:#c62828}
-footer{text-align:center;padding:28px 24px;border-top:1px solid #eee;color:#aaa;font-size:.76em}
+footer{text-align:center;padding:28px 24px;border-top:1px solid #ddd;color:#aaa;font-size:.76em}
 footer a{color:#888;text-decoration:none}
 footer a:hover{color:#222;text-decoration:underline}
 footer .sep{color:#ddd;margin:0 8px}
@@ -145,7 +145,7 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 .guide-diagram svg{width:100%;height:auto;max-width:620px}
 .guide-diagram .diag-cap{text-align:center;font-size:.74em;color:#999;margin-top:6px}
 .guide-search{margin-bottom:14px;position:relative}
-.guide-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid #e0e0e0;border-radius:7px;font-size:.85em;outline:0;background:#fafafa;transition:border .2s}
+.guide-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid #d4d4d4;border-radius:7px;font-size:.85em;outline:0;background:#f2f2f2;transition:border .2s}
 .guide-search input:focus{border-color:#222;background:#fff}
 .guide-search .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#bbb;font-size:.85em}
 .guide-section.hidden{display:none}
@@ -205,6 +205,46 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 [data-theme="dark"] #reading-progress{background:linear-gradient(90deg,#666,#888)}
 [data-theme="dark"] .copy-btn{background:#252525;border-color:#333;color:#888}
 [data-theme="dark"] .copy-btn:hover{background:#333}
+
+/* ---------- RELEASE BAR ---------- */
+.release-bar{padding:0 0 20px}
+.rl-wrap{background:#f2f2f2;border:1px solid #e0e0e0;border-radius:10px;padding:22px 28px 18px;position:relative}
+[data-theme="dark"] .rl-wrap{background:#1e1e1e;border-color:#2a2a2a}
+.rl-timeline{position:relative;height:72px;margin:0 8px}
+.rl-track{position:absolute;top:18px;left:8px;right:8px;height:4px;background:#e8e8e8;border-radius:2px;z-index:0}
+[data-theme="dark"] .rl-track{background:#2a2a2a}
+.rl-progress{height:100%;background:linear-gradient(90deg,#555,#222);border-radius:2px;transition:width .5s ease}
+[data-theme="dark"] .rl-progress{background:linear-gradient(90deg,#666,#888)}
+.rl-milestone{position:absolute;top:11px;transform:translateX(-50%);z-index:1;text-align:center}
+.rl-dot{width:14px;height:14px;border-radius:50%;background:#e0e0e0;border:2px solid #ccc;margin:0 auto 4px;position:relative;z-index:2;box-sizing:border-box}
+.rl-milestone.active .rl-dot{background:#222;border-color:#222;box-shadow:0 0 0 3px rgba(0,0,0,.12)}
+[data-theme="dark"] .rl-milestone.active .rl-dot{background:#888;border-color:#888;box-shadow:0 0 0 3px rgba(255,255,255,.1)}
+.rl-milestone.future .rl-dot{background:#fff;border-color:#ddd;border-style:dashed}
+.rl-ver{font-size:.72em;font-weight:600;color:#222;white-space:nowrap}
+.rl-label{font-size:.62em;color:#888;margin-top:1px}
+.rl-date{font-size:.55em;color:#aaa;margin-top:1px}
+.rl-milestone.active .rl-ver{color:#000}
+[data-theme="dark"] .rl-ver{color:#ccc}
+[data-theme="dark"] .rl-milestone.active .rl-ver{color:#fff}
+[data-theme="dark"] .rl-date{color:#666}
+.rl-changelog{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px;padding-top:14px;border-top:1px solid #eee;align-items:center}
+[data-theme="dark"] .rl-changelog{border-color:#2a2a2a}
+.rl-cl-entry{font-size:.74em;color:#555;display:flex;align-items:center;gap:5px;padding:2px 0;width:100%}
+@media(min-width:700px){.rl-cl-entry{width:48%}}
+.rl-cl-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.68em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;flex-shrink:0}
+.rl-cl-tag.rl-feat{background:#e8f0fe;color:#1a56db}
+.rl-cl-tag.rl-fix{background:#e6f7e6;color:#1a7d2e}
+.rl-cl-tag.rl-chore{background:#f5f5f5;color:#888}
+[data-theme="dark"] .rl-cl-tag.rl-feat{background:#152240;color:#6a8fc9}
+[data-theme="dark"] .rl-cl-tag.rl-fix{background:#152d15;color:#5a9e5a}
+[data-theme="dark"] .rl-cl-tag.rl-chore{background:#252525;color:#999}
+[data-theme="dark"] .rl-cl-entry{color:#aaa}
+.rl-cl-more{font-size:.72em;padding-top:4px;width:100%}
+.rl-cl-more a{color:#888;text-decoration:none}
+.rl-cl-more a:hover{color:#222;text-decoration:underline}
+[data-theme="dark"] .rl-cl-more a{color:#777}
+[data-theme="dark"] .rl-cl-more a:hover{color:#ccc}
+@media(max-width:600px){.rl-timeline{height:62px;margin:0 4px}.rl-wrap{padding:16px 14px 14px}.rl-ver{font-size:.64em}.rl-label{font-size:.55em}.rl-date{font-size:.5em}.rl-dot{width:10px;height:10px}.rl-milestone .rl-dot{margin-bottom:2px}}
 
 /* ---------- ANCHOR LINKS ---------- */
 .gs-body .anchor-link{opacity:0;text-decoration:none;color:#ccc;font-size:.85em;margin-left:4px;transition:opacity .15s}
@@ -276,6 +316,68 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <div class="gh-btns">
   <a class="github-button" href="https://github.com/valeriocomo/ESP32_DRONE_ID" data-show-count="true" data-size="large" aria-label="Star valeriocomo/ESP32_DRONE_ID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/valeriocomo/ESP32_DRONE_ID/fork" data-show-count="true" data-size="large" aria-label="Fork valeriocomo/ESP32_DRONE_ID on GitHub">Fork</a>
+</div>
+</div>
+
+<!-- RELEASE BAR -->
+<div class="release-bar">
+<div class="rl-wrap">
+<div class="rl-timeline">
+<div class="rl-milestone" style="left:10%">
+<div class="rl-dot"></div>
+<div class="rl-ver">v0.5</div>
+<div class="rl-label">Alpha</div>
+<div class="rl-date">Jan 2026</div>
+</div>
+<div class="rl-milestone" style="left:30%">
+<div class="rl-dot"></div>
+<div class="rl-ver">v0.9</div>
+<div class="rl-label">Beta RC</div>
+<div class="rl-date">Mar 2026</div>
+</div>
+<div class="rl-milestone active" style="left:50%">
+<div class="rl-dot"></div>
+<div class="rl-ver">v1.0.0-beta</div>
+<div class="rl-label">Current</div>
+<div class="rl-date">Apr 2026</div>
+</div>
+<div class="rl-milestone future" style="left:72%">
+<div class="rl-dot"></div>
+<div class="rl-ver">v1.0.0</div>
+<div class="rl-label">Stable</div>
+<div class="rl-date">TBD</div>
+</div>
+<div class="rl-milestone future" style="left:90%">
+<div class="rl-dot"></div>
+<div class="rl-ver">v1.1</div>
+<div class="rl-label">Future</div>
+<div class="rl-date">TBD</div>
+</div>
+</div>
+<div class="rl-track"><div class="rl-progress" style="width:50%"></div></div>
+</div>
+<div class="rl-changelog">
+<div class="rl-cl-entry">
+<span class="rl-cl-tag rl-feat">feat</span>
+<span>BLE 5.0 Coded PHY support (ESP32-S3/C3)</span>
+</div>
+<div class="rl-cl-entry">
+<span class="rl-cl-tag rl-feat">feat</span>
+<span>Automatic protocol detection (MAVLink/MSP/NMEA)</span>
+</div>
+<div class="rl-cl-entry">
+<span class="rl-cl-tag rl-feat">feat</span>
+<span>Web-based configurator with real-time telemetry dashboard</span>
+</div>
+<div class="rl-cl-entry">
+<span class="rl-cl-tag rl-fix">fix</span>
+<span>GPS parsing stability across all input protocols</span>
+</div>
+<div class="rl-cl-entry">
+<span class="rl-cl-tag rl-chore">chore</span>
+<span>CI/CD pipeline with ccache, automated release, GitHub Pages deploy</span>
+</div>
+<div class="rl-cl-more"><a href="https://github.com/valeriocomo/ESP32_DRONE_ID/releases">All releases &rarr;</a></div>
 </div>
 </div>
 
@@ -1581,6 +1683,36 @@ cat public.pem</pre>
 <li>Use a dedicated Remote ID receiver app to verify your broadcast before each flight session.</li>
 <li>Keep records of your UAS ID and operator registration for inspection if requested.</li>
 </ul>
+
+<h4>Tested Configurations</h4>
+<p>The following hardware and protocol combinations have been verified by the community. Results are reported by users and subject to change with firmware updates.</p>
+<table>
+<tr><th>Flight Controller</th><th>Protocol</th><th>ESP32 Board</th><th>Status</th><th>Reported By</th></tr>
+<tr><td>Pixhawk (PX4)</td><td>MAVLink</td><td>ESP32 DevKitC</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>Pixhawk (ArduPilot)</td><td>MAVLink</td><td>ESP32 DevKitC</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>Matek F405-STD</td><td>MSP</td><td>ESP32 DevKitC</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>Matek F765-Wing</td><td>MAVLink</td><td>ESP32-S3</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>BN-880 GPS (direct tap)</td><td>NMEA</td><td>ESP32 DevKitC</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>BN-220 GPS (direct tap)</td><td>NMEA</td><td>ESP32-C3</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+<tr><td>Betaflight F4</td><td>MSP</td><td>ESP32 DevKitC</td><td><span class="tag tag-blue">Reported</span></td><td>Community</td></tr>
+<tr><td>iNav F7</td><td>MSP</td><td>ESP32-S3</td><td><span class="tag tag-blue">Reported</span></td><td>Community</td></tr>
+<tr><td>Holybro Kakute F7</td><td>MAVLink</td><td>ESP32 DevKitC</td><td><span class="tag tag-blue">Reported</span></td><td>Community</td></tr>
+<tr><td>Standard GPS module</td><td>NMEA</td><td>ESP32 DevKitC</td><td><span class="tag tag-green">Verified</span></td><td>Developer</td></tr>
+</table>
+<p><span class="tag tag-green">Verified</span> = tested by the project developer &mdash; <span class="tag tag-blue">Reported</span> = reported working by community users.</p>
+<p>If you have tested a configuration not listed here, please <a href="https://github.com/valeriocomo/ESP32_DRONE_ID/issues">open an issue</a> or submit a PR to add it.</p>
+
+<h4>Protocol Maturity</h4>
+<table>
+<tr><th>Protocol</th><th>Status</th><th>Notes</th></tr>
+<tr><td>WiFi Beacon</td><td><span class="tag tag-green">Stable</span></td><td>Fully implemented and tested. The primary broadcast method. Enabled by default.</td></tr>
+<tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising. Works on all ESP32 variants. Enabled by default.</td></tr>
+<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-red">Beta</span></td><td>Requires ESP32-S3 or ESP32-C3. Disabled by default. Longer range, needs real-world validation.</td></tr>
+<tr><td>WiFi NAN</td><td><span class="tag tag-blue">Planned</span></td><td>ASTM F3411-22a mentions NAN as optional. Implementation started but transmission path is incomplete. Not available for use.</td></tr>
+<tr><td>MAVLink (input)</td><td><span class="tag tag-green">Stable</span></td><td>v1 and v2 protocol support. Used with ArduPilot / PX4 flight controllers.</td></tr>
+<tr><td>MSP (input)</td><td><span class="tag tag-green">Stable</span></td><td>MSP v1. Used with Betaflight / iNAV flight controllers.</td></tr>
+<tr><td>NMEA 0183 (input)</td><td><span class="tag tag-green">Stable</span></td><td>Works with any standard GPS module. Requires 1k&Omega; resistor tap.</td></tr>
+</table>
 </div>
 </div>
 
