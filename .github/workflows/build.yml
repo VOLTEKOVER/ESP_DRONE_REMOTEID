@@ -111,6 +111,9 @@ jobs:
           ls -la docs/firmware/*/
         shell: bash
 
+      - name: Copy images into docs
+        run: cp -r images docs/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
