@@ -1,5 +1,3 @@
-# ESP Remote ID [BETA]
-
 <p align="center">
   <img src="images/logo%20con%20scritta.svg" alt="ESP Remote ID" width="400">
 </p>
