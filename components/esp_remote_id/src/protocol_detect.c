@@ -58,6 +58,24 @@ rid_protocol_t protocol_detect_auto(void)
     return RID_PROTOCOL_NMEA;
 }
 
+void protocol_detect_reinit(uint32_t baud)
+{
+    ESP_LOGI(TAG, "Reconfiguring UART to %lu baud", (unsigned long)baud);
+    uart_driver_delete(UART_NUM_1);
+    uart_config_t uart_cfg = {
+        .baud_rate = (int)baud,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+    uart_param_config(UART_NUM_1, &uart_cfg);
+    uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_driver_install(UART_NUM_1, PROTO_BUF_SIZE, 0, 0, NULL, 0);
+    ESP_LOGI(TAG, "UART reconfigured to %lu baud", (unsigned long)baud);
+}
+
 void protocol_detect_set_fixed(rid_protocol_t proto)
 {
     g_fixed_proto = proto;

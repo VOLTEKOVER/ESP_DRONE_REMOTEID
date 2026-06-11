@@ -30,7 +30,8 @@ dist/
 *.bootloader
 *.partition-table
 
-# Configuration files (optional build artifacts)
+# Configuration files (optional build artifacts; sdkconfig is auto-generated)
+sdkconfig
 sdkconfig.old
 sdkconfig.rename
 

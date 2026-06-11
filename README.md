@@ -58,8 +58,11 @@ idf.py build flash monitor
 ```
 ESP32_DRONE_ID/
 ├── main/                    # Entry point
-├── components/esp_remote_id/# Core component
-├── docs/                    # GitHub Pages site
+├── components/esp_remote_id/# Core component (protocol detect, web UI, config)
+│   └── webui/               # Embedded web interface (config.html)
+├── docs/                    # GitHub Pages site (docs, demo, install)
+│   └── config(demo).html    # Standalone config simulator
+├── images/                  # Logo assets (libellula/dragonfly SVG)
 └── .github/workflows/      # CI/CD
 ```
 

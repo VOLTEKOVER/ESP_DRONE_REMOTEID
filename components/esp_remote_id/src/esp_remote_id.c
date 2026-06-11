@@ -87,8 +87,12 @@ void esp_rid_init(void)
 
 void esp_rid_set_config(const rid_config_t *config)
 {
+    uint32_t old_baud = g_config.baud_rate;
     memcpy(&g_config, config, sizeof(rid_config_t));
     nvs_storage_save(&g_config);
+    if (g_config.baud_rate != old_baud && g_config.baud_rate > 0) {
+        protocol_detect_reinit(g_config.baud_rate);
+    }
 }
 
 void esp_rid_get_config(rid_config_t *config)
@@ -133,10 +137,24 @@ static void update_transmissions(void)
     }
 }
 
+static const char *proto_name(rid_protocol_t p)
+{
+    switch (p) {
+        case RID_PROTOCOL_UNKNOWN: return "UNKNOWN";
+        case RID_PROTOCOL_MAVLINK: return "MAVLink";
+        case RID_PROTOCOL_MSP:     return "MSP";
+        case RID_PROTOCOL_NMEA:   return "NMEA";
+        case RID_PROTOCOL_NONE:   return "NONE";
+        case RID_PROTOCOL_AUTO:   return "AUTO";
+        default: return "?";
+    }
+}
+
 static void rid_task(void *arg)
 {
     ESP_LOGI(TAG, "ESP Remote ID task started");
     g_state.active_protocol = RID_PROTOCOL_UNKNOWN;
+    uint32_t log_cycle = 0;
 
     while (g_running) {
         rid_gps_data_t gps_data;
@@ -176,6 +194,15 @@ static void rid_task(void *arg)
             g_state.identity.ua_type = g_config.ua_type;
 
             update_transmissions();
+        }
+
+        log_cycle++;
+        if (log_cycle % 100 == 0) {
+            ESP_LOGI(TAG, "proto=%s gps=%s fix=%d lat=%.4f lon=%.4f tx=%lu",
+                proto_name(g_state.active_protocol),
+                g_state.gps_valid ? "ok" : "no",
+                g_state.gps.fix_type, g_state.gps.latitude, g_state.gps.longitude,
+                (unsigned long)g_state.transmissions_count);
         }
 
         vTaskDelay(pdMS_TO_TICKS(100));

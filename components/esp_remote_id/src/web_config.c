@@ -1,14 +1,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_wifi.h"
 #include "esp_ota_ops.h"
 #include "esp_app_format.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "freertos/task.h"
 #include "web_config.h"
 #include "nvs_storage.h"
 #include "esp_remote_id.h"
+#include "protocol_detect.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 2048
@@ -19,6 +24,62 @@ extern const char config_html_end[] asm("_binary_config_html_end");
 #define config_html_size ((size_t)(config_html_end - config_html_start))
 
 static httpd_handle_t g_server = NULL;
+
+/* ---------- Log ring buffer ---------- */
+#define LOG_RING_MAX 64
+#define LOG_MSG_MAX 240
+
+typedef struct {
+    uint32_t time_ms;
+    char level;
+    char msg[LOG_MSG_MAX];
+} log_entry_t;
+
+static log_entry_t s_log_ring[LOG_RING_MAX];
+static int s_log_head = 0;
+static int s_log_count = 0;
+static SemaphoreHandle_t s_log_lock = NULL;
+static int (*s_orig_vprintf)(const char *, va_list) = NULL;
+
+static void log_push(char level, const char *msg)
+{
+    if (!s_log_lock) return;
+    if (xSemaphoreTake(s_log_lock, pdMS_TO_TICKS(10)) == pdTRUE) {
+        int i = (s_log_head + s_log_count) % LOG_RING_MAX;
+        s_log_ring[i].time_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+        s_log_ring[i].level = level;
+        strncpy(s_log_ring[i].msg, msg, LOG_MSG_MAX - 1);
+        s_log_ring[i].msg[LOG_MSG_MAX - 1] = '\0';
+        if (s_log_count < LOG_RING_MAX) s_log_count++;
+        else s_log_head = (s_log_head + 1) % LOG_RING_MAX;
+        xSemaphoreGive(s_log_lock);
+    }
+}
+
+static int log_vprintf(const char *fmt, va_list args)
+{
+    va_list copy;
+    va_copy(copy, args);
+    int ret = 0;
+    if (s_orig_vprintf) ret = s_orig_vprintf(fmt, args);
+    char buf[LOG_MSG_MAX];
+    int n = vsnprintf(buf, sizeof(buf), fmt, copy);
+    va_end(copy);
+    if (n > 0) {
+        char lv = 'I';
+        if (buf[0] == 'E' || buf[0] == 'W' || buf[0] == 'I' || buf[0] == 'D' || buf[0] == 'V') {
+            lv = buf[0];
+        }
+        log_push(lv, buf);
+    }
+    return ret;
+}
+
+static void log_init(void)
+{
+    s_log_lock = xSemaphoreCreateMutex();
+    s_orig_vprintf = esp_log_set_vprintf(log_vprintf);
+}
 
 static char *json_str(const char *json, const char *key)
 {
@@ -72,6 +133,11 @@ static void apply_json(rid_config_t *cfg, const char *json)
     iv = json_int(json, "id_type_2"); if (iv > 0) cfg->id_type_2 = (uint8_t)iv;
     iv = json_int(json, "ua_type_2"); if (iv > 0) cfg->ua_type_2 = (uint8_t)iv;
 
+    if (strstr(json, "\"protocol\"")) {
+        int p = json_int(json, "protocol");
+        if (p >= 1 && p <= 4) cfg->protocol = (rid_protocol_t)p;
+        else cfg->protocol = RID_PROTOCOL_AUTO;
+    }
     iv = json_int(json, "tx_modes"); cfg->tx_modes = (uint8_t)iv;
     iv = json_int(json, "wifi_channel"); if (iv >= 1 && iv <= 13) cfg->wifi_channel = (uint8_t)iv;
     iv = json_int(json, "webserver_en"); cfg->webserver_en = (uint8_t)iv;
@@ -104,6 +170,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
 {
     snprintf(buf, sz,
         "{"
+        "\"protocol\":%u,"
         "\"uas_id\":\"%s\",\"id_type\":%u,\"ua_type\":%u,\"operator_id\":\"%s\","
         "\"uas_id_2\":\"%s\",\"id_type_2\":%u,\"ua_type_2\":%u,"
         "\"tx_modes\":%u,\"wifi_channel\":%u,\"wifi_power_dbm\":%.1f,"
@@ -116,6 +183,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         "\"public_key_1\":\"%s\",\"public_key_2\":\"%s\","
         "\"public_key_3\":\"%s\",\"public_key_4\":\"%s\",\"public_key_5\":\"%s\""
         "}",
+        (unsigned)c->protocol,
         c->uas_id, c->id_type, c->ua_type, c->operator_id,
         c->uas_id_2, c->id_type_2, c->ua_type_2,
         c->tx_modes, c->wifi_channel, (double)c->wifi_power_dbm,
@@ -133,12 +201,13 @@ static void state_to_json(const rid_state_t *s, char *buf, size_t sz)
 {
     snprintf(buf, sz,
         "{"
-        "\"protocol\":%d,\"gps_valid\":%s,\"lat\":%.6f,\"lon\":%.6f,"
+        "\"fw_version\":\"%s\",\"protocol\":%d,\"gps_valid\":%s,\"lat\":%.6f,\"lon\":%.6f,"
         "\"alt\":%.1f,\"speed\":%.1f,\"heading\":%d,\"satellites\":%u,\"fix_type\":%u,"
         "\"tx_total\":%lu,\"tx_wifi_bcn\":%lu,\"tx_wifi_nan\":%lu,"
         "\"tx_ble4\":%lu,\"tx_ble5\":%lu,"
         "\"uptime_ms\":%lu"
         "}",
+        ESP_RID_VERSION,
         (int)s->active_protocol, s->gps_valid ? "true" : "false",
         s->gps.latitude, s->gps.longitude,
         (double)s->gps.altitude_msl, (double)s->gps.speed,
@@ -244,18 +313,109 @@ static esp_err_t handle_ota(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t handle_get_logs(httpd_req_t *req)
+{
+    char buf[4096];
+    int off = 0;
+    off += snprintf(buf + off, sizeof(buf) - off, "[");
+    if (s_log_lock && xSemaphoreTake(s_log_lock, pdMS_TO_TICKS(50)) == pdTRUE) {
+        int n = s_log_count;
+        int start = (n < LOG_RING_MAX) ? 0 : s_log_head;
+        for (int i = 0; i < n; i++) {
+            int idx = (start + i) % LOG_RING_MAX;
+            log_entry_t *e = &s_log_ring[idx];
+            char lvstr[2] = { e->level, '\0' };
+            /* escape JSON special chars in msg */
+            char escaped[LOG_MSG_MAX * 2];
+            int eo = 0;
+            for (int si = 0; e->msg[si] && eo < (int)sizeof(escaped) - 4; si++) {
+                char c = e->msg[si];
+                if (c == '"' || c == '\\') { escaped[eo++] = '\\'; escaped[eo++] = c; }
+                else if (c == '\n') { escaped[eo++] = '\\'; escaped[eo++] = 'n'; }
+                else if (c == '\r') { escaped[eo++] = '\\'; escaped[eo++] = 'r'; }
+                else if (c == '\t') { escaped[eo++] = '\\'; escaped[eo++] = 't'; }
+                else if (c < 0x20) continue;
+                else escaped[eo++] = c;
+            }
+            escaped[eo] = '\0';
+            if (i > 0) off += snprintf(buf + off, sizeof(buf) - off, ",");
+            off += snprintf(buf + off, sizeof(buf) - off,
+                "{\"t\":%lu,\"l\":\"%s\",\"m\":\"%s\"}",
+                (unsigned long)e->time_ms, lvstr, escaped);
+            if (off >= (int)sizeof(buf) - 128) { break; }
+        }
+        xSemaphoreGive(s_log_lock);
+    }
+    off += snprintf(buf + off, sizeof(buf) - off, "]");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, buf, strlen(buf));
+    return ESP_OK;
+}
+
+static esp_err_t handle_post_command(httpd_req_t *req)
+{
+    char body[256];
+    int ret = httpd_req_recv(req, body, sizeof(body) - 1);
+    if (ret <= 0) { httpd_resp_send_500(req); return ESP_FAIL; }
+    body[ret] = '\0';
+
+    /* strip quotes if wrapped */
+    char *cmd = body;
+    while (*cmd == ' ' || *cmd == '\t') cmd++;
+    if (cmd[0] == '"') { cmd++; char *e = strchr(cmd, '"'); if (e) *e = '\0'; }
+
+    esp_err_t res = ESP_OK;
+    const char *reply = "ok";
+
+    if (strcmp(cmd, "restart") == 0 || strcmp(cmd, "reboot") == 0) {
+        reply = "restarting";
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"status\":\"restarting\"}", 22);
+        esp_restart();
+        return ESP_OK;
+    } else if (strcmp(cmd, "reset") == 0 || strcmp(cmd, "factory") == 0) {
+        esp_rid_factory_reset();
+        reply = "factory reset, restarting";
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"status\":\"reset\"}", 18);
+        esp_restart();
+        return ESP_OK;
+    } else if (strcmp(cmd, "status") == 0) {
+        rid_state_t st;
+        esp_rid_get_state(&st);
+        char tmp[512];
+        state_to_json(&st, tmp, sizeof(tmp));
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, tmp, strlen(tmp));
+        return ESP_OK;
+    } else {
+        /* forward unknown command as log entry */
+        ESP_LOGI("CMD", "Received command: %s", cmd);
+        reply = "unknown command";
+    }
+
+    char resp[128];
+    snprintf(resp, sizeof(resp), "{\"status\":\"%s\"}", reply);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, resp, strlen(resp));
+    return res;
+}
+
 static const httpd_uri_t uri_index = { "/", HTTP_GET, handle_index, NULL };
 static const httpd_uri_t uri_get_cfg = { "/api/config", HTTP_GET, handle_get_config, NULL };
 static const httpd_uri_t uri_set_cfg = { "/api/config", HTTP_POST, handle_post_config, NULL };
 static const httpd_uri_t uri_status = { "/api/status", HTTP_GET, handle_get_status, NULL };
 static const httpd_uri_t uri_reset = { "/api/reset", HTTP_POST, handle_factory_reset, NULL };
 static const httpd_uri_t uri_ota = { "/ota", HTTP_POST, handle_ota, NULL };
+static const httpd_uri_t uri_logs = { "/api/logs", HTTP_GET, handle_get_logs, NULL };
+static const httpd_uri_t uri_cmd = { "/api/command", HTTP_POST, handle_post_command, NULL };
 
 void web_config_init(void)
 {
+    log_init();
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = 80;
-    config.max_uri_handlers = 12;
+    config.max_uri_handlers = 16;
     config.lru_purge_enable = true;
 
     if (httpd_start(&g_server, &config) == ESP_OK) {
@@ -265,6 +425,8 @@ void web_config_init(void)
         httpd_register_uri_handler(g_server, &uri_status);
         httpd_register_uri_handler(g_server, &uri_reset);
         httpd_register_uri_handler(g_server, &uri_ota);
+        httpd_register_uri_handler(g_server, &uri_logs);
+        httpd_register_uri_handler(g_server, &uri_cmd);
         ESP_LOGI(TAG, "Web server started on port 80");
     } else {
         ESP_LOGE(TAG, "Failed to start web server");

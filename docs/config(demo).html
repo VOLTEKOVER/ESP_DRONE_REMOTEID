@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ESP Remote ID [BETA] — Configuration</title>
+<title>ESP Remote ID [BETA] — Config Demo</title>
 <style>
 :root{--bg:#fafafa;--card-bg:#fff;--card-border:#e0e0e0;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.04);--accent:#222}
 @media(prefers-color-scheme:dark){
@@ -206,10 +206,11 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 
 <div class="hdr">
 <a href="https://github.com/valeriocomo/ESP32_DRONE_ID" target="_blank" class="brand">
-<img class="logo-img" src="../../../images/logo%20con%20scritta.svg" alt="ESP Remote ID">
+<img class="logo-img" src="../images/logo%20con%20scritta.svg" alt="ESP Remote ID">
 </a>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
 <div class="badge" id="status-badge"><span class="health-dot" id="health-dot"></span> Connecting...</div>
+<div class="badge" style="background:#e8e0f0;color:#6a1b9a;border-color:#ce93d8;font-weight:600">&#x1f6a7; DEMO</div>
 <div class="hdr-actions">
 <div class="mode-tabs" id="mode-tabs">
 <button class="mode-tab active" data-view="dashboard" onclick="setView('dashboard')"><span class="ico">&#x1f4ca;</span>Dashboard</button>
@@ -275,7 +276,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 
 <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
 <button class="hdr-btn" onclick="setView('advanced')" style="flex:1;justify-content:center">&#x2699; Open Config</button>
-<button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Restarting...'))" style="flex:1;justify-content:center">&#x1f504; Restart</button>
+<button class="hdr-btn" onclick="showMsg('Restart simulated (no real device)')" style="flex:1;justify-content:center">&#x1f504; Restart</button>
 <button class="hdr-btn danger" onclick="showModal('reset')" style="flex:1;justify-content:center">&#x21bb; Factory Reset</button>
 </div>
 </div>
@@ -479,7 +480,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <button class="btn" type="submit">Save System</button>
 </form>
 <button class="btn-danger" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
-<button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Device restarting...'))" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
+<button class="hdr-btn" onclick="showMsg('Device restart simulated (no real device)')" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
 </div>
 
 <!-- TERMINAL + STATUS -->
@@ -645,7 +646,7 @@ title.textContent = 'Factory Reset';
 text.textContent = 'All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
 confirmBtn.textContent = 'Reset';
 confirmBtn.className = 'btn-danger';
-modalAction = function(){fetch('/api/reset',{method:'POST'}).then(r=>showMsg('Factory reset OK, rebooting...'))};
+modalAction = function(){showMsg('Factory reset simulated (no real device)')};
 }else if(type==='ota'){
 icon.textContent = '&#x26a0;';
 title.textContent = 'Firmware Update';
@@ -769,30 +770,30 @@ function setPlaceholders(){
   $('status').textContent='Loading configuration...'
 }
 function getCfg(){
-fetch('/api/config').then(r=>r.json()).then(c=>{
-$('uas_id').value=c.uas_id||''
-$('id_type').value=c.id_type||1
-$('ua_type').value=c.ua_type||1
-$('op_id').value=c.operator_id||''
-$('uas_id2').value=c.uas_id_2||''
-$('id_type2').value=c.id_type_2||0
+var c={protocol:255,uas_id:'DEMO-RID-87654321',id_type:1,ua_type:2,operator_id:'OP-DEMO-12345',uas_id_2:'',id_type_2:0,ua_type_2:0,wifi_channel:11,wifi_power_dbm:18,wifi_bcn_rate_hz:1,wifi_nan_rate_hz:0,ble4_rate_hz:1,ble4_power_dbm:12,ble5_rate_hz:1,ble5_power_dbm:18,wifi_ssid:'ESP-RID-DEMO',wifi_password:'',webserver_en:1,baud_rate:57600,mavlink_sysid:1,bcast_powerup:0,lock_level:0,options:0,public_key_1:'',public_key_2:'',public_key_3:'',public_key_4:'',public_key_5:'',tx_modes:13}
+$('uas_id').value=c.uas_id
+$('id_type').value=c.id_type
+$('ua_type').value=c.ua_type
+$('op_id').value=c.operator_id
+$('uas_id2').value=c.uas_id_2
+$('id_type2').value=c.id_type_2
 $('ua_type2').value=c.ua_type_2||0
-$('wifi_ch').value=c.wifi_channel||6
-$('wifi_pwr').value=c.wifi_power_dbm||20
-$('wifi_bcn').value=c.wifi_bcn_rate_hz||1
-$('wifi_nan').value=c.wifi_nan_rate_hz||0
-$('bt4_rate').value=c.ble4_rate_hz||1
-$('bt4_pwr').value=c.ble4_power_dbm||18
-$('bt5_rate').value=c.ble5_rate_hz||1
-$('bt5_pwr').value=c.ble5_power_dbm||18
-$('wifi_ssid').value=c.wifi_ssid||'ESP-RID'
-$('wifi_pass').value=c.wifi_password||''
+$('wifi_ch').value=c.wifi_channel
+$('wifi_pwr').value=c.wifi_power_dbm
+$('wifi_bcn').value=c.wifi_bcn_rate_hz
+$('wifi_nan').value=c.wifi_nan_rate_hz
+$('bt4_rate').value=c.ble4_rate_hz
+$('bt4_pwr').value=c.ble4_power_dbm
+$('bt5_rate').value=c.ble5_rate_hz
+$('bt5_pwr').value=c.ble5_power_dbm
+$('wifi_ssid').value=c.wifi_ssid
+$('wifi_pass').value=c.wifi_password
 $('websrv_en').checked=!!c.webserver_en
-$('baud').value=c.baud_rate||57600
+$('baud').value=c.baud_rate
 $('protocol').value=c.protocol!==undefined?c.protocol:255
-$('mav_sysid').value=c.mavlink_sysid||0
+$('mav_sysid').value=c.mavlink_sysid
 $('bcast_pwr').checked=!!c.bcast_powerup
-$('lock_lvl').value=c.lock_level||0
+$('lock_lvl').value=c.lock_level
 $('opt_arm').checked=!!(c.options&1)
 $('opt_nosave').checked=!!(c.options&2)
 $('opt_print').checked=!!(c.options&4)
@@ -801,12 +802,9 @@ $('tx_wifi_bcn').checked=!!(c.tx_modes&1)
 $('tx_wifi_nan').checked=!!(c.tx_modes&2)
 $('tx_ble4').checked=!!(c.tx_modes&4)
 $('tx_ble5').checked=!!(c.tx_modes&8)
-  document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
-  applyDeviceConstraints();
-}).catch(function(){
-  document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
-  showMsg('Cannot connect to ESP Remote ID. Make sure you are connected to the device WiFi.',1)
-})}
+document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
+applyDeviceConstraints();
+}
 
 function collectForm(){return{
 protocol:parseInt($('protocol').value),
@@ -843,19 +841,10 @@ tx_modes:($('tx_wifi_bcn').checked?1:0)|($('tx_wifi_nan').checked?2:0)|($('tx_bl
 
 function doSave(btn){
 if(btn){btn.classList.add('loading');btn.disabled=true}
-fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectForm())})
-.then(r=>{
-if(!r.ok){return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status)})}
-return r.json()
-})
-.then(j=>{
-showMsg('Configuration saved successfully');
+setTimeout(function(){
+showMsg('Configuration saved successfully (simulated)');
 if(btn){btn.classList.remove('loading');btn.disabled=false}
-})
-.catch(e=>{
-showMsg('Error saving configuration: '+e.message,1);
-if(btn){btn.classList.remove('loading');btn.disabled=false}
-})
+},400)
 }
 
 function saveForm(e){
@@ -871,16 +860,15 @@ doSave(btn);
 }
 
 function exportCfg(){
-  fetch('/api/config').then(function(r){return r.json()}).then(function(c){
-    var b=new Blob([JSON.stringify(c,null,2)],{type:'application/json'})
-    var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='esp_rid_config.json';a.click()
-    showMsg('Configuration exported')
-  }).catch(function(){showMsg('Failed to fetch config',1)})
+  var c=collectForm();
+  var b=new Blob([JSON.stringify(c,null,2)],{type:'application/json'})
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='esp_rid_config_demo.json';a.click()
+  showMsg('Configuration exported (demo)')
 }
 function importCfg(el){
   var f=el.files[0];if(!f)return
   var r=new FileReader()
-  r.onload=function(e){try{var c=JSON.parse(e.target.result);fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(){showMsg('Configuration imported successfully');getCfg()}).catch(function(e){showMsg('Import failed: '+e.message,1)})}catch(e){showMsg('Invalid JSON file',1)}}
+  r.onload=function(e){try{var c=JSON.parse(e.target.result);showMsg('Configuration imported successfully (simulated)');getCfg()}catch(e){showMsg('Invalid JSON file',1)}}
   r.readAsText(f)
   el.value=''
 }
@@ -901,10 +889,10 @@ function saveAll(){
   }else{btn.classList.add('loading');doSaveAll(btn,c)}
 }
 function doSaveAll(btn,c){
-  fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
-  .then(r=>{if(!r.ok){return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status)})}return r.json()})
-  .then(j=>{showMsg('All settings saved');btn.classList.remove('loading')})
-  .catch(e=>{showMsg('Error: '+e.message,1);btn.classList.remove('loading')})
+  setTimeout(function(){
+    showMsg('All settings saved (simulated)');
+    if(btn){btn.classList.remove('loading')}
+  },400)
 }
 
 function otaUpdate(){
@@ -913,43 +901,34 @@ if(!f){showMsg('Select a .bin file first',1);return}
 var btn=$('ota-btn');
 btn.classList.add('loading');btn.disabled=true;
 $('ota_progress').textContent='Uploading... ('+(f.size/1024).toFixed(0)+' KB)'
-var r=new FileReader()
-r.onload=function(e){
-fetch('/ota',{method:'POST',body:e.target.result,headers:{'Content-Type':'application/octet-stream'}})
-.then(r=>r.text()).then(t=>{
-$('ota_progress').textContent=t;
-showMsg('OTA complete, rebooting...');
-btn.classList.remove('loading');btn.disabled=false
-})
-.catch(function(e){
-$('ota_progress').textContent='';
-showMsg('OTA failed: '+e.message,1);
-btn.classList.remove('loading');btn.disabled=false
-})
-}
-r.onerror=function(){showMsg('Failed to read file',1);btn.classList.remove('loading');btn.disabled=false}
-r.readAsArrayBuffer(f)
+setTimeout(function(){
+  $('ota_progress').textContent='OTA simulation complete (no real device)';
+  showMsg('OTA demo: firmware update simulated');
+  btn.classList.remove('loading');btn.disabled=false
+},1000)
 }
 
-/* ---------- Terminal ---------- */
+/* ---------- Terminal (simulated) ---------- */
 var termAutoScroll=true
 var lastLogCount=0
+var demoLogEntries=['System initialized','Protocol detect: MAVLink detected on UART1','GPS: 3D fix acquired (12 satellites)','WiFi Beacon: TX OK','BLE 4.0: TX OK','BLE 5.0: TX OK','Position: 45.123456, 9.654321','Battery: 12.4V','Altitude: 82.3m AGL','Speed: 5.2 m/s','Heading: 180\u00b0 S','Telemetry frame sent','Heartbeat OK','SDK version: v5.4.0','ESP32 temperature: 48\u00b0C'];
+var demoLogIdx=0;
 function pollLogs(){
-  fetch('/api/logs').then(r=>r.json()).then(entries=>{
-    if(entries.length===0)return
-    var out=$('term-output')
-    var ph=out.querySelector('.term-placeholder')
-    if(ph)ph.remove()
-    var shouldScroll=termAutoScroll && (out.scrollTop >= out.scrollHeight - out.clientHeight - 20 || lastLogCount===0)
-    entries.forEach(function(e){
-      var d=document.createElement('div');d.className='line lv-'+e.l
-      var ts='<span class="ts">['+(e.t/1000).toFixed(1)+'s]</span>'
-      d.innerHTML=ts+escHtml(e.m)
-      out.appendChild(d)
-    })
-    if(shouldScroll)out.scrollTop=out.scrollHeight
-    lastLogCount=entries.length
-  }).catch(function(){})
+  if(demoLogIdx>=demoLogEntries.length)return;
+  var out=$('term-output')
+  var ph=out.querySelector('.term-placeholder')
+  if(ph)ph.remove()
+  var count=Math.min(3,demoLogEntries.length-demoLogIdx);
+  var shouldScroll=termAutoScroll && (out.scrollTop >= out.scrollHeight - out.clientHeight - 20 || lastLogCount===0)
+  for(var i=0;i<count;i++){
+    var d=document.createElement('div');d.className='line lv-'+(demoLogIdx%3===0?'I':'D')
+    var ts='<span class="ts">['+((demoLogIdx+1)*2.1).toFixed(1)+'s]</span>'
+    d.innerHTML=ts+escHtml(demoLogEntries[demoLogIdx])
+    out.appendChild(d)
+    demoLogIdx++
+  }
+  if(shouldScroll)out.scrollTop=out.scrollHeight
+  lastLogCount=demoLogIdx
 }
 function sendCmd(){
   var inp=$('term-input'),cmd=inp.value.trim()
@@ -959,14 +938,11 @@ function sendCmd(){
   var d=document.createElement('div');d.className='line lv-V'
   d.innerHTML='<span class="ts">[cmd]</span> $ '+escHtml(cmd)
   out.appendChild(d);if(termAutoScroll)out.scrollTop=out.scrollHeight
-  fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:cmd})
-  .then(function(r){return r.json()}).then(function(j){
-    if(j.status&&j.status!=='ok'){
-      var d2=document.createElement('div');d2.className='line lv-W'
-      d2.innerHTML='<span class="ts">[resp]</span> '+escHtml(j.status)
-      out.appendChild(d2);if(termAutoScroll)out.scrollTop=out.scrollHeight
-    }
-  }).catch(function(){})
+  setTimeout(function(){
+    var d2=document.createElement('div');d2.className='line lv-I'
+    d2.innerHTML='<span class="ts">[resp]</span> Command "'+escHtml(cmd)+'" executed (simulated)'
+    out.appendChild(d2);if(termAutoScroll)out.scrollTop=out.scrollHeight
+  },300)
 }
 function clearTerm(){
   var out=$('term-output');out.innerHTML='<div class="term-placeholder">Console cleared.</div>'
@@ -978,7 +954,8 @@ function toggleTermScroll(){
 }
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-/* ---------- Dashboard ---------- */
+/* ---------- Dashboard (simulated) ---------- */
+var demoLat=45.123456,demoLon=9.654321,demoAlt=82.3,demoSpeed=5.2,demoHeading=180,demoSat=12,demoTx=0;
 function updateDashboard(s){
   if(!s)return;
   var protoNames=['Unknown','MAVLink','MSP','NMEA','None'];
@@ -1001,14 +978,16 @@ function updateDashboard(s){
   var live=$('dash-status-badge');
   if(ok && s.protocol>0){live.className='dash-badge live';live.textContent='\u25cf RUNNING'}
   else if(s.protocol===0){live.className='dash-badge warn';live.textContent='\u26a0 WAITING'}
-  else if(s.protocol===0){live.className='dash-badge warn';live.textContent='\u26a0 WAITING'}
   else{live.className='dash-badge err';live.textContent='\u274c NO GPS'}
-  /* bar chart */
+  /* update bar chart */
   var maxVal=Math.max(s.tx_wifi_bcn||0,s.tx_ble4||0,s.tx_ble5||0,1);
+  var pctWifi=((s.tx_wifi_bcn||0)/maxVal*100).toFixed(0);
+  var pctBle4=((s.tx_ble4||0)/maxVal*100).toFixed(0);
+  var pctBle5=((s.tx_ble5||0)/maxVal*100).toFixed(0);
   var bw=$('bar-wifi'),b4=$('bar-ble4'),b5=$('bar-ble5');
-  if(bw)bw.style.height=Math.max(4,((s.tx_wifi_bcn||0)/maxVal*100))+'%';
-  if(b4)b4.style.height=Math.max(4,((s.tx_ble4||0)/maxVal*100))+'%';
-  if(b5)b5.style.height=Math.max(4,((s.tx_ble5||0)/maxVal*100))+'%';
+  if(bw)bw.style.height=Math.max(4,parseInt(pctWifi))+'%';
+  if(b4)b4.style.height=Math.max(4,parseInt(pctBle4))+'%';
+  if(b5)b5.style.height=Math.max(4,parseInt(pctBle5))+'%';
   /* signal gauge */
   var sig=$('dash-signal');
   if(sig){
@@ -1021,14 +1000,27 @@ function updateDashboard(s){
 var lastStatusTime=0
 var timeoutWarningShown=false
 var termLogTimer=0
+
+/* Simulated status data generator */
+function genSimStatus(){
+  demoTx+=Math.floor(Math.random()*50)+10;
+  demoLat+=((Math.random()-0.5)*0.0001);
+  demoLon+=((Math.random()-0.5)*0.0001);
+  demoAlt+=((Math.random()-0.5)*0.5);
+  demoSpeed+=((Math.random()-0.5)*0.3);
+  demoHeading=(demoHeading+((Math.random()-0.5)*5)+360)%360;
+  demoSat=Math.max(6,Math.min(22,demoSat+Math.floor((Math.random()-0.5)*2)));
+  return {protocol:1,gps_valid:true,fix_type:3,lat:demoLat,lon:demoLon,alt:demoAlt,speed:demoSpeed,heading:demoHeading,satellites:demoSat,fw_version:'v1.0.0-demo',tx_total:demoTx,tx_wifi_bcn:Math.floor(demoTx*0.6),tx_ble4:Math.floor(demoTx*0.3),tx_ble5:Math.floor(demoTx*0.1)};
+}
+
 setInterval(function(){
   termLogTimer++;if(termLogTimer%2===0){pollLogs()}
-  fetch('/api/status').then(function(r){return r.json()}).then(function(s){
-          lastStatusTime=Date.now()
-          timeoutWarningShown=false
+  var s=genSimStatus();
+  lastStatusTime=Date.now()
+  timeoutWarningShown=false
   var h=document.createElement('div');h.className='status-grid'
   function addRow(l,v){var a=document.createElement('div');a.className='sg-label';a.textContent=l;h.appendChild(a);var b=document.createElement('div');b.className='sg-val';b.textContent=v;h.appendChild(b)}
-  addRow('Firmware',s.fw_version||'v1.0.0-beta')
+  addRow('Firmware',s.fw_version)
   addRow('Protocol',['Unknown','MAVLink','MSP','NMEA','None'][s.protocol])
   var gpsEl=document.createElement('div');gpsEl.className='sg-label';gpsEl.textContent='GPS';h.appendChild(gpsEl)
   var gpsVal=document.createElement('div');gpsVal.className='sg-val'
@@ -1047,41 +1039,15 @@ setInterval(function(){
   addRow('BLE 4.0',s.tx_ble4)
   addRow('BLE 5.0',s.tx_ble5||0)
   var st=$('status');st.textContent='';st.appendChild(h)
-          var proto=s.protocol!==undefined?['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]:'Disconnected'
-          var dot=$('health-dot')
-          if(proto==='No FC'){dot.className='health-dot warn'}else if(proto==='Disconnected'){dot.className='health-dot err'}else{dot.className='health-dot ok'}
-          $('status-badge').innerHTML='<span class="health-dot '+dot.className.split(' ')[1]+'"></span> '+proto
-          updateDashboard(s);
-          }).catch(function(){
-            $('status').textContent='Waiting for connection...'
-            var dot=$('health-dot')
-            dot.className='health-dot err'
-            $('status-badge').innerHTML='<span class="health-dot err"></span> Disconnected'
-          })
-          if(Date.now()-lastStatusTime>15000&&!timeoutWarningShown){
-            timeoutWarningShown=true
-            showMsg('Connection timeout — check that the device is powered on and you are connected to its WiFi',1)
-          }
+  var proto=s.protocol!==undefined?['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]:'Disconnected'
+  var dot=$('health-dot')
+  if(proto==='No FC'){dot.className='health-dot warn'}else if(proto==='Disconnected'){dot.className='health-dot err'}else{dot.className='health-dot ok'}
+  $('status-badge').innerHTML='<span class="health-dot '+dot.className.split(' ')[1]+'"></span> '+proto
+  updateDashboard(s);
 },2000)
 
 /* ---------- Initial view ---------- */
-var savedView = null;
-try{savedView = localStorage.getItem('rid_view')}catch(e){}
-if(savedView && savedView!=='dashboard'){
-  setView(savedView);
-} else {
-  /* wait for first status to decide: show dashboard if running, else basic */
-  setView('dashboard');
-  var iv = setInterval(function(){
-    fetch('/api/status').then(function(r){return r.json()}).then(function(s){
-      if(s.protocol>0 && s.gps_valid){
-        setView('dashboard');
-        clearInterval(iv);
-      }
-    }).catch(function(){});
-  },2000);
-  setTimeout(function(){clearInterval(iv);if(currentView==='dashboard'){setView('advanced')}},6000);
-}
+setView('dashboard');
 </script>
 </body>
 </html>
