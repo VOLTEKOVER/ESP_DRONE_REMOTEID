@@ -6,7 +6,6 @@
 #include "esp_http_server.h"
 #include "esp_wifi.h"
 #include "esp_ota_ops.h"
-#include "esp_app_format.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"

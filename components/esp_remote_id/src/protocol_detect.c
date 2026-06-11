@@ -11,8 +11,6 @@
 #define DETECT_TIMEOUT_MS 1000
 #define DETECT_READ_MS 50
 
-static rid_protocol_t g_fixed_proto = RID_PROTOCOL_AUTO;
-
 void protocol_detect_init(void)
 {
     uart_config_t uart_cfg = {
@@ -74,9 +72,4 @@ void protocol_detect_reinit(uint32_t baud)
     uart_set_pin(UART_NUM_1, 17, 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_driver_install(UART_NUM_1, PROTO_BUF_SIZE, 0, 0, NULL, 0);
     ESP_LOGI(TAG, "UART reconfigured to %lu baud", (unsigned long)baud);
-}
-
-void protocol_detect_set_fixed(rid_protocol_t proto)
-{
-    g_fixed_proto = proto;
 }
