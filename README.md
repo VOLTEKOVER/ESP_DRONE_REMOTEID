@@ -1,5 +1,9 @@
 # ESP Remote ID [BETA]
 
+<p align="center">
+  <img src="images/logo%20con%20scritta.svg" alt="ESP Remote ID" width="400">
+</p>
+
 [![Build](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/build.yml/badge.svg)](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/build.yml)
 [![Pages](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/pages.yml/badge.svg)](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/pages.yml)
 [![Platform](https://img.shields.io/badge/ESP32%2FS3%2FC3-000)](https://www.espressif.com/)
@@ -62,7 +66,7 @@ ESP32_DRONE_ID/
 │   └── webui/               # Embedded web interface (config.html)
 ├── docs/                    # GitHub Pages site (docs, demo, install)
 │   └── config(demo).html    # Standalone config simulator
-├── images/                  # Logo assets (libellula/dragonfly SVG)
+├── images/                  # Logo assets — <img src="images/logo.svg" width="18" alt="dragonfly icon"> libellula/dragonfly SVG
 └── .github/workflows/      # CI/CD
 ```
 
