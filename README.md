@@ -4,8 +4,8 @@
 
 <p align="center">
   <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP_DRONE_REMOTEID/build.yml?logo=github&label=build" alt="Build"></a>
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><img src="https://img.shields.io/badge/web%20flasher-000?logo=esphome" alt="Web Flasher"></a>
-  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/ESP_DRONE_REMOTEID?include_prereleases&logo=github" alt="Release"></a>
+  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><img src="https://img.shields.io/badge/DEV%20build-000?logo=esphome&color=c62828" alt="DEV"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/ESP_DRONE_REMOTEID?include_prereleases&logo=github&label=version" alt="Release"></a>
   <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32%20%7C%20S3%20%7C%20C3-000?logo=espressif" alt="Platform"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/VOLTEKOVER/ESP_DRONE_REMOTEID?color=blue" alt="License"></a>
 </p>
@@ -17,17 +17,18 @@
 </p>
 
 <p align="center">
-  <b>ASTM F3411-22a</b> Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C3.<br>
-  Reads GPS from any flight controller via <b>MAVLink</b> · <b>MSP</b> · <b>NMEA</b> and broadcasts over <b>WiFi Beacon</b> + <b>BLE 4.0/5.0</b>.
+  <b>ASTM F3411-22a</b> Open DroneID transmitter — <b>development build</b>.<br>
+  Code implements MAVLink · MSP · NMEA parsing and WiFi Beacon + BLE 4.0/5.0 broadcast.<br>
+  <b>Hardware testing pending</b> — see <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">wiki</a> for current status.
 </p>
 
 <p align="center">
-  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><b>Web Installer & Docs</b></a>
+  <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/"><b>Wiki & Demo</b></a>
 </p>
 
 ---
 
-## Quick Start
+## Quick Start (once hardware testing is complete)
 
 | Step | Action |
 |------|--------|
@@ -38,19 +39,19 @@
 | 5 | Power from battery, connect to WiFi **ESP-RID** |
 | 6 | Configure at `http://192.168.4.1` |
 
-No toolchain required &mdash; works in Chrome/Edge via WebSerial.
+> **&#x26a0; Development build** — code is written but has not been tested on real hardware yet. The web UI configurator is fully functional as a <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html">standalone demo</a>.
 
 ## Features
 
 | | |
 |---|---|
-| **Protocols** | MAVLink (ArduPilot), MSP (Betaflight/INAV), NMEA (any GPS) — auto-detect in 50 ms |
-| **Radio** | WiFi Beacon (802.11 b/g/n) + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3) |
+| **Protocols** | MAVLink, MSP, NMEA — auto-detect in 50 ms (code complete, untested) |
+| **Radio** | WiFi Beacon + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3) — code complete, untested |
 | **No extra GPS** | Reuses existing flight controller GPS data |
-| **Web UI** | Built-in AP + REST API + live telemetry |
-| **OTA updates** | Upload firmware over WiFi from browser |
+| **Web UI** | Built-in AP + REST API + live telemetry (functional as demo) |
+| **OTA updates** | Upload firmware over WiFi (code complete, untested) |
 | **Config** | 26 parameters: UAS ID, rates, power, public keys, lock levels |
-| **Security** | 3 lock levels (normal / signed / eFuse permanent) |
+| **Security** | 3 lock levels (normal / signed / eFuse permanent) — code complete, untested |
 | **Flashing** | Browser via WebSerial, manual via esptool.py, or Docker |
 
 ## Hardware
@@ -61,11 +62,12 @@ No toolchain required &mdash; works in Chrome/Edge via WebSerial.
 | `GND` | FC GND |
 | `5V` (VIN) | FC BEC or USB |
 
+> **&#x26a0; Wiring guidance is based on the code — no hardware testing has been performed yet.**  
 > NMEA clone (tap GPS TX): add **1 k&Omega; series resistor** on the tap line.
 
 ## Build
 
-Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions.  
+Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions (compilation only, no hardware tests).  
 [See latest builds](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml)
 
 ### Locally (ESP-IDF v6.0.1)
@@ -74,7 +76,7 @@ Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions.
 git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
 cd ESP_DRONE_REMOTEID
 idf.py set-target esp32    # or esp32s3 / esp32c3
-idf.py build flash monitor
+idf.py build               # compiles — flash/monitor untested
 ```
 
 ## Project Structure
