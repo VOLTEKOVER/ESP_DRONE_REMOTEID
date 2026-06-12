@@ -2025,22 +2025,9 @@ document.querySelectorAll('.guide-diagram').forEach(function(d){
 function closeLb(){document.getElementById('lb-overlay').classList.remove('open')}
 
 // --- CHIP SELECTOR ---
-var chipRadios = document.querySelectorAll('#chip-selector input');
-chipRadios.forEach(function(r){r.addEventListener('change',function(){
+document.querySelectorAll('#chip-selector input').forEach(function(r){r.addEventListener('change',function(){
   document.querySelectorAll('.chip-option').forEach(function(l){l.classList.toggle('active',l.querySelector('input')===r)});
-  filterManifest(r.value);
 })});
-function filterManifest(chip){
-  if(!window.__manifestAll){fetch('manifest.json').then(function(r){return r.json()}).then(function(m){
-    window.__manifestAll=m;applyFilter(chip);
-  })}else{applyFilter(chip)}
-}
-function applyFilter(chip){
-  var m=JSON.parse(JSON.stringify(window.__manifestAll));
-  m.builds=m.builds.filter(function(b){return b.chipFamily===chip});
-  document.getElementById('install-button').manifest=m;
-}
-document.querySelector('#chip-selector input:checked')&&filterManifest(document.querySelector('#chip-selector input:checked').value);
 
 // Initial breadcrumb / TOC highlight
 updateScroll();
