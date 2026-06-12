@@ -114,34 +114,34 @@ jobs:
       - name: Generate manifest.json (release)
         run: |
           python3 -c "
-import json, os
-manifest = {
-  'name': 'ESP Remote ID',
-  'version': os.environ['VERSION'],
-  'home_url': 'https://voltekover.github.io/ESP32_DRONE_ID',
-  'config_url': 'http://192.168.4.1',
-  'new_install_improv_wait_time': 0,
-  'builds': [
-    { 'chipFamily': 'ESP32', 'parts': [
-      { 'path': 'firmware/esp32/bootloader.bin', 'offset': 0x1000 },
-      { 'path': 'firmware/esp32/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]},
-    { 'chipFamily': 'ESP32-S3', 'parts': [
-      { 'path': 'firmware/esp32s3/bootloader.bin', 'offset': 0x0 },
-      { 'path': 'firmware/esp32s3/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32s3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]},
-    { 'chipFamily': 'ESP32-C3', 'parts': [
-      { 'path': 'firmware/esp32c3/bootloader.bin', 'offset': 0x0 },
-      { 'path': 'firmware/esp32c3/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32c3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]}
-  ]
-}
-with open('release/firmware/manifest.json', 'w') as f:
-  json.dump(manifest, f, indent=2)
-"
+          import json, os
+          manifest = {
+            'name': 'ESP Remote ID',
+            'version': os.environ['VERSION'],
+            'home_url': 'https://voltekover.github.io/ESP32_DRONE_ID',
+            'config_url': 'http://192.168.4.1',
+            'new_install_improv_wait_time': 0,
+            'builds': [
+              { 'chipFamily': 'ESP32', 'parts': [
+                { 'path': 'firmware/esp32/bootloader.bin', 'offset': 0x1000 },
+                { 'path': 'firmware/esp32/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]},
+              { 'chipFamily': 'ESP32-S3', 'parts': [
+                { 'path': 'firmware/esp32s3/bootloader.bin', 'offset': 0x0 },
+                { 'path': 'firmware/esp32s3/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32s3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]},
+              { 'chipFamily': 'ESP32-C3', 'parts': [
+                { 'path': 'firmware/esp32c3/bootloader.bin', 'offset': 0x0 },
+                { 'path': 'firmware/esp32c3/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32c3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]}
+            ]
+          }
+          with open('release/firmware/manifest.json', 'w') as f:
+            json.dump(manifest, f, indent=2)
+          "
         shell: bash
 
       - name: Generate release notes
@@ -202,34 +202,34 @@ with open('release/firmware/manifest.json', 'w') as f:
           cp -r images docs/
           # Generate manifest.json in docs/ for Pages
           python3 -c "
-import json, os
-manifest = {
-  'name': 'ESP Remote ID',
-  'version': os.environ['VERSION'],
-  'home_url': 'https://voltekover.github.io/ESP32_DRONE_ID',
-  'config_url': 'http://192.168.4.1',
-  'new_install_improv_wait_time': 0,
-  'builds': [
-    { 'chipFamily': 'ESP32', 'parts': [
-      { 'path': 'firmware/esp32/bootloader.bin', 'offset': 0x1000 },
-      { 'path': 'firmware/esp32/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]},
-    { 'chipFamily': 'ESP32-S3', 'parts': [
-      { 'path': 'firmware/esp32s3/bootloader.bin', 'offset': 0x0 },
-      { 'path': 'firmware/esp32s3/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32s3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]},
-    { 'chipFamily': 'ESP32-C3', 'parts': [
-      { 'path': 'firmware/esp32c3/bootloader.bin', 'offset': 0x0 },
-      { 'path': 'firmware/esp32c3/partition-table.bin', 'offset': 0x8000 },
-      { 'path': 'firmware/esp32c3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
-    ]}
-  ]
-}
-with open('docs/manifest.json', 'w') as f:
-  json.dump(manifest, f, indent=2)
-"
+          import json, os
+          manifest = {
+            'name': 'ESP Remote ID',
+            'version': os.environ['VERSION'],
+            'home_url': 'https://voltekover.github.io/ESP32_DRONE_ID',
+            'config_url': 'http://192.168.4.1',
+            'new_install_improv_wait_time': 0,
+            'builds': [
+              { 'chipFamily': 'ESP32', 'parts': [
+                { 'path': 'firmware/esp32/bootloader.bin', 'offset': 0x1000 },
+                { 'path': 'firmware/esp32/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]},
+              { 'chipFamily': 'ESP32-S3', 'parts': [
+                { 'path': 'firmware/esp32s3/bootloader.bin', 'offset': 0x0 },
+                { 'path': 'firmware/esp32s3/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32s3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]},
+              { 'chipFamily': 'ESP32-C3', 'parts': [
+                { 'path': 'firmware/esp32c3/bootloader.bin', 'offset': 0x0 },
+                { 'path': 'firmware/esp32c3/partition-table.bin', 'offset': 0x8000 },
+                { 'path': 'firmware/esp32c3/esp32-remote-id-scanner.bin', 'offset': 0x20000 }
+              ]}
+            ]
+          }
+          with open('docs/manifest.json', 'w') as f:
+            json.dump(manifest, f, indent=2)
+          "
         shell: bash
 
       - name: Upload Pages artifact
