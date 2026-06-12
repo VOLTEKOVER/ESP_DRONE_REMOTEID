@@ -78,7 +78,7 @@ void wifi_tx_init(void)
             .ssid_len = 7,
             .channel = 6,
             .authmode = WIFI_AUTH_OPEN,
-            .max_connection = 0,
+            .max_connection = 4,
             .beacon_interval = 100,
         },
     };
