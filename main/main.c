@@ -18,9 +18,6 @@ static void print_splash(void)
 {
     uint8_t mac[6] = {0};
     esp_wifi_get_mac(WIFI_IF_AP, mac);
-    int64_t us = esp_timer_get_time();
-    uint32_t sec = (uint32_t)(us / 1000000);
-    uint32_t h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60;
 
     printf("\n");
     printf(C_BLU);
@@ -41,7 +38,7 @@ static void print_splash(void)
     printf("  \xE2\x95\x91          .-=-:::::::::---=++=:.  .:--:=.          .               \xE2\x95\x91\n");
     printf("  \xE2\x95\x91            .:-.        ..:---===-:..:=++:     =*##+=.             \xE2\x95\x91\n");
     printf("  \xE2\x95\x91               :-:          .::::-=++-:=%%###*+@@@@+**             \xE2\x95\x91\n");
-    printf("  \xE2\x95\x91                 .::.            ..:=*#%%@@@@@@@@@%*#*+:             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                 .::.            ..:=*#%%@@@@@@@@@%%*#*+:             \xE2\x95\x91\n");
     printf("  \xE2\x95\x91                    .:::..      ..:-=%%%%@@@@@@@@@%%*-               \xE2\x95\x91\n");
     printf("  \xE2\x95\x91                        .........-#%%@@%%%%****++#-* ==              \xE2\x95\x91\n");
     printf("  \xE2\x95\x91                               :*@@%%*+:    -=. *  :-::::::.        \xE2\x95\x91\n");
@@ -49,8 +46,8 @@ static void print_splash(void)
     printf("  \xE2\x95\x91        .:::::           .-+=:            =-     ..::::            \xE2\x95\x91\n");
     printf("  \xE2\x95\x91    .=+==-----.       :=*+-                .--                     \xE2\x95\x91\n");
     printf("  \xE2\x95\x91  .++::-=====-    .-+##=.                    .=                    \xE2\x95\x91\n");
-    printf("  \xE2\x95\x91 :%%- +*:-:-===. .=*%%%*:                                              \xE2\x95\x91\n");
-    printf("  \xE2\x95\x91 #+ *# -#-. .-*%%%*-                                                 \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 :%%- +*:-:-===. .=*%%%%*:                                              \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 #+ *# -#-. .-*%%%%*-                                                 \xE2\x95\x91\n");
     printf("  \xE2\x95\x91 -  =. =:  :*#+-=  -  -.                                            \xE2\x95\x91\n");
     printf("  \xE2\x95\x91           .   -%% :@..@:                                           \xE2\x95\x91\n");
     printf("  \xE2\x95\x91           :-=++.:#= +#                                             \xE2\x95\x91\n");
