@@ -4,34 +4,78 @@
 #include "esp_remote_id.h"
 #include "esp_mac.h"
 #include "esp_wifi.h"
+#include "esp_timer.h"
 
 #define TAG "MAIN"
+
+static void print_bar(uint8_t pct)
+{
+    int n = pct * 16 / 100;
+    printf("\x1b[32m");
+    for (int i = 0; i < 16; i++) printf(i < n ? "\xE2\x96\x88" : "\xE2\x96\x91");
+    printf("\x1b[0m");
+}
 
 static void print_splash(void)
 {
     uint8_t mac[6] = {0};
     esp_wifi_get_mac(WIFI_IF_AP, mac);
+    int64_t us = esp_timer_get_time();
+    uint32_t sec = (uint32_t)(us / 1000000);
+    uint32_t h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60;
 
     printf("\n");
-    printf("  ╔══════════════════════════════════════════════╗\n");
-    printf("  ║                                              ║\n");
-    printf("  ║       ___ ____  ____                         ║\n");
-    printf("  ║      / __/ __ \\/ __ \\    Remote ID           ║\n");
-    printf("  ║     / /_/ /_/ / /_/ /    Transmitter         ║\n");
-    printf("  ║     \\__/ .___/ .___/     ————————           ║\n");
-    printf("  ║       /_/   /_/                              ║\n");
-    printf("  ║                                              ║\n");
-    printf("  ║  v%s                               ║\n", ESP_RID_VERSION);
-    printf("  ║  ASTM F3411-22a                              ║\n");
-    printf("  ║                                              ║\n");
-    printf("  ╠══════════════════════════════════════════════╣\n");
-    printf("  ║                                              ║\n");
-    printf("  ║  WiFi  AP   │  ESP-RID                       ║\n");
-    printf("  ║  Config URL │  http://192.168.4.1            ║\n");
-    printf("  ║  MAC  AP    │  %02x:%02x:%02x:%02x:%02x:%02x              ║\n",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    printf("  ║                                              ║\n");
-    printf("  ╚══════════════════════════════════════════════╝\n");
+    printf("  \xE2\x95\x94\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x97\n");
+    printf("  \xE2\x95\x91                                                                  \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                  ..                                               \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                -:...:-:                                           \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                +     .+*-                                         \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                +:      :*=.                                       \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91              .--+.       -=:                                      \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91              --  =:       :=-                                     \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91       ......  -.  +:.:::.  ---.                                   \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91     .=.  .:-++-=-  =:   ..::=:-:.                                 \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91     .=       .:-++::+-      .-=--::                               \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91      .-:         .-+===.      .=:::-:                             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91        .-:          :--+=:      -::.:-                            \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91          .-=-:::::::::---=++=:.  .:--:=.          .               \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91            .:-.        ..:---===-:..:=++:     =*##+=.             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91               :-:          .::::-=++-:=%%###*+@@@@+**             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                 .::.            ..:=*#%%@@@@@@@@@%*#*+:             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                    .:::..      ..:-=%%%%@@@@@@@@@%%*-               \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                        .........-#%%@@%%%%****++#-* ==              \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                               :*@@%%*+:    -=. *  :-::::::.        \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                            .-++=:.      .+-   =-..                \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91        .:::::           .-+=:            =-     ..::::            \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91    .=+==-----.       :=*+-                .--                     \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  .++::-=====-    .-+##=.                    .=                    \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 :%%- +*:-:-===. .=*%%%*:                                              \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 #+ *# -#-. .-*%%%*-                                                 \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 -  =. =:  :*#+-=  -  -.                                            \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91           .   -%% :@..@:                                           \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91           :-=++.:#= +#                                             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91           :----++:.**                                             \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91           -------++:                                               \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91           =+++==:.                                                 \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                                                                  \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  ___ ___ ___    ___  ___   ___  _  _ ___                          \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 | __/ __| _ \\  |   \\| _ \\ / _ \\| \\| | __|                          \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 | _|\\__ \\  _/  | |) |   /| (_) | .` | _|                           \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 |___|___/_|    |___/|_|_\\ \\___/|_|\\_|___|                          \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                                                                  \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  ___ ___ __  __ ___ _____ ___   ___ ___                            \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 | _ \\ __|  \\/  |  \\_   _| __| | |_ _|   \\                          \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 |   / _|| |\\/| | () || | | _|    | || |) |                         \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91 |_|_\\___|_|  |_|\\___/|_| |___|  |___|___/                          \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                                                                  \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  Remote ID Transmitter for FPV / Drones                           \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91                                                                  \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  v%-12s                   ASTM F3411-22a                   \xE2\x95\x91\n", ESP_RID_VERSION);
+    printf("  \xE2\x95\xA0\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\xA3\n");
+    printf("  \xE2\x95\x91  WiFi AP    │ ESP-RID                                            \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  Config URL │ http://192.168.4.1                                 \xE2\x95\x91\n");
+    printf("  \xE2\x95\x91  MAC AP     │ %02x:%02x:%02x:%02x:%02x:%02x                                        \xE2\x95\x91\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    printf("  \xE2\x95\x9A\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x90\xE2\x95\x9D\n");
     printf("\n");
 }
 
@@ -41,6 +85,4 @@ void app_main(void)
     esp_rid_start();
 
     print_splash();
-
-    ESP_LOGI(TAG, "Connect to WiFi AP 'ESP-RID' and open http://192.168.4.1");
 }

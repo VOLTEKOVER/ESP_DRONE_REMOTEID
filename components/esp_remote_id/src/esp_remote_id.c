@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "esp_log.h"
+#include "esp_timer.h"
+#include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_remote_id.h"
@@ -87,7 +89,7 @@ void esp_rid_init(void)
 
     web_config_init();
 
-    ESP_LOGI(TAG, "ESP Remote ID initialized");
+    ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID initialized");
 }
 
 void esp_rid_set_config(const rid_config_t *config)
@@ -156,9 +158,51 @@ static const char *proto_name(rid_protocol_t p)
     }
 }
 
+static void print_status_box(void)
+{
+    char lat_str[16], lon_str[16];
+    if (g_state.gps_valid)
+        snprintf(lat_str, sizeof(lat_str), "%.4f", g_state.gps.latitude);
+    else
+        snprintf(lat_str, sizeof(lat_str), "--");
+    if (g_state.gps_valid)
+        snprintf(lon_str, sizeof(lon_str), "%.4f", g_state.gps.longitude);
+    else
+        snprintf(lon_str, sizeof(lon_str), "--");
+
+    const char *gps_str = g_state.gps_valid ? "YES" : "NO";
+    const char *proto = proto_name(g_state.active_protocol);
+
+    printf("\n");
+    printf("  \xE2\x94\x8C\xE2\x94\x80 ESP Drone Remote ID \xE2\x94\x80 status \xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x90\n");
+    printf("  \xE2\x94\x82  Protocol  : %-33s \xE2\x94\x82\n", proto);
+    printf("  \xE2\x94\x82  GPS Fix   : %-3s           (%d/%d)       \xE2\x94\x82\n",
+           gps_str, g_state.gps.fix_type, g_state.gps.satellites);
+    printf("  \xE2\x94\x82  Lat / Lon : %s / %-12s       \xE2\x94\x82\n", lat_str, lon_str);
+    printf("  \xE2\x94\x82  TX count  : %-35lu \xE2\x94\x82\n",
+           (unsigned long)g_state.transmissions_count);
+    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
+}
+
+static void print_system_box(void)
+{
+    int64_t us = esp_timer_get_time();
+    uint32_t sec = (uint32_t)(us / 1000000);
+    uint32_t h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60;
+    uint32_t heap_free = esp_get_free_heap_size();
+    uint32_t heap_total = heap_caps_get_total_size(MALLOC_CAP_DEFAULT);
+    uint8_t tx_pct = g_state.transmissions_count > 0 ? 100 : 0;
+
+    printf("\n");
+    printf("  \xE2\x94\x8C\xE2\x94\x80 System Info \xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x90\n");
+    printf("  \xE2\x94\x82  Heap free : %-5u KB / %-5u KB                        \xE2\x94\x82\n",
+           heap_free / 1024, heap_total / 1024);
+    printf("  \xE2\x94\x82  Uptime    : %02u:%02u:%02u                                      \xE2\x94\x82\n", h, m, s);
+    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
+}
+
 static void rid_task(void *arg)
 {
-    ESP_LOGI(TAG, "ESP Remote ID task started");
     g_state.active_protocol = RID_PROTOCOL_UNKNOWN;
     uint32_t log_cycle = 0;
 
@@ -224,11 +268,10 @@ static void rid_task(void *arg)
 
         log_cycle++;
         if (log_cycle % 100 == 0) {
-            ESP_LOGI(TAG, "proto=%s gps=%s fix=%d lat=%.4f lon=%.4f tx=%lu",
-                proto_name(g_state.active_protocol),
-                g_state.gps_valid ? "ok" : "no",
-                g_state.gps.fix_type, g_state.gps.latitude, g_state.gps.longitude,
-                (unsigned long)g_state.transmissions_count);
+            print_status_box();
+        }
+        if (log_cycle % 500 == 0) {
+            print_system_box();
         }
 
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -242,7 +285,7 @@ void esp_rid_start(void)
     if (g_running) return;
     g_running = true;
     xTaskCreate(rid_task, "rid_task", 4096, NULL, 5, NULL);
-    ESP_LOGI(TAG, "ESP Remote ID started");
+    ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID started");
 }
 
 void esp_rid_stop(void)
