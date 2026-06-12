@@ -7,7 +7,7 @@
 #include "protocol_detect.h"
 
 #define TAG "PROTO_DETECT"
-#define PROTO_BUF_SIZE 64
+#define PROTO_BUF_SIZE 256
 #define DETECT_TIMEOUT_MS 1000
 #define DETECT_READ_MS 50
 

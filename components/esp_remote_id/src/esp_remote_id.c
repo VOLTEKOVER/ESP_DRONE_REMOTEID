@@ -10,6 +10,7 @@
 #include "mavlink_parser.h"
 #include "wifi_tx.h"
 #include "ble_tx.h"
+#include "esp_netif.h"
 #include "web_config.h"
 #include "nvs_storage.h"
 
@@ -81,6 +82,8 @@ void esp_rid_init(void)
 
     wifi_tx_init();
     ble_tx_init();
+
+    esp_netif_init();
 
     web_config_init();
 
