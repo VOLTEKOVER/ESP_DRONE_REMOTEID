@@ -20,6 +20,7 @@ idf_component_register(
         bt
         nvs_flash
         esp_event
+        esp_netif
         esp_system
         freertos
         esp_http_server

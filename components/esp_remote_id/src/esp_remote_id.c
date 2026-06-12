@@ -88,10 +88,10 @@ void esp_rid_init(void)
     mavlink_parser_init();
     mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
 
+    esp_netif_init();
+
     wifi_tx_init();
     ble_tx_init();
-
-    esp_netif_init();
 
     web_config_init();
 
