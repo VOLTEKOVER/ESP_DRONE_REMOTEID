@@ -1,73 +1,96 @@
 <p align="center">
-  <img src="images/logo%20con%20scritta.svg" alt="ESP Remote ID" width="400">
+  <img src="images/logo%20con%20scritta.svg" alt="ESP Remote ID" width="420">
 </p>
 
-[![Build](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/build.yml/badge.svg)](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/build.yml)
-[![Pages](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/pages.yml/badge.svg)](https://github.com/valeriocomo/ESP32_DRONE_ID/actions/workflows/pages.yml)
-[![Platform](https://img.shields.io/badge/ESP32%2FS3%2FC3-000)](https://www.espressif.com/)
-[![License: GPL v3](https://img.shields.io/badge/GPLv3-blue)](LICENSE)
+<p align="center">
+  <a href="https://github.com/VOLTEKOVER/ESP32_DRONE_ID/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/VOLTEKOVER/ESP32_DRONE_ID/build.yml?logo=github&label=build" alt="Build"></a>
+  <a href="https://voltekover.github.io/ESP32_DRONE_ID/"><img src="https://img.shields.io/badge/web%20flasher-000?logo=esphome" alt="Web Flasher"></a>
+  <a href="https://github.com/VOLTEKOVER/ESP32_DRONE_ID/releases"><img src="https://img.shields.io/github/v/release/VOLTEKOVER/ESP32_DRONE_ID?include_prereleases&logo=github" alt="Release"></a>
+  <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32%20%7C%20S3%20%7C%20C3-000?logo=espressif" alt="Platform"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/VOLTEKOVER/ESP32_DRONE_ID?color=blue" alt="License"></a>
+</p>
 
-Universal **ASTM F3411-22a / ASD-STAN prEN 4709-002** Open DroneID transmitter for ESP32. Reads GPS from any flight controller (MAVLink, MSP, NMEA) and broadcasts via **WiFi Beacon** + **BLE 4.0/5.0**.
+<p align="center">
+  <img src="images/ardupilot_logo.webp" height="28" alt="ArduPilot">&nbsp;&nbsp;
+  <img src="images/betaflight_logo.svg" height="28" alt="Betaflight">&nbsp;&nbsp;
+  <img src="images/inav_logo.png" height="28" alt="INAV">
+</p>
 
-> **Web installer & docs:** https://valeriocomo.github.io/ESP32_DRONE_ID/
+<p align="center">
+  <b>ASTM F3411-22a</b> Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C3.<br>
+  Reads GPS from any flight controller via <b>MAVLink</b> · <b>MSP</b> · <b>NMEA</b> and broadcasts over <b>WiFi Beacon</b> + <b>BLE 4.0/5.0</b>.
+</p>
+
+<p align="center">
+  <a href="https://voltekover.github.io/ESP32_DRONE_ID/"><b>Web Installer & Docs</b></a>
+</p>
 
 ---
 
 ## Quick Start
 
-1. Connect ESP32 to USB
-2. Open https://valeriocomo.github.io/ESP32_DRONE_ID/
-3. Click **Install**, select port
-4. Power from battery, connect WiFi to **ESP-RID**
-5. Configure at **http://192.168.4.1**
+| Step | Action |
+|------|--------|
+| 1 | Connect ESP32 to USB |
+| 2 | Open [voltekover.github.io/ESP32_DRONE_ID](https://voltekover.github.io/ESP32_DRONE_ID/) |
+| 3 | Select your chip (**ESP32** / **ESP32-S3** / **ESP32-C3**) |
+| 4 | Click **Install**, pick serial port |
+| 5 | Power from battery, connect to WiFi **ESP-RID** |
+| 6 | Configure at `http://192.168.4.1` |
+
+No toolchain required &mdash; works in Chrome/Edge via WebSerial.
 
 ## Features
 
-- **Triple protocol** — MAVLink, MSP, NMEA + auto-detect (50 ms)
-- **Dual radio** — WiFi Beacon + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3)
-- **No second GPS** — reuses existing FC GPS data
-- **26 config params** — UAS ID, rates, power, public keys, etc.
-- **Web UI** — built-in AP with REST API + OTA updates
-- **Browser flashing** — WebSerial, no toolchain needed
+| | |
+|---|---|
+| **Protocols** | MAVLink (ArduPilot), MSP (Betaflight/INAV), NMEA (any GPS) — auto-detect in 50 ms |
+| **Radio** | WiFi Beacon (802.11 b/g/n) + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3) |
+| **No extra GPS** | Reuses existing flight controller GPS data |
+| **Web UI** | Built-in AP + REST API + live telemetry |
+| **OTA updates** | Upload firmware over WiFi from browser |
+| **Config** | 26 parameters: UAS ID, rates, power, public keys, lock levels |
+| **Security** | 3 lock levels (normal / signed / eFuse permanent) |
+| **Flashing** | Browser via WebSerial, manual via esptool.py, or Docker |
 
 ## Hardware
 
-| ESP32 | Connect to |
-|-------|-----------|
-| GPIO16 (UART2 RX) | FC TX |
-| GND | FC GND |
-| 5V | FC BEC or USB |
+| ESP32 Pin | Connect to |
+|-----------|-----------|
+| `GPIO16` (UART2 RX) | FC TX (output) |
+| `GND` | FC GND |
+| `5V` (VIN) | FC BEC or USB |
 
-For NMEA clone (tap GPS TX): add **1 kΩ series resistor**.
+> NMEA clone (tap GPS TX): add **1 k&Omega; series resistor** on the tap line.
 
 ## Build
 
-### GitHub Actions (automatic)
-Push to `main` → builds for ESP32/S3/C3. See [Actions](https://github.com/valeriocomo/ESP32_DRONE_ID/actions).
+Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions.  
+[See latest builds](https://github.com/VOLTEKOVER/ESP32_DRONE_ID/actions/workflows/build.yml)
 
 ### Locally (ESP-IDF v6.0.1)
 
 ```bash
-git clone https://github.com/valeriocomo/ESP32_DRONE_ID.git
+git clone https://github.com/VOLTEKOVER/ESP32_DRONE_ID.git
 cd ESP32_DRONE_ID
-. $HOME/esp/v6.0.1/esp-idf/export.sh
-idf.py set-target esp32
+idf.py set-target esp32    # or esp32s3 / esp32c3
 idf.py build flash monitor
 ```
 
-## Structure
+## Project Structure
 
 ```
 ESP32_DRONE_ID/
-├── main/                    # Entry point
-├── components/esp_remote_id/# Core component (protocol detect, web UI, config)
-│   └── webui/               # Embedded web interface (config.html)
-├── docs/                    # GitHub Pages site (docs, demo, install)
-│   └── config(demo).html    # Standalone config simulator
-├── images/                  # Logo assets — <img src="images/logo.svg" width="18" alt="icon"> dragonfly SVG
-└── .github/workflows/      # CI/CD
+├── main/                    # Entry point (app_main)
+├── components/esp_remote_id/# Core: protocol detect, web UI, NVS config
+│   └── webui/config.html    # Embedded web interface
+├── docs/                    # GitHub Pages site
+│   └── index.html           # WebSerial flasher + wiki
+│   └── manifest.json        # Firmware manifest (auto-generated by CI)
+├── images/                  # Logo assets
+└── .github/workflows/       # CI/CD (build + release + Pages deploy)
 ```
 
 ## License
 
-GNU General Public License v3.0 — see [LICENSE](LICENSE).
+[GNU General Public License v3.0](LICENSE)
