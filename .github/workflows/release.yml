@@ -233,11 +233,9 @@ jobs:
         shell: bash
 
       - name: Upload Pages artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
-          name: github-pages
           path: docs
-          overwrite: true
 
       - name: Deploy to GitHub Pages
         id: deployment
