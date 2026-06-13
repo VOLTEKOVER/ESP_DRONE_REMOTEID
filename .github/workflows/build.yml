@@ -72,10 +72,17 @@ jobs:
       - name: Copy firmware to docs
         run: |
           mkdir -p docs/firmware/${{ matrix.target }}
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/bootloader/bootloader.bin docs/firmware/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/partition_table/partition-table.bin docs/firmware/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTEID_Firmware/build/bootloader/bootloader.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTEID_Firmware/build/partition_table/partition-table.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTEID_Firmware/build/esp-drone-remoteid.bin docs/firmware/${{ matrix.target }}/
         shell: bash
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.target }}
+          path: docs/firmware/${{ matrix.target }}/
+          retention-days: 1
 
   deploy-pages:
     name: Deploy GitHub Pages
@@ -99,9 +106,10 @@ jobs:
       - name: Prepare firmware directory
         run: |
           for dir in downloaded-artifacts/firmware-*/; do
+            [ -d "$dir" ] || continue
             target=$(basename "$dir" | sed 's/firmware-//')
             mkdir -p "docs/firmware/$target"
-            cp -r "$dir/$target/"* "docs/firmware/$target/"
+            cp -r "$dir"* "docs/firmware/$target/"
           done
           ls -la docs/firmware/*/
         shell: bash
