@@ -72,9 +72,9 @@ jobs:
       - name: Copy firmware to docs
         run: |
           mkdir -p docs/firmware/${{ matrix.target }}
-          cp ESP32_DRONE_REMOTEID_Firmware/build/bootloader/bootloader.bin docs/firmware/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTEID_Firmware/build/partition_table/partition-table.bin docs/firmware/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTEID_Firmware/build/esp-drone-remoteid.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/bootloader/bootloader.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/partition_table/partition-table.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin docs/firmware/${{ matrix.target }}/
         shell: bash
 
       - name: Upload firmware artifact
