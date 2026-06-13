@@ -13,7 +13,7 @@ ODID_MESSAGE_AUTH = 0x02
 ODID_MESSAGE_SELF_ID = 0x03
 ODID_MESSAGE_SYSTEM = 0x04
 ODID_MESSAGE_OPERATOR_ID = 0x05
-ODID_MESSAGE_PACK = 0xFF
+ODID_MESSAGE_PACK = 0x0F
 
 # ID types
 ID_TYPE_NONE = 0
@@ -209,83 +209,140 @@ class MessagePack:
         }
 
 
-ODID_MESSAGE_HEADER = struct.Struct("<BB")
-SYSTEM_FIXED = struct.Struct("<iiHHhI")
-BASIC_ID_FIXED = struct.Struct("<BB20s")
-OPERATOR_ID_FIXED = struct.Struct("<20s")
-SELF_ID_FIXED = struct.Struct("<23s")
-
-
 def decode_basic_id(data: bytes, offset: int = 0) -> BasicIDMessage:
     msg = BasicIDMessage()
     if len(data) - offset < 22:
         return msg
-    raw = BASIC_ID_FIXED.unpack_from(data, offset)
-    msg.id_type = raw[0]
-    msg.ua_type = raw[1]
-    raw_id = raw[2]
+    b1 = data[offset]
+    msg.id_type = (b1 >> 4) & 0x0F
+    msg.ua_type = b1 & 0x0F
+    raw_id = data[offset + 1 : offset + 21]
     msg.uas_id = raw_id.split(b"\x00")[0].decode("utf-8", errors="replace")
     return msg
 
 
 def decode_location(data: bytes, offset: int = 0) -> LocationMessage:
     msg = LocationMessage()
-    if len(data) - offset < 26:
+    if len(data) - offset < 24:
         return msg
-    msg.status = struct.unpack_from("<B", data, offset)[0]; offset += 1
-    _reserved = struct.unpack_from("<B", data, offset)[0]; offset += 1  # noqa
-    msg.direction = struct.unpack_from("<H", data, offset)[0] / 100.0; offset += 2
-    msg.speed_horizontal = struct.unpack_from("<H", data, offset)[0] * 0.25; offset += 2
-    msg.speed_vertical = struct.unpack_from("<h", data, offset)[0] * 0.25; offset += 2
-    msg.latitude = struct.unpack_from("<i", data, offset)[0] / 1e7; offset += 4
-    msg.longitude = struct.unpack_from("<i", data, offset)[0] / 1e7; offset += 4
-    msg.altitude_pressure = struct.unpack_from("<h", data, offset)[0] / 2.0 - 1000.0; offset += 2
-    msg.altitude_geodetic = struct.unpack_from("<h", data, offset)[0] / 2.0 - 1000.0; offset += 2
-    msg.height = struct.unpack_from("<h", data, offset)[0] / 2.0 - 1000.0; offset += 2
-    msg.timestamp = struct.unpack_from("<I", data, offset)[0] / 10.0
+
+    b1 = data[offset]
+    status = b1 >> 4
+    reserved1 = (b1 >> 3) & 0x01
+    height_type = (b1 >> 2) & 0x01
+    ew_direction = (b1 >> 1) & 0x01
+    speed_mult = b1 & 0x01
+
+    direction_val = data[offset + 1]
+    speed_h = data[offset + 2]
+    speed_v = struct.unpack_from("<b", data, offset + 3)[0]
+    lat_raw = struct.unpack_from("<i", data, offset + 4)[0]
+    lon_raw = struct.unpack_from("<i", data, offset + 8)[0]
+    alt_baro = struct.unpack_from("<H", data, offset + 12)[0]
+    alt_geo = struct.unpack_from("<H", data, offset + 14)[0]
+    height_raw = struct.unpack_from("<H", data, offset + 16)[0]
+    b19 = data[offset + 18]
+    horiz_acc = b19 & 0x0F
+    vert_acc = b19 >> 4
+    b20 = data[offset + 19]
+    speed_acc = b20 & 0x0F
+    baro_acc = b20 >> 4
+    ts_raw = struct.unpack_from("<H", data, offset + 20)[0]
+
+    if ew_direction == 1:
+        direction_val += 180
+    direction = float(direction_val)
+
+    if speed_mult == 0:
+        speed_horizontal = speed_h * 0.25
+    else:
+        speed_horizontal = 63.75 + speed_h * 0.75
+
+    speed_vertical = speed_v * 0.5
+    latitude = lat_raw / 1e7
+    longitude = lon_raw / 1e7
+    altitude_pressure = alt_baro * 0.5 - 1000.0
+    altitude_geodetic = alt_geo * 0.5 - 1000.0
+    height = height_raw * 0.5 - 1000.0
+    timestamp = ts_raw / 10.0 if ts_raw != 0xFFFF else -1
+
+    msg.status = status
+    msg.direction = direction
+    msg.speed_horizontal = speed_horizontal
+    msg.speed_vertical = speed_vertical
+    msg.latitude = latitude
+    msg.longitude = longitude
+    msg.altitude_pressure = altitude_pressure
+    msg.altitude_geodetic = altitude_geodetic
+    msg.height = height
+    msg.timestamp = timestamp
     return msg
 
 
 def decode_system(data: bytes, offset: int = 0) -> SystemMessage:
     msg = SystemMessage()
-    if len(data) - offset < SYSTEM_FIXED.size:
+    if len(data) - offset < 24:
         return msg
-    raw = SYSTEM_FIXED.unpack_from(data, offset)
-    msg.operator_lat = raw[0] / 1e7
-    msg.operator_lon = raw[1] / 1e7
-    msg.area_count = raw[2]
-    msg.area_radius = raw[3]
-    msg.operator_alt_geo = raw[4] / 2.0 - 1000.0
-    msg.timestamp = raw[5]
+
+    b1 = data[offset]
+    reserved = (b1 >> 6) & 0x03
+    classification_type = (b1 >> 3) & 0x07
+    operator_loc_type = b1 & 0x03
+
+    op_lat = struct.unpack_from("<i", data, offset + 1)[0]
+    op_lon = struct.unpack_from("<i", data, offset + 5)[0]
+    area_count = struct.unpack_from("<H", data, offset + 9)[0]
+    area_radius = data[offset + 11]
+    area_ceiling = struct.unpack_from("<H", data, offset + 12)[0]
+    area_floor = struct.unpack_from("<H", data, offset + 14)[0]
+    b17 = data[offset + 16]
+    class_eu = b17 & 0x0F
+    category_eu = b17 >> 4
+    op_alt_geo = struct.unpack_from("<H", data, offset + 17)[0]
+    ts_raw = struct.unpack_from("<I", data, offset + 19)[0]
+
+    msg.operator_lat = op_lat / 1e7
+    msg.operator_lon = op_lon / 1e7
+    msg.area_count = area_count
+    msg.area_radius = area_radius * 10
+    msg.operator_alt_geo = op_alt_geo * 0.5 - 1000.0
+    msg.timestamp = ts_raw
     return msg
 
 
 def decode_operator_id(data: bytes, offset: int = 0) -> OperatorIDMessage:
     msg = OperatorIDMessage()
-    if len(data) - offset < 20:
+    if len(data) - offset < 21:
         return msg
-    raw_id = data[offset : offset + 20]
+    op_id_type = data[offset]
+    raw_id = data[offset + 1 : offset + 21]
     msg.operator_id = raw_id.split(b"\x00")[0].decode("utf-8", errors="replace")
     return msg
 
 
 def decode_self_id(data: bytes, offset: int = 0) -> SelfIDMessage:
     msg = SelfIDMessage()
-    if len(data) - offset < 23:
+    if len(data) - offset < 24:
         return msg
     msg.desc_type = data[offset]
-    raw_desc = data[offset + 1 : offset + 23]
+    raw_desc = data[offset + 1 : offset + 24]
     msg.description = raw_desc.split(b"\x00")[0].decode("utf-8", errors="replace")
     return msg
 
 
 def decode_auth(data: bytes, offset: int = 0) -> AuthMessage:
     msg = AuthMessage()
-    if len(data) - offset < 2:
+    if len(data) - offset < 24:
         return msg
-    msg.auth_type = data[offset]
-    msg.auth_page = data[offset + 1]
-    msg.auth_data = data[offset + 2:]
+    b1 = data[offset]
+    auth_type = b1 >> 4
+    auth_page = b1 & 0x0F
+    msg.auth_type = auth_type
+    msg.auth_page = auth_page
+    if auth_page == 0:
+        msg.auth_data = data[offset + 7 : offset + 24]
+    else:
+        msg.auth_data = data[offset + 1 : offset + 24]
     return msg
 
 
@@ -310,21 +367,22 @@ MESSAGE_TYPE_NAMES = {
 
 
 def decode_odid_message(data: bytes) -> dict:
-    if len(data) < 2:
+    if len(data) < 1:
         return {"type": "Error", "error": "Too short"}
-    msg_type = data[0]
-    _protocol_version = data[1]
+    header_byte = data[0]
+    msg_type = header_byte >> 4
+    proto_version = header_byte & 0x0F
 
     decoded = None
     decoder = DECODERS.get(msg_type)
     if decoder:
-        decoded = decoder(data, 2)
+        decoded = decoder(data, 1)
 
     name = MESSAGE_TYPE_NAMES.get(msg_type, f"Unknown (0x{msg_type:02x})")
 
     result = {
         "message_type": msg_type,
-        "protocol_version": _protocol_version,
+        "protocol_version": proto_version,
         "message_name": name,
     }
     if decoded:
@@ -334,31 +392,83 @@ def decode_odid_message(data: bytes) -> dict:
     return result
 
 
+def _is_valid_msg_header(byte_val: int) -> bool:
+    msg_type = byte_val >> 4
+    return msg_type <= 5 or msg_type == 0x0F
+
+
 def decode_beacon_payload(payload: bytes) -> list[dict]:
     results = []
     offset = 0
+
+    if len(payload) >= 4:
+        def looks_like_pack(pos):
+            return (payload[pos] >> 4) == 0x0F and (payload[pos] & 0x0F) <= 2 and payload[pos + 1] == 25 and 1 <= payload[pos + 2] <= 9
+        has_pack_at_0 = looks_like_pack(0)
+        has_pack_at_1 = looks_like_pack(1)
+        if has_pack_at_1 and not has_pack_at_0:
+            offset = 1
+
     while offset < len(payload):
-        if offset + 2 > len(payload):
-            break
-        msg_type = payload[offset]
-        msg_len = payload[offset + 1]
-
-        if offset + 2 + msg_len > len(payload):
+        if offset >= len(payload):
             break
 
-        msg_data = payload[offset : offset + 2 + msg_len]
-        decoded = decode_odid_message(msg_data)
-        results.append(decoded)
-        offset += 2 + msg_len
+        header_byte = payload[offset]
+
+        if not _is_valid_msg_header(header_byte):
+            offset += 1
+            continue
+
+        msg_type = header_byte >> 4
+
+        if msg_type == 0x0F:
+            if offset + 3 > len(payload):
+                break
+            single_msg_size = payload[offset + 1]
+            pack_size = payload[offset + 2]
+
+            if pack_size == 0 or single_msg_size < 20:
+                offset += 1
+                continue
+
+            pack_header_len = 3
+            total_msg_bytes = pack_size * single_msg_size
+
+            if offset + pack_header_len + total_msg_bytes > len(payload):
+                tail = len(payload) - offset - pack_header_len
+                pack_size = tail // single_msg_size
+                total_msg_bytes = pack_size * single_msg_size
+
+            for i in range(pack_size):
+                msg_start = offset + pack_header_len + i * single_msg_size
+                msg_data = payload[msg_start : msg_start + single_msg_size]
+                decoded = decode_odid_message(msg_data)
+                results.append(decoded)
+
+            offset += pack_header_len + total_msg_bytes
+
+        elif msg_type <= 5:
+            msg_size = 25
+            if offset + msg_size > len(payload):
+                msg_data = payload[offset:]
+            else:
+                msg_data = payload[offset : offset + msg_size]
+            decoded = decode_odid_message(msg_data)
+            results.append(decoded)
+            offset += len(msg_data)
+
+        else:
+            offset += 1
+
     return results
 
 
-# WiFi Vendor IE (OUI 0xFA0BBC) for ODID Beacon frames
 ODID_WIFI_OUI = bytes([0xFA, 0x0B, 0xBC])
 ODID_WIFI_OUI_WID = 0x0D
 
 
 def extract_odid_from_beacon(frame_body: bytes) -> list[dict]:
+    results = []
     offset = 0
     while offset < len(frame_body):
         if offset + 2 > len(frame_body):
@@ -374,9 +484,9 @@ def extract_odid_from_beacon(frame_body: bytes) -> list[dict]:
             oui_wid = elem_data[3]
             if oui == ODID_WIFI_OUI and oui_wid == ODID_WIFI_OUI_WID:
                 odid_payload = elem_data[4:]
-                return decode_beacon_payload(odid_payload)
+                results.extend(decode_beacon_payload(odid_payload))
         offset += 2 + elem_len
-    return []
+    return results
 
 
 def format_summary(decoded_list: list[dict]) -> str:

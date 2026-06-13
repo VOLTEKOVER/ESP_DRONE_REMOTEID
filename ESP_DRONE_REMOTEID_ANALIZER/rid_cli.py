@@ -16,7 +16,7 @@ logger = logging.getLogger("rid_cli")
 
 def cmd_capture(args):
     """Capture and print ODID packets to stdout."""
-    from capture import RIDCapture, list_interfaces
+    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture, list_interfaces
 
     if args.list_ifaces:
         for i in list_interfaces():
@@ -47,8 +47,8 @@ def cmd_capture(args):
 
 def cmd_serve(args):
     """Run WebSocket server (headless)."""
-    from server import BroadcastServer
-    from capture import RIDCapture
+    from ESP_DRONE_REMOTEID_ANALIZER.server import BroadcastServer
+    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture
 
     server = BroadcastServer(host=args.bind, port=args.port)
     server.start()

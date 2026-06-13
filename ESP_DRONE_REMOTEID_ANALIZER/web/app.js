@@ -217,11 +217,16 @@ function renderStats() {
 /* ---- Charts ---- */
 let chartRssi = null;
 let chartRate = null;
+const chartColors = ["#58a6ff", "#3fb950", "#f0883e", "#f85149", "#bc8cff", "#ff7b72", "#79c0ff", "#a5d6ff"];
+let rssiDsMap = {};
 
 function initCharts() {
   const ctx1 = document.getElementById("chart-rssi");
   const ctx2 = document.getElementById("chart-rate");
   if (!ctx1 || !ctx2) return;
+
+  const gridCol = "#21262d";
+  const tickCol = "#8b949e";
 
   chartRssi = new Chart(ctx1, {
     type: "scatter",
@@ -231,8 +236,8 @@ function initCharts() {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        x: { type: "linear", title: { display: false }, grid: { color: "#21262d" }, ticks: { color: "#8b949e", maxTicksLimit: 8 } },
-        y: { min: -100, max: -20, title: { display: true, text: "RSSI (dBm)", color: "#8b949e" }, grid: { color: "#21262d" }, ticks: { color: "#8b949e" } },
+        x: { type: "linear", min: Date.now() / 1000 - 120, max: Date.now() / 1000, title: { display: false }, grid: { color: gridCol }, ticks: { color: tickCol, maxTicksLimit: 8 } },
+        y: { min: -100, max: -20, title: { display: true, text: "RSSI (dBm)", color: tickCol }, grid: { color: gridCol }, ticks: { color: tickCol } },
       },
       plugins: { legend: { display: false } },
     },
@@ -253,8 +258,8 @@ function initCharts() {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        x: { grid: { display: false }, ticks: { color: "#8b949e", maxTicksLimit: 10 } },
-        y: { beginAtZero: true, title: { display: true, text: "Count", color: "#8b949e" }, grid: { color: "#21262d" }, ticks: { color: "#8b949e" } },
+        x: { grid: { display: false }, ticks: { color: tickCol, maxTicksLimit: 10 } },
+        y: { beginAtZero: true, title: { display: true, text: "Count", color: tickCol }, grid: { color: gridCol }, ticks: { color: tickCol } },
       },
       plugins: { legend: { display: false } },
     },
@@ -264,26 +269,43 @@ function initCharts() {
 function updateCharts() {
   if (!chartRssi || !chartRate) return;
 
-  const colorMap = {};
-  let ci = 0;
-  const colors = ["#58a6ff", "#3fb950", "#f0883e", "#f85149", "#bc8cff", "#ff7b72", "#79c0ff", "#a5d6ff"];
-
-  /* group RSSI by MAC, show last 120 points */
+  const now = Date.now() / 1000;
   const history = state.rssiHistory;
   const macs = [...new Set(history.map(h => h.mac))].slice(0, 8);
-  const datasets = macs.map(mac => {
-    if (!colorMap[mac]) { colorMap[mac] = colors[ci++ % colors.length]; }
+
+  /* Prune stale datasets */
+  for (const mac of Object.keys(rssiDsMap)) {
+    if (!macs.includes(mac)) {
+      const idx = chartRssi.data.datasets.indexOf(rssiDsMap[mac]);
+      if (idx !== -1) chartRssi.data.datasets.splice(idx, 1);
+      delete rssiDsMap[mac];
+    }
+  }
+
+  /* Update / add datasets in-place */
+  let ci = 0;
+  for (const mac of macs) {
+    if (!rssiDsMap[mac]) {
+      const color = chartColors[ci++ % chartColors.length];
+      const ds = {
+        label: mac.length > 12 ? mac.slice(-12) : mac,
+        data: [],
+        backgroundColor: color,
+        borderColor: color,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+      };
+      chartRssi.data.datasets.push(ds);
+      rssiDsMap[mac] = ds;
+    }
+    const ds = rssiDsMap[mac];
     const pts = history.filter(h => h.mac === mac).map(h => ({ x: h.ts, y: h.rssi }));
-    return {
-      label: mac.length > 12 ? mac.slice(-12) : mac,
-      data: pts,
-      backgroundColor: colorMap[mac],
-      borderColor: colorMap[mac],
-      pointRadius: 2,
-      pointHoverRadius: 5,
-    };
-  });
-  chartRssi.data.datasets = datasets;
+    ds.data.splice(0, ds.data.length, ...pts);
+  }
+
+  /* Fix X axis window: last 120s */
+  chartRssi.options.scales.x.min = now - 120;
+  chartRssi.options.scales.x.max = now;
   chartRssi.update("none");
 
   /* Rate */
@@ -398,5 +420,19 @@ function init() {
   initMap();
   setInterval(tick, 1000);
 }
+
+/* ---- Dark mode ---- */
+function toggleDark() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  localStorage.setItem("rid-theme", isDark ? "light" : "dark");
+}
+(function initTheme() {
+  const saved = localStorage.getItem("rid-theme");
+  if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    document.documentElement.setAttribute("data-theme", "dark");
+  }
+})();
 
 document.addEventListener("DOMContentLoaded", init);

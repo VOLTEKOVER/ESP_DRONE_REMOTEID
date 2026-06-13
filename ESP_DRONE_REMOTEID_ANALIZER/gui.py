@@ -8,6 +8,7 @@ import time
 import threading
 import logging
 from pathlib import Path
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,12 +18,11 @@ logger = logging.getLogger("rid_gui")
 
 
 WEB_DIR = Path(__file__).parent / "web"
-HTML_FILE = WEB_DIR / "index.html"
 
 
 def run_backend(ws_port: int, capture_iface: str, capture_channel: int):
-    from server import BroadcastServer
-    from capture import RIDCapture, list_interfaces, check_monitor_mode, print_interface_help
+    from ESP_DRONE_REMOTEID_ANALIZER.server import BroadcastServer
+    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture, list_interfaces, check_monitor_mode, print_interface_help
 
     server = BroadcastServer(port=ws_port)
     server.start()
@@ -36,6 +36,14 @@ def run_backend(ws_port: int, capture_iface: str, capture_channel: int):
     capturer.start()
 
     return server, capturer
+
+
+def start_http_server(web_dir: Path, port: int):
+    os.chdir(str(web_dir))
+    server = HTTPServer(("127.0.0.1", port), SimpleHTTPRequestHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server
 
 
 def main():
@@ -52,7 +60,7 @@ def main():
     args = parser.parse_args()
 
     if args.list_ifaces:
-        from capture import list_interfaces
+        from ESP_DRONE_REMOTEID_ANALIZER.capture import list_interfaces
         ifaces = list_interfaces()
         print("Available interfaces:")
         for i in ifaces:
@@ -68,6 +76,9 @@ def main():
             print("pywebview not installed. Run: pip install pywebview\nFalling back to headless mode.")
             args.no_gui = True
 
+    httpd = start_http_server(WEB_DIR, args.http_port)
+    logger.info("HTTP server on http://127.0.0.1:%d", args.http_port)
+
     server, capturer = run_backend(args.port, args.iface, args.channel)
     time.sleep(0.5)
 
@@ -79,21 +90,9 @@ def main():
         except KeyboardInterrupt:
             pass
     else:
-        if not HTML_FILE.exists():
-            logger.error("Web UI not found at %s", HTML_FILE)
-            sys.exit(1)
-
-        ws_url = f"ws://127.0.0.1:{args.port}"
-        html_content = HTML_FILE.read_text(encoding="utf-8")
-        html_content = html_content.replace("__WS_URL__", ws_url)
-
-        import tempfile
-        tmp_html = Path(tempfile.gettempdir()) / "ESP_DRONE_REMOTEID_ANALIZER.html"
-        tmp_html.write_text(html_content, encoding="utf-8")
-
         window = webview.create_window(
             title="ESP DRONE REMOTEID ANALIZER",
-            url=str(tmp_html),
+            url=f"http://127.0.0.1:{args.http_port}/index.html",
             width=1280,
             height=860,
             resizable=True,
@@ -103,6 +102,7 @@ def main():
 
     capturer.stop()
     server.stop()
+    httpd.shutdown()
 
 
 if __name__ == "__main__":

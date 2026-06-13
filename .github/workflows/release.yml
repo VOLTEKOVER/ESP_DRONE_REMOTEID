@@ -54,19 +54,13 @@ jobs:
           idf.py build
         shell: bash
 
-      - name: Collect artifacts
+      - name: Copy firmware to docs
         run: |
-          mkdir -p release/${{ matrix.target }}
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/bootloader/bootloader.bin release/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/partition_table/partition-table.bin release/${{ matrix.target }}/
-          cp ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin release/${{ matrix.target }}/
+          mkdir -p docs/firmware/${{ matrix.target }}
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/bootloader/bootloader.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/partition_table/partition-table.bin docs/firmware/${{ matrix.target }}/
+          cp ESP32_DRONE_REMOTE_ID_Firmware/build/esp-drone-remoteid.bin docs/firmware/${{ matrix.target }}/
         shell: bash
-
-      - name: Upload
-        uses: actions/upload-artifact@v7
-        with:
-          name: firmware-${{ matrix.target }}
-          path: release/
 
   create-release:
     name: Create Release
