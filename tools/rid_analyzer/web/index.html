@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP DRONE REMOTEID — RID Analyzer</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1><span class="gradient">ESP DRONE REMOTEID</span> <span class="sub">RID Analyzer</span></h1>
+    </div>
+    <div class="header-right">
+      <span id="ws-status" class="badge badge-off">Disconnected</span>
+      <span id="stats-devices" class="badge">0 devices</span>
+      <span id="stats-ids" class="badge">0 IDs</span>
+      <span id="stats-packets" class="badge">0 pkt/min</span>
+      <button class="btn" onclick="resetStats()">Reset</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="devices">Devices</button>
+    <button class="tab" data-tab="map">Map</button>
+    <button class="tab" data-tab="timeline">Timeline</button>
+    <button class="tab" data-tab="about">About</button>
+  </div>
+
+  <div class="tab-content active" id="tab-devices">
+    <table id="device-table">
+      <thead>
+        <tr>
+          <th>MAC</th>
+          <th>Basic ID</th>
+          <th>UA Type</th>
+          <th>Operator</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>RSSI</th>
+          <th>Packets</th>
+          <th>Last Seen</th>
+        </tr>
+      </thead>
+      <tbody id="device-tbody">
+        <tr><td colspan="9" class="empty">Waiting for RID packets...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tab-content" id="tab-map">
+    <div id="map"></div>
+  </div>
+
+  <div class="tab-content" id="tab-timeline">
+    <div class="chart-row">
+      <div class="chart-box">
+        <h3>RSSI Timeline</h3>
+        <canvas id="chart-rssi"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Packet Rate</h3>
+        <canvas id="chart-rate"></canvas>
+      </div>
+    </div>
+    <div class="log-box">
+      <h3>Live Packet Log</h3>
+      <pre id="packet-log"><div class="placeholder">No packets yet.</div></pre>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-about">
+    <div class="about-box">
+      <h2>ESP DRONE REMOTEID — RID Analyzer</h2>
+      <p>Real-time Open Drone ID (ASTM F3411-22a) WiFi beacon analyzer.</p>
+      <ul>
+        <li><strong>Capture</strong>: Scapy-based WiFi promiscuous/monitor mode</li>
+        <li><strong>UI</strong>: Chart.js + Leaflet + WebSocket</li>
+        <li><strong>Export</strong>: PCAP logging</li>
+        <li><strong>Compatibility</strong>: Windows, macOS, Linux</li>
+      </ul>
+      <p>Built with <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">ESP DRONE REMOTEID</a>.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

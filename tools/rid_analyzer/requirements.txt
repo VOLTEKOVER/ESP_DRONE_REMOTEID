@@ -1,0 +1,14 @@
+# ESP DRONE REMOTEID — RID Analyzer
+# Install: pip install -r requirements.txt
+
+# Core
+scapy>=2.5.0
+
+# WebSocket bridge
+simple-websocket-server>=2.2.1
+
+# Desktop GUI (optional — omit for headless/server only)
+pywebview>=4.4.1
+
+# Web UI serves bundled HTML, but no Python web framework needed
+# (WebSocket handles real-time data)
