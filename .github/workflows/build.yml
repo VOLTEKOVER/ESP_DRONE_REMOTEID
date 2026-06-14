@@ -34,8 +34,11 @@ jobs:
       matrix:
         target:
           - esp32
+          - esp32s2
           - esp32s3
+          - esp32c2
           - esp32c3
+          - esp32c6
 
     steps:
       - name: Checkout
@@ -56,16 +59,25 @@ jobs:
         run: |
           . /opt/esp/idf/export.sh > /dev/null 2>&1
           git config --global --add safe.directory "$(pwd)" > /dev/null 2>&1
-          cd ESP32_DRONE_REMOTE_ID_Firmware
-          idf.py set-target ${{ matrix.target }}
-          echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
-          echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
-          if [ "${{ matrix.target }}" != "esp32" ]; then
-            echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
-          fi
-          export CCACHE_BASEDIR="$PWD"
+           cd ESP32_DRONE_REMOTE_ID_Firmware
+           idf.py set-target ${{ matrix.target }}
+           echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
+           if [ "${{ matrix.target }}" = "esp32c2" ]; then
+             echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions_2mb.csv\"" >> sdkconfig
+             echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions_2mb.csv\"" >> sdkconfig
+           else
+             echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
+             echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
+           fi
+           if [ "${{ matrix.target }}" = "esp32c2" ]; then
+             echo "CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y" >> sdkconfig
+           else
+             echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
+           fi
+           if [ "${{ matrix.target }}" != "esp32" ] && [ "${{ matrix.target }}" != "esp32s2" ]; then
+             echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
+           fi
+           export CCACHE_BASEDIR="$PWD"
           idf.py build
         shell: bash
 
@@ -101,6 +113,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: downloaded-artifacts
+          pattern: firmware-*
+          merge-multiple: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare firmware directory
@@ -119,30 +133,50 @@ jobs:
           export VERSION="$(git describe --tags --always 2>/dev/null || echo 'dev')"
           python3 -c "
           import json, os
+
+          # chip family mapping
+          FAMILIES = {
+            'esp32': 'ESP32',
+            'esp32s2': 'ESP32-S2',
+            'esp32s3': 'ESP32-S3',
+            'esp32c2': 'ESP32-C2',
+            'esp32c3': 'ESP32-C3',
+            'esp32c6': 'ESP32-C6',
+          }
+          # bootloader offset: 0x1000 for Xtensa pre-S3, 0x0 for others
+          BOOT_OFFSET_0x1000 = ('esp32', 'esp32s2')
+
           manifest = {
             'name': 'ESP Remote ID',
             'version': os.environ['VERSION'],
             'home_url': 'https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID',
             'config_url': 'http://192.168.4.1',
             'new_install_improv_wait_time': 0,
-            'builds': [
-              { 'chipFamily': 'ESP32', 'parts': [
-                { 'path': 'firmware/esp32/bootloader.bin', 'offset': 0x1000 },
-                { 'path': 'firmware/esp32/partition-table.bin', 'offset': 0x8000 },
-                { 'path': 'firmware/esp32/esp-drone-remoteid.bin', 'offset': 0x20000 }
-              ]},
-              { 'chipFamily': 'ESP32-S3', 'parts': [
-                { 'path': 'firmware/esp32s3/bootloader.bin', 'offset': 0x0 },
-                { 'path': 'firmware/esp32s3/partition-table.bin', 'offset': 0x8000 },
-                { 'path': 'firmware/esp32s3/esp-drone-remoteid.bin', 'offset': 0x20000 }
-              ]},
-              { 'chipFamily': 'ESP32-C3', 'parts': [
-                { 'path': 'firmware/esp32c3/bootloader.bin', 'offset': 0x0 },
-                { 'path': 'firmware/esp32c3/partition-table.bin', 'offset': 0x8000 },
-                { 'path': 'firmware/esp32c3/esp-drone-remoteid.bin', 'offset': 0x20000 }
-              ]}
-            ]
+            'builds': [],
           }
+
+          fw_dir = 'docs/firmware'
+          for target in sorted(os.listdir(fw_dir)):
+            parts_path = os.path.join(fw_dir, target)
+            if not os.path.isdir(parts_path):
+              continue
+            boot_bin = os.path.join(parts_path, 'bootloader.bin')
+            part_bin = os.path.join(parts_path, 'partition-table.bin')
+            app_bin = os.path.join(parts_path, 'esp-drone-remoteid.bin')
+            if not (os.path.exists(boot_bin) and os.path.exists(part_bin) and os.path.exists(app_bin)):
+              continue
+            boot_offset = 0x0
+            if target in BOOT_OFFSET_0x1000:
+              boot_offset = 0x1000
+            manifest['builds'].append({
+              'chipFamily': FAMILIES.get(target, target),
+              'parts': [
+                {'path': f'firmware/{target}/bootloader.bin', 'offset': boot_offset},
+                {'path': f'firmware/{target}/partition-table.bin', 'offset': 0x8000},
+                {'path': f'firmware/{target}/esp-drone-remoteid.bin', 'offset': 0x20000},
+              ]
+            })
+
           with open('docs/manifest.json', 'w') as f:
             json.dump(manifest, f, indent=2)
           "
