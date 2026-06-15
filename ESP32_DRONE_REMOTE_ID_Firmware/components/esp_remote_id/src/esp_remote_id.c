@@ -69,6 +69,25 @@ static void default_config(rid_config_t *cfg)
     cfg->options = 0;
     cfg->lock_level = 0;
 
+    cfg->led_r_gpio =
+#ifdef CONFIG_RID_LED_R_GPIO
+        CONFIG_RID_LED_R_GPIO;
+#else
+        -1;
+#endif
+    cfg->led_g_gpio =
+#ifdef CONFIG_RID_LED_G_GPIO
+        CONFIG_RID_LED_G_GPIO;
+#else
+        -1;
+#endif
+    cfg->led_b_gpio =
+#ifdef CONFIG_RID_LED_B_GPIO
+        CONFIG_RID_LED_B_GPIO;
+#else
+        -1;
+#endif
+
     for (int i = 0; i < ESP_RID_NUM_KEYS; i++)
         cfg->public_keys[i][0] = '\0';
 }
@@ -94,7 +113,7 @@ void esp_rid_init(void)
     wifi_tx_init();
     ble_tx_init();
 
-    led_status_init();
+    led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
     web_config_init();
 
     ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID initialized");
@@ -109,6 +128,7 @@ void esp_rid_set_config(const rid_config_t *config)
         protocol_detect_reinit(g_config.baud_rate);
     }
     mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
+    led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
 }
 
 void esp_rid_get_config(rid_config_t *config)
@@ -129,6 +149,7 @@ void esp_rid_factory_reset(void)
 }
 
 static int64_t last_tx_wifi_bcn = 0;
+static int64_t last_tx_wifi_nan = 0;
 static int64_t last_tx_ble4 = 0;
 static int64_t last_tx_ble5 = 0;
 
@@ -144,6 +165,8 @@ static bool rate_allowed(int64_t *last_us, float rate_hz)
     return false;
 }
 
+static uint8_t g_nan_counter = 0;
+
 static bool update_transmissions(void)
 {
     if (!g_state.gps_valid && !g_config.bcast_powerup) return false;
@@ -155,6 +178,14 @@ static bool update_transmissions(void)
         rate_allowed(&last_tx_wifi_bcn, g_config.wifi_bcn_rate_hz)) {
         wifi_tx_transmit(&g_state.gps, &g_state.identity);
         g_state.wifi_bcn_count++;
+        g_state.transmissions_count++;
+        tx = true;
+    }
+
+    if ((g_config.tx_modes & RID_TRANSMIT_WIFI_NAN) &&
+        rate_allowed(&last_tx_wifi_nan, g_config.wifi_nan_rate_hz)) {
+        wifi_tx_transmit_nan(&g_state.gps, &g_state.identity, g_nan_counter++);
+        g_state.wifi_nan_count++;
         g_state.transmissions_count++;
         tx = true;
     }
@@ -277,13 +308,23 @@ static void rid_task(void *arg)
                 g_state.gps_valid = true;
                 g_state.last_update_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
 
-                snprintf(g_state.identity.uas_id, sizeof(g_state.identity.uas_id), "%s", g_config.uas_id);
-                snprintf(g_state.identity.operator_id, sizeof(g_state.identity.operator_id), "%s", g_config.operator_id);
-                g_state.identity.id_type = g_config.id_type;
-                g_state.identity.ua_type = g_config.ua_type;
-                snprintf(g_state.identity.uas_id_2, sizeof(g_state.identity.uas_id_2), "%s", g_config.uas_id_2);
-                g_state.identity.id_type_2 = g_config.id_type_2;
-                g_state.identity.ua_type_2 = g_config.ua_type_2;
+                rid_identity_t mav_id;
+                bool have_mav_id = false;
+                if (proto == RID_PROTOCOL_MAVLINK) {
+                    have_mav_id = mavlink_parser_get_identity(&mav_id);
+                }
+
+                if (have_mav_id && mav_id.uas_id[0] != '\0') {
+                    memcpy(&g_state.identity, &mav_id, sizeof(rid_identity_t));
+                } else {
+                    snprintf(g_state.identity.uas_id, sizeof(g_state.identity.uas_id), "%s", g_config.uas_id);
+                    snprintf(g_state.identity.operator_id, sizeof(g_state.identity.operator_id), "%s", g_config.operator_id);
+                    g_state.identity.id_type = g_config.id_type;
+                    g_state.identity.ua_type = g_config.ua_type;
+                    snprintf(g_state.identity.uas_id_2, sizeof(g_state.identity.uas_id_2), "%s", g_config.uas_id_2);
+                    g_state.identity.id_type_2 = g_config.id_type_2;
+                    g_state.identity.ua_type_2 = g_config.ua_type_2;
+                }
 
                 if (g_config.options & RID_OPT_DONT_SAVE_BASIC_ID) {
                     g_state.identity.uas_id[0] = '\0';
@@ -296,7 +337,12 @@ static void rid_task(void *arg)
         } else {
             led_status_update(false, false);
         }
-    
+
+        uint32_t now_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+        if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
+            g_state.gps_valid = false;
+        }
+
         if (g_config.options & RID_OPT_PRINT_RID_MAVLINK) {
             ESP_LOGI(TAG, "RID uas=%s lat=%.6f lon=%.6f alt=%.1f speed=%.1f hdg=%d fix=%d sat=%u",
                 g_state.identity.uas_id,

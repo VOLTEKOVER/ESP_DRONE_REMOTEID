@@ -89,6 +89,10 @@ typedef struct {
     uint8_t options;
     int8_t lock_level;
 
+    int8_t led_r_gpio;
+    int8_t led_g_gpio;
+    int8_t led_b_gpio;
+
     char public_keys[ESP_RID_NUM_KEYS][ESP_RID_MAX_KEY_LEN + 1];
 } rid_config_t;
 

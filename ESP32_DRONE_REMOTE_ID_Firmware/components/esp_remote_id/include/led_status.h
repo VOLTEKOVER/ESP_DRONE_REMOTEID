@@ -17,6 +17,7 @@
 #endif
 
 void led_status_init(void);
+void led_status_reconfigure(int r_pin, int g_pin, int b_pin);
 void led_status_update(bool gps_valid, bool transmitting);
 
 #endif

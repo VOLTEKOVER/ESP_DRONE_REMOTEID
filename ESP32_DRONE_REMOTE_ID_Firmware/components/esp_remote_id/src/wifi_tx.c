@@ -147,3 +147,58 @@ bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)
 
     return false;
 }
+
+bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t counter)
+{
+    if (!g_initialized || !gps || !identity) return false;
+
+    memset(&g_uas_data, 0, sizeof(ODID_UAS_Data));
+
+    g_uas_data.BasicIDValid[0] = 1;
+    g_uas_data.BasicID[0].IDType = (ODID_idtype_t)identity->id_type;
+    g_uas_data.BasicID[0].UAType = (ODID_uatype_t)identity->ua_type;
+    strncpy((char *)g_uas_data.BasicID[0].UASID, identity->uas_id, ODID_ID_SIZE);
+
+    if (identity->uas_id_2[0] != '\0') {
+        g_uas_data.BasicIDValid[1] = 1;
+        g_uas_data.BasicID[1].IDType = (ODID_idtype_t)identity->id_type_2;
+        g_uas_data.BasicID[1].UAType = (ODID_uatype_t)identity->ua_type_2;
+        strncpy((char *)g_uas_data.BasicID[1].UASID, identity->uas_id_2, ODID_ID_SIZE);
+    }
+
+    g_uas_data.LocationValid = 1;
+    g_uas_data.Location.Latitude = gps->latitude;
+    g_uas_data.Location.Longitude = gps->longitude;
+    g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
+    g_uas_data.Location.Height = gps->altitude_relative;
+    g_uas_data.Location.SpeedHorizontal = gps->speed;
+    g_uas_data.Location.Direction = gps->heading;
+    g_uas_data.Location.SpeedVertical = gps->speed_vertical;
+    g_uas_data.Location.HorizAccuracy = horiz_acc_from_gps(gps->fix_type, gps->satellites);
+    g_uas_data.Location.VertAccuracy = vert_acc_from_gps(gps->fix_type, gps->satellites);
+
+    g_uas_data.SystemValid = 1;
+    g_uas_data.System.OperatorLatitude = gps->latitude;
+    g_uas_data.System.OperatorLongitude = gps->longitude;
+    g_uas_data.System.AreaCount = 0;
+    g_uas_data.System.AreaRadius = 0;
+
+    g_uas_data.OperatorIDValid = 1;
+    strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+
+    static uint8_t buffer[1024];
+    int length = odid_wifi_build_message_pack_nan_action_frame(
+        &g_uas_data, (char *)g_random_mac,
+        counter, buffer, sizeof(buffer));
+
+    if (length > 0) {
+        esp_err_t ret = esp_wifi_80211_tx(WIFI_IF_AP, buffer, length, true);
+        if (ret != ESP_OK) {
+            ESP_LOGW(TAG, "NAN TX failed: %s", esp_err_to_name(ret));
+            return false;
+        }
+        return true;
+    }
+
+    return false;
+}

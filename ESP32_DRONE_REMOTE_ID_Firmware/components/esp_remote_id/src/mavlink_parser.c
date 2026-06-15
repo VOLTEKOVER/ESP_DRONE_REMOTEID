@@ -6,14 +6,17 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "mavlink_parser.h"
-#include "common/mavlink.h"
+#include "ardupilotmega/mavlink.h"
+#include "mav2odid.h"
 
 #define TAG "MAVLINK"
 #define UART_MAV UART_NUM_1
 #define MAV_RX_BUF 512
 
 static rid_gps_data_t g_last_gps;
+static rid_identity_t g_last_identity;
 static uint32_t g_last_update = 0;
+static uint32_t g_last_identity_update = 0;
 static mavlink_status_t g_mav_status;
 static uint8_t g_mav_buf[MAV_RX_BUF];
 static uint8_t g_sysid_filter = 0;
@@ -21,6 +24,7 @@ static uint8_t g_sysid_filter = 0;
 void mavlink_parser_init(void)
 {
     memset(&g_last_gps, 0, sizeof(rid_gps_data_t));
+    memset(&g_last_identity, 0, sizeof(rid_identity_t));
     memset(&g_mav_status, 0, sizeof(g_mav_status));
 }
 
@@ -83,9 +87,60 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                     if (g_last_gps.heading < 0) g_last_gps.heading += 360;
                     break;
                 }
+                case MAVLINK_MSG_ID_AHRS2: {
+                    mavlink_ahrs2_t ahrs;
+                    mavlink_msg_ahrs2_decode(&msg, &ahrs);
+                    g_last_gps.heading = (int16_t)(ahrs.yaw * 180.0f / 3.14159f);
+                    if (g_last_gps.heading < 0) g_last_gps.heading += 360;
+                    break;
+                }
                 case MAVLINK_MSG_ID_HEARTBEAT: {
                     const uint8_t *p = (const uint8_t *)msg.payload64;
                     g_last_gps.armed = (p[2] & 128) != 0;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_LOCATION: {
+                    mavlink_open_drone_id_location_t odid_loc;
+                    mavlink_msg_open_drone_id_location_decode(&msg, &odid_loc);
+                    g_last_gps.latitude = odid_loc.latitude / 1e7;
+                    g_last_gps.longitude = odid_loc.longitude / 1e7;
+                    g_last_gps.altitude_msl = odid_loc.altitude_geodetic;
+                    g_last_gps.altitude_relative = odid_loc.height;
+                    g_last_gps.altitude_baro = odid_loc.altitude_barometric;
+                    g_last_gps.speed = odid_loc.speed_horizontal / 100.0f;
+                    g_last_gps.speed_vertical = odid_loc.speed_vertical / 100.0f;
+                    g_last_gps.heading = odid_loc.direction / 100;
+                    g_last_gps.fix_type = 3;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_BASIC_ID: {
+                    mavlink_open_drone_id_basic_id_t odid_basic;
+                    mavlink_msg_open_drone_id_basic_id_decode(&msg, &odid_basic);
+                    int id_len = ODID_ID_SIZE;
+                    if (id_len > ESP_RID_MAX_STR_LEN) id_len = ESP_RID_MAX_STR_LEN;
+                    memcpy(g_last_identity.uas_id, odid_basic.uas_id, id_len);
+                    g_last_identity.uas_id[id_len] = '\0';
+                    g_last_identity.id_type = odid_basic.id_type;
+                    g_last_identity.ua_type = odid_basic.ua_type;
+                    g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_OPERATOR_ID: {
+                    mavlink_open_drone_id_operator_id_t odid_op;
+                    mavlink_msg_open_drone_id_operator_id_decode(&msg, &odid_op);
+                    int op_len = ODID_ID_SIZE;
+                    if (op_len > ESP_RID_MAX_STR_LEN) op_len = ESP_RID_MAX_STR_LEN;
+                    memcpy(g_last_identity.operator_id, odid_op.operator_id, op_len);
+                    g_last_identity.operator_id[op_len] = '\0';
+                    g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_SYSTEM: {
+                    mavlink_open_drone_id_system_t odid_sys;
+                    mavlink_msg_open_drone_id_system_decode(&msg, &odid_sys);
+                    g_last_gps.latitude = odid_sys.operator_latitude / 1e7;
+                    g_last_gps.longitude = odid_sys.operator_longitude / 1e7;
+                    g_last_gps.satellites = odid_sys.area_count;
                     break;
                 }
                 default:
@@ -104,5 +159,15 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
         return true;
     }
 
+    return false;
+}
+
+bool mavlink_parser_get_identity(rid_identity_t *identity)
+{
+    if (g_last_identity_update != 0 &&
+        (xTaskGetTickCount() * portTICK_PERIOD_MS - g_last_identity_update) < 10000) {
+        memcpy(identity, &g_last_identity, sizeof(rid_identity_t));
+        return true;
+    }
     return false;
 }

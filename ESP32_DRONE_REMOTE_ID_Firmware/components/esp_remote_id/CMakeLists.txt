@@ -27,6 +27,7 @@ idf_component_register(
         esp_http_server
         app_update
         esp_driver_uart
+        esp_driver_gpio
     EMBED_TXTFILES
         "webui/config.html"
 )

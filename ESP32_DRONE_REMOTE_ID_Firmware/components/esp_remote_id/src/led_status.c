@@ -1,14 +1,18 @@
 #include "led_status.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #define TAG "LED"
+#define TX_BLINK_US 80000
 
 static int r_pin = CONFIG_RID_LED_R_GPIO;
 static int g_pin = CONFIG_RID_LED_G_GPIO;
 static int b_pin = CONFIG_RID_LED_B_GPIO;
+static bool pins_initialized = false;
+static int64_t last_blink_us = 0;
 
 static void set_pin(int pin, bool on)
 {
@@ -23,25 +27,38 @@ static void all_off(void)
     set_pin(b_pin, 0);
 }
 
+void led_status_reconfigure(int r, int g, int b)
+{
+    r_pin = r;
+    g_pin = g;
+    b_pin = b;
+    pins_initialized = false;
+    led_status_init();
+}
+
 void led_status_init(void)
 {
     if (r_pin < 0 && g_pin < 0 && b_pin < 0) {
         ESP_LOGI(TAG, "No LED pins configured");
+        pins_initialized = true;
         return;
     }
 
-    gpio_config_t io_conf = {
-        .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-    };
+    if (!pins_initialized) {
+        gpio_config_t io_conf = {
+            .intr_type = GPIO_INTR_DISABLE,
+            .mode = GPIO_MODE_OUTPUT,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+        };
 
-    int pins[] = {r_pin, g_pin, b_pin};
-    for (int i = 0; i < 3; i++) {
-        if (pins[i] < 0) continue;
-        io_conf.pin_bit_mask = (1ULL << pins[i]);
-        gpio_config(&io_conf);
+        int pins[] = {r_pin, g_pin, b_pin};
+        for (int i = 0; i < 3; i++) {
+            if (pins[i] < 0) continue;
+            io_conf.pin_bit_mask = (1ULL << pins[i]);
+            gpio_config(&io_conf);
+        }
+        pins_initialized = true;
     }
 
     all_off();
@@ -51,6 +68,15 @@ void led_status_init(void)
 void led_status_update(bool gps_valid, bool transmitting)
 {
     if (r_pin < 0 && g_pin < 0 && b_pin < 0) return;
+
+    if (transmitting) {
+        last_blink_us = esp_timer_get_time();
+    }
+
+    if (last_blink_us > 0 && esp_timer_get_time() - last_blink_us < TX_BLINK_US) {
+        all_off();
+        return;
+    }
 
     if (!gps_valid) {
         set_pin(r_pin, 1);

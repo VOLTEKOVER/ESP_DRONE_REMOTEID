@@ -13,6 +13,7 @@
 #include "nvs_storage.h"
 #include "esp_remote_id.h"
 #include "protocol_detect.h"
+#include "esp_efuse.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 2048
@@ -23,6 +24,13 @@ extern const char config_html_end[] asm("_binary_config_html_end");
 #define config_html_size ((size_t)(config_html_end - config_html_start))
 
 static httpd_handle_t g_server = NULL;
+
+static int get_lock_level(void)
+{
+    rid_config_t cfg;
+    esp_rid_get_config(&cfg);
+    return cfg.lock_level;
+}
 
 /* ---------- Log ring buffer ---------- */
 #define LOG_RING_MAX 64
@@ -144,6 +152,9 @@ static void apply_json(rid_config_t *cfg, const char *json)
     iv = json_int(json, "bcast_powerup"); cfg->bcast_powerup = (uint8_t)iv;
     iv = json_int(json, "options"); cfg->options = (uint8_t)iv;
     iv = json_int(json, "lock_level"); cfg->lock_level = (int8_t)iv;
+    iv = json_int(json, "led_r_gpio"); cfg->led_r_gpio = (int8_t)iv;
+    iv = json_int(json, "led_g_gpio"); cfg->led_g_gpio = (int8_t)iv;
+    iv = json_int(json, "led_b_gpio"); cfg->led_b_gpio = (int8_t)iv;
     if (json_int(json, "baud_rate") > 0) cfg->baud_rate = (uint32_t)json_int(json, "baud_rate");
 
     float fv = json_float(json, "wifi_power_dbm"); if (fv >= 2 && fv <= 20) cfg->wifi_power_dbm = fv;
@@ -179,6 +190,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         "\"wifi_ssid\":\"%s\",\"wifi_password\":\"%s\",\"webserver_en\":%u,"
         "\"baud_rate\":%lu,\"mavlink_sysid\":%u,\"bcast_powerup\":%u,"
         "\"options\":%u,\"lock_level\":%d,"
+        "\"led_r_gpio\":%d,\"led_g_gpio\":%d,\"led_b_gpio\":%d,"
         "\"public_key_1\":\"%s\",\"public_key_2\":\"%s\","
         "\"public_key_3\":\"%s\",\"public_key_4\":\"%s\",\"public_key_5\":\"%s\""
         "}",
@@ -192,6 +204,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         c->wifi_ssid, c->wifi_password, c->webserver_en,
         (unsigned long)c->baud_rate, c->mavlink_sysid, c->bcast_powerup,
         c->options, c->lock_level,
+        c->led_r_gpio, c->led_g_gpio, c->led_b_gpio,
         c->public_keys[0], c->public_keys[1],
         c->public_keys[2], c->public_keys[3], c->public_keys[4]);
 }
@@ -230,6 +243,12 @@ static esp_err_t handle_get_config(httpd_req_t *req)
 
 static esp_err_t handle_post_config(httpd_req_t *req)
 {
+    if (get_lock_level() >= 1) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"status\":\"locked\"}", 20);
+        return ESP_OK;
+    }
+
     char *body = (char *)malloc(MAX_POST);
     if (!body) { httpd_resp_send_500(req); return ESP_FAIL; }
 
@@ -269,6 +288,11 @@ static esp_err_t handle_index(httpd_req_t *req)
 
 static esp_err_t handle_factory_reset(httpd_req_t *req)
 {
+    if (get_lock_level() >= 1) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"status\":\"locked\"}", 20);
+        return ESP_OK;
+    }
     esp_rid_factory_reset();
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, "{\"status\":\"reset\"}", 18);
@@ -278,6 +302,11 @@ static esp_err_t handle_factory_reset(httpd_req_t *req)
 
 static esp_err_t handle_ota(httpd_req_t *req)
 {
+    if (get_lock_level() >= 2) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"status\":\"locked\"}", 20);
+        return ESP_OK;
+    }
     esp_ota_handle_t ota_handle = 0;
     const esp_partition_t *ota_part = esp_ota_get_next_update_partition(NULL);
     if (!ota_part) {
@@ -354,6 +383,8 @@ static esp_err_t handle_get_logs(httpd_req_t *req)
 
 static esp_err_t handle_post_command(httpd_req_t *req)
 {
+    int locked = get_lock_level();
+
     char body[256];
     int ret = httpd_req_recv(req, body, sizeof(body) - 1);
     if (ret <= 0) { httpd_resp_send_500(req); return ESP_FAIL; }
@@ -368,12 +399,14 @@ static esp_err_t handle_post_command(httpd_req_t *req)
     const char *reply = "ok";
 
     if (strcmp(cmd, "restart") == 0 || strcmp(cmd, "reboot") == 0) {
+        if (locked >= 1) { reply = "locked"; goto out; }
         reply = "restarting";
         httpd_resp_set_type(req, "application/json");
         httpd_resp_send(req, "{\"status\":\"restarting\"}", 22);
         esp_restart();
         return ESP_OK;
     } else if (strcmp(cmd, "reset") == 0 || strcmp(cmd, "factory") == 0) {
+        if (locked >= 1) { reply = "locked"; goto out; }
         esp_rid_factory_reset();
         reply = "factory reset, restarting";
         httpd_resp_set_type(req, "application/json");
@@ -394,6 +427,7 @@ static esp_err_t handle_post_command(httpd_req_t *req)
         reply = "unknown command";
     }
 
+out:
     char resp[128];
     snprintf(resp, sizeof(resp), "{\"status\":\"%s\"}", reply);
     httpd_resp_set_type(req, "application/json");

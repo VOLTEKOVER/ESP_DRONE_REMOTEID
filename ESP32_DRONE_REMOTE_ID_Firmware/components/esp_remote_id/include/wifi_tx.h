@@ -5,5 +5,6 @@
 
 void wifi_tx_init(void);
 bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity);
+bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t counter);
 
 #endif

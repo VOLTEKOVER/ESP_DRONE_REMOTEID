@@ -194,6 +194,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .bar-fill.wifi{background:linear-gradient(180deg,#1565c0,#1976d2)}
 .bar-fill.ble4{background:linear-gradient(180deg,#2e7d32,#43a047)}
 .bar-fill.ble5{background:linear-gradient(180deg,#e65100,#fb8c00)}
+.bar-fill.nan{background:linear-gradient(180deg,#6a1b9a,#ab47bc)}
 .bar-value{font-size:.95em;font-weight:700;color:var(--txt)}
 .bar-label{font-size:.62em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.3px}
 
@@ -292,6 +293,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </div>
 <div class="bar-chart" id="bar-chart">
 <div class="bar-group"><div class="bar-value" id="dash-tx-wifi">0</div><div class="bar-track"><div class="bar-fill wifi" id="bar-wifi" style="height:4%"></div></div><div class="bar-label">WiFi</div></div>
+<div class="bar-group"><div class="bar-value" id="dash-tx-nan">0</div><div class="bar-track"><div class="bar-fill nan" id="bar-nan" style="height:4%"></div></div><div class="bar-label">NAN</div></div>
 <div class="bar-group"><div class="bar-value" id="dash-tx-ble4">0</div><div class="bar-track"><div class="bar-fill ble4" id="bar-ble4" style="height:4%"></div></div><div class="bar-label">BLE 4.0</div></div>
 <div class="bar-group"><div class="bar-value" id="dash-tx-ble5">0</div><div class="bar-track"><div class="bar-fill ble5" id="bar-ble5" style="height:4%"></div></div><div class="bar-label">BLE 5.0</div></div>
 </div>
@@ -405,11 +407,11 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <label>Enabled Channels</label>
 <div class="chk">
     <label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
-<label style="opacity:.4"><input type="checkbox" id="tx_wifi_nan" disabled> WiFi NAN <span class="tag tag-na">N/A</span></label>
+<label><input type="checkbox" id="tx_wifi_nan"> WiFi NAN <span class="tag tag-beta">Beta</span></label>
 <label><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
 <label style="opacity:.6"><input type="checkbox" id="tx_ble5"> BLE 5.0 LR <span class="tag tag-beta">Beta</span></label>
 </div>
-<div class="hint">BLE 5.0 LR is experimental. Requires ESP32-S3 or ESP32-C3. WiFi NAN is not yet implemented.</div>
+<div class="hint">BLE 5.0 LR is experimental (ESP32-S3/C3). WiFi NAN experimental.</div>
 <div id="tx-mode-hint" class="hint" style="color:#2e7d32;margin-top:4px"></div>
 
 <div class="grid2">
@@ -431,7 +433,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 
 <div class="grid2">
 <div><label>WiFi Beacon Rate (Hz)</label><input id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
-<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0" disabled></div>
+<div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
 </div>
 <div class="grid2">
 <div><label>BLE 4.0 Rate (Hz)</label><input id="bt4_rate" type="number" min="0" max="5" step=".1" value="1"></div>
@@ -523,7 +525,16 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
 </div>
 
-<label>Public Key 1</label><input id="pubkey1" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+            <hr>
+            <h3 style="font-size:.82em;margin:0 0 4px;color:var(--txt-sec)">Status LED GPIOs <span style="font-weight:400;color:var(--txt-muted)">(-1 to disable)</span></h3>
+            <div class="grid2">
+            <div><label>Red Pin</label><input id="led_r_gpio" type="number" min="-1" max="48" value="-1"></div>
+            <div><label>Green Pin</label><input id="led_g_gpio" type="number" min="-1" max="48" value="-1"></div>
+            <div><label>Blue Pin</label><input id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
+            </div>
+            <div class="hint">Set the GPIO numbers connected to your RGB LED. Use -1 for unused channels. Changes apply after saving.</div>
+
+            <label>Public Key 1</label><input id="pubkey1" maxlength="64" placeholder="PUBLIC_KEYV1:...">
 <label>Public Key 2</label><input id="pubkey2" maxlength="64" placeholder="PUBLIC_KEYV1:...">
 <label>Public Key 3</label><input id="pubkey3" maxlength="64" placeholder="PUBLIC_KEYV1:...">
 <label>Public Key 4</label><input id="pubkey4" maxlength="64" placeholder="PUBLIC_KEYV1:...">
@@ -769,7 +780,10 @@ var rules={
   bt4_pwr:{min:-27,max:18,msg:'Must be -27–18 dBm'},
   bt5_rate:{min:0,max:5,step:.1,msg:'Must be 0–5 Hz'},
   bt5_pwr:{min:-27,max:18,msg:'Must be -27–18 dBm'},
-  mav_sysid:{min:0,max:254,msg:'Must be 0–254'}
+  mav_sysid:{min:0,max:254,msg:'Must be 0–254'},
+  led_r_gpio:{min:-1,max:48,msg:'Must be -1–48'},
+  led_g_gpio:{min:-1,max:48,msg:'Must be -1–48'},
+  led_b_gpio:{min:-1,max:48,msg:'Must be -1–48'}
 }
 
 function setError(el,msg){
@@ -799,7 +813,7 @@ function validateField(id){
 }
 
 function validateForm(formId){
-  var fields={f1:['uas_id','op_id','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass','mav_sysid'],f4:['lock_lvl']}
+  var fields={f1:['uas_id','op_id','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass','mav_sysid'],f4:['lock_lvl','led_r_gpio','led_g_gpio','led_b_gpio']}
   var ids=fields[formId]||[],ok=true
   ids.forEach(function(id){if(!validateField(id))ok=false})
   if(formId==='f2'&&!$('tx_wifi_bcn').checked&&!$('tx_wifi_nan').checked&&!$('tx_ble4').checked&&!$('tx_ble5').checked){showMsg('At least one transmission mode must be enabled',1);ok=false}
@@ -818,7 +832,7 @@ document.querySelectorAll('input,select').forEach(function(el){
 for(var i=1;i<=5;i++){(function(id){var el=$(id);el.addEventListener('blur',function(){var v=el.value.trim();if(v&&!/^PUBLIC_KEYV1:/i.test(v)){setError(el,'Should start with PUBLIC_KEYV1:')}else{clearError(el)}});el.addEventListener('input',function(){clearError(el)})})('pubkey'+i)}
 
 function setPlaceholders(){
-  ['uas_id','op_id','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid'].forEach(function(id){
+  ['uas_id','op_id','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio'].forEach(function(id){
     var el=$(id);if(el&&!el.value)el.style.opacity=''
   })
   $('status').textContent='Loading configuration...'
@@ -847,8 +861,11 @@ $('baud').value=c.baud_rate||57600
 $('protocol').value=c.protocol!==undefined?c.protocol:255
 $('mav_sysid').value=c.mavlink_sysid||0
 $('bcast_pwr').checked=!!c.bcast_powerup
-$('lock_lvl').value=c.lock_level||0
-$('opt_arm').checked=!!(c.options&1)
+    $('lock_lvl').value=c.lock_level||0
+    $('led_r_gpio').value=c.led_r_gpio!==undefined?c.led_r_gpio:-1
+    $('led_g_gpio').value=c.led_g_gpio!==undefined?c.led_g_gpio:-1
+    $('led_b_gpio').value=c.led_b_gpio!==undefined?c.led_b_gpio:-1
+    $('opt_arm').checked=!!(c.options&1)
 $('opt_nosave').checked=!!(c.options&2)
 $('opt_print').checked=!!(c.options&4)
 for(var i=1;i<=5;i++){$('pubkey'+i).value=c['public_key_'+i]||''}
@@ -887,6 +904,9 @@ baud_rate:parseInt($('baud').value),
 mavlink_sysid:parseInt($('mav_sysid').value),
 bcast_powerup:$('bcast_pwr').checked?1:0,
 lock_level:parseInt($('lock_lvl').value),
+led_r_gpio:parseInt($('led_r_gpio').value),
+led_g_gpio:parseInt($('led_g_gpio').value),
+led_b_gpio:parseInt($('led_b_gpio').value),
 options:($('opt_arm').checked?1:0)|($('opt_nosave').checked?2:0)|($('opt_print').checked?4:0),
 public_key_1:$('pubkey1').value,
 public_key_2:$('pubkey2').value,
@@ -1087,6 +1107,7 @@ function updateDashboard(s){
   $('dash-speed').textContent=s.speed!==undefined?s.speed.toFixed(1)+' m/s ('+(s.heading!==undefined?s.heading+'\u00b0':'---')+')':'---';
   $('dash-tx-total').textContent='Total: '+(s.tx_total||0).toLocaleString();
   $('dash-tx-wifi').textContent=(s.tx_wifi_bcn||0).toLocaleString();
+  $('dash-tx-nan').textContent=(s.tx_wifi_nan||0).toLocaleString();
   $('dash-tx-ble4').textContent=(s.tx_ble4||0).toLocaleString();
   $('dash-tx-ble5').textContent=(s.tx_ble5||0).toLocaleString();
   var live=$('dash-status-badge');
@@ -1095,9 +1116,10 @@ function updateDashboard(s){
   else if(s.protocol===0){live.className='dash-badge warn';live.textContent='\u26a0 WAITING'}
   else{live.className='dash-badge err';live.textContent='\u274c NO GPS'}
   /* bar chart */
-  var maxVal=Math.max(s.tx_wifi_bcn||0,s.tx_ble4||0,s.tx_ble5||0,1);
-  var bw=$('bar-wifi'),b4=$('bar-ble4'),b5=$('bar-ble5');
+  var maxVal=Math.max(s.tx_wifi_bcn||0,s.tx_wifi_nan||0,s.tx_ble4||0,s.tx_ble5||0,1);
+  var bw=$('bar-wifi'),bn=$('bar-nan'),b4=$('bar-ble4'),b5=$('bar-ble5');
   if(bw)bw.style.height=Math.max(4,((s.tx_wifi_bcn||0)/maxVal*100))+'%';
+  if(bn)bn.style.height=Math.max(4,((s.tx_wifi_nan||0)/maxVal*100))+'%';
   if(b4)b4.style.height=Math.max(4,((s.tx_ble4||0)/maxVal*100))+'%';
   if(b5)b5.style.height=Math.max(4,((s.tx_ble5||0)/maxVal*100))+'%';
   /* signal gauge */
@@ -1135,6 +1157,7 @@ setInterval(function(){
   var sep=document.createElement('div');sep.className='sg-full';sep.textContent='Transmission Counters';h.appendChild(sep)
   addRow('Tx Total',s.tx_total)
   addRow('WiFi Beacon',s.tx_wifi_bcn)
+  addRow('WiFi NAN',s.tx_wifi_nan||0)
   addRow('BLE 4.0',s.tx_ble4)
   addRow('BLE 5.0',s.tx_ble5||0)
   var st=$('status');st.textContent='';st.appendChild(h)
