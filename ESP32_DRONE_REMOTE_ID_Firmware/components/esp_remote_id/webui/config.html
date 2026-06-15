@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🛸</text></svg>">
+<meta name="theme-color" content="#121212">
+<meta name="description" content="Configuration and management tool for ESP32 Drone Remote ID">
 <title>ESP DRONE REMOTEID — Configuration</title>
 <style>
 :root{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
@@ -11,69 +14,170 @@
 }
 [data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);padding:20px}
+html,body{height:100dvh;overflow:hidden}
+html{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
+[data-theme="dark"] html{background-image:radial-gradient(ellipse at 20% 50%,rgba(66,165,245,.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(102,187,106,.05) 0%,transparent 50%)}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);padding:8px 16px;display:flex;flex-direction:column;position:relative}
+#side-swipe-zone{position:fixed;left:0;top:0;bottom:0;width:24px;z-index:100;cursor:pointer;display:none}
 .logo-txt{font-size:1.25em;font-weight:700;letter-spacing:-.3px;background:linear-gradient(135deg,#1565c0,#2e7d32);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 [data-theme="dark"] .logo-txt{background:linear-gradient(135deg,#42a5f5,#66bb6a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-txt .sub{font-weight:400;font-size:.5em;display:block;letter-spacing:1px;color:var(--txt-muted);-webkit-text-fill-color:var(--txt-muted)}
 @media(prefers-color-scheme:dark){.tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}}[data-theme="dark"] .tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}
 @media(prefers-color-scheme:dark){.tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}}[data-theme="dark"] .tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}
 @media(prefers-color-scheme:dark){.tag-na{background:#1e1e1e;color:#666;border-color:#333}}[data-theme="dark"] .tag-na{background:#1e1e1e;color:#666;border-color:#333}
-.hdr{background:var(--card-bg);border-radius:12px;margin:0 auto 20px;max-width:1100px;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
+.hdr{background:var(--card-bg);border-radius:10px;margin:0 0 6px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow);flex-shrink:0;font-size:1.05em}
 .hdr .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt)}
 .hdr .brand h1{font-size:1.15em;font-weight:600;letter-spacing:-.3px}
 .hdr .brand span{font-size:.55em;color:var(--txt-muted);font-weight:400;margin-left:6px}
-.hdr .badge{background:var(--hover);color:var(--txt-sec);padding:4px 12px;border-radius:12px;font-size:.76em;border:1px solid var(--line);display:flex;align-items:center;gap:6px}
-.health-dot{width:8px;height:8px;border-radius:50%;display:inline-block;transition:background .3s}
-.health-dot.ok{background:#2e7d32;box-shadow:0 0 6px rgba(46,125,50,.4);animation:pulse 2s infinite}
-.health-dot.warn{background:#f57f17}
-.health-dot.err{background:#c62828}
+.hdr-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hdr-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72em;font-weight:500;background:var(--hover);border:1px solid var(--line);color:var(--txt-sec);white-space:nowrap}
+.hdr-chip .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;transition:background .3s}
+.hdr-chip .dot.ok{background:#2e7d32;box-shadow:0 0 5px rgba(46,125,50,.4)}
+.hdr-chip .dot.warn{background:#f57f17}
+.hdr-chip .dot.err{background:#c62828}
+.hdr-chip .chip-icon{font-size:.85em;opacity:.7}
+.hdr-chip.proto{min-width:60px}
+.hdr-chip.gps{min-width:50px}
+.hdr-chip.tx{min-width:55px}
+.hdr-sensors{display:flex;align-items:center;gap:3px}
+.hdr-sensor{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;font-size:.62em;font-weight:500;border:1px solid transparent;color:var(--txt-muted);background:transparent;transition:all .3s}
+.hdr-sensor.on{color:var(--txt-sec);border-color:var(--line);background:var(--hover)}
+.hdr-sensor .sd{width:5px;height:5px;border-radius:50%;background:var(--txt-muted);transition:background .3s;flex-shrink:0}
+.hdr-sensor.on .sd{background:#2e7d32;box-shadow:0 0 4px rgba(46,125,50,.3)}
+.hdr-sensor.on.warn .sd{background:#f57f17}
+.status-bar{display:flex;align-items:center;gap:16px;padding:3px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;font-size:.62em;color:var(--txt-muted);flex-shrink:0;margin-top:4px}
+.status-bar span{display:inline-flex;align-items:center;gap:4px}
+.console-off .dash-bottom,.console-off .tab-pane .term-container{display:none}
+#splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity .5s ease,visibility .5s ease;opacity:1;visibility:visible}
+#splash.hide{opacity:0;visibility:hidden}
+#splash .logo{font-size:2.2em;font-weight:700;letter-spacing:-.5px;background:linear-gradient(135deg,#1565c0,#2e7d32);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+[data-theme="dark"] #splash .logo{background:linear-gradient(135deg,#42a5f5,#66bb6a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#splash .sub{font-size:.78em;color:var(--txt-muted);margin-bottom:28px}
+#splash .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:splashSpin .8s linear infinite}
+@keyframes splashSpin{to{transform:rotate(360deg)}}
+#splash .bar-wrap{width:160px;height:3px;background:var(--line);border-radius:3px;margin-top:16px;overflow:hidden}
+#splash .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#1565c0,#2e7d32);border-radius:3px;animation:splashBar 1.2s ease forwards}
+[data-theme="dark"] #splash .bar-fill{background:linear-gradient(90deg,#42a5f5,#66bb6a)}
+#splash:not(.hide) ~ dialog{visibility:hidden!important}
+#splash:not(.hide) ~ #toast-center{visibility:hidden!important}
+@keyframes splashBar{to{width:100%}}
+.val-st{display:inline-block;width:16px;text-align:center;font-size:.78em;margin-left:4px;vertical-align:middle;flex-shrink:0}
+.val-st.ok{color:#2e7d32}
+.val-st.err{color:#c62828}
+.val-st.warn{color:#f57f17}
+.val-st.pending{color:var(--txt-muted)}
+input.error,select.error{border-color:#c62828!important;border-width:2px!important}
+input.ok,select.ok{border-color:#2e7d32!important}
+input.warn,select.warn{border-color:#f57f17!important}
+.field-wrap{display:flex;align-items:center;gap:4px}
+.field-wrap label{flex-shrink:0}
+.field-wrap input,.field-wrap select{flex:1}
+input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
+.hdr-menu-btn{display:none;background:none;border:none;color:var(--txt);font-size:1.2em;cursor:pointer;padding:2px 6px;border-radius:4px}
+.hdr-menu-btn:hover{background:var(--hover)}
+.hdr-reveal-btn{display:none;background:none;border:none;color:var(--txt-muted);font-size:.7em;cursor:pointer;padding:2px 4px;border-radius:4px;transition:transform .2s;opacity:.6}
+.hdr-reveal-btn:hover{opacity:1}
+.hdr-reveal-btn.open{transform:rotate(90deg)}
+.loading-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center}
+.loading-box{background:var(--card-bg);border-radius:12px;padding:32px 48px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dialog-interactive,.dialog-modal,.dialog-wait{
+  padding:0;border:none;border-radius:12px;background:var(--card-bg);color:var(--txt);max-width:420px;width:90%;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);animation:dialogIn .2s ease;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes dialogIn{from{opacity:0}to{opacity:1}}
+.dialog-interactive{max-width:600px}
+.dialog-interactive::backdrop,.dialog-modal::backdrop,.dialog-wait::backdrop{background:rgba(0,0,0,.5)}
+.dialog-box{padding:24px}
+.dialog-box h3,.dialog-box h3.dialog-modal-title{margin:0 0 12px;font-size:1em}
+.dialog-box h3.dialog-modal-icon{font-size:1.4em;text-align:center;color:#c62828;margin-bottom:8px}
+.dialog-content{margin:0 0 16px;font-size:.9em;color:var(--txt-sec);line-height:1.5}
+.dialog-report-list{margin:0 0 16px;padding:0;list-style:none}
+.dialog-report-list li{padding:8px 12px;margin:4px 0;background:var(--hover);border-radius:6px;font-size:.85em;border-left:3px solid #f57f17}
+.dialog-wait-box{padding:28px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.dialog-wait-box h3{font-size:1em;text-align:center}
+.dialog-wait-content{font-size:.85em;color:var(--txt-sec);text-align:center}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.modal-actions button{padding:9px 20px;border-radius:6px;border:none;font-size:.85em;cursor:pointer;font-weight:500;transition:background .2s}
+.modal-actions .btn-cancel{background:var(--hover);color:var(--txt)}
+.modal-actions .btn-cancel:hover{background:var(--card-border)}
+.modal-actions .btn-danger{background:#c62828;color:#fff}
+.modal-actions .btn-danger:hover{background:#e53935}
+.st-icon{display:inline-flex;align-items:center;font-size:.8em;opacity:.5;transition:opacity .2s}
+.st-icon.active{opacity:1}
+.st-icon.armed{color:#2e7d32}
+.st-icon.failsafe{color:#f57f17}
+.st-icon.link.active{color:#1565c0}
+#scrollicon{display:inline-block;font-size:.7em;color:var(--txt-muted);opacity:.5;transition:opacity .3s;margin-left:auto}
+#scrollicon.active{opacity:1;color:var(--accent)}
+.term-scroll-icon{font-size:.7em;color:var(--txt-muted);opacity:.5;transition:opacity .3s}
+.term-scroll-icon.active{opacity:1;color:var(--accent)}
+.st-flash-progress{display:inline-block;width:30px;height:6px;background:var(--hover);border-radius:3px;overflow:hidden;vertical-align:middle}
+.st-flash-fill{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .5s ease;opacity:.6}
+.sensor-grid .sg-item{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--hover);border-radius:4px}
+.sensor-grid .sg-label{color:var(--txt-muted);font-size:.85em}
+.sensor-grid .sg-value{font-weight:600;font-family:monospace;font-size:.95em}
+#preset-list .preset-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin:3px 0;background:var(--hover);border-radius:6px;gap:6px}
+#preset-list .preset-item .preset-name{flex:1;font-weight:500;font-size:.9em}
+#preset-list .preset-item .preset-ts{font-size:.7em;color:var(--txt-muted)}
+@media(max-width:800px){
+.hdr-menu-btn{display:inline-flex;align-items:center}
+.hdr-reveal-btn{display:inline-flex;align-items:center}
+.hdr-chips.collapsed{display:none}
+.hdr-sensors.collapsed{display:none}
+.hdr-actions.collapsed{display:none}
+}
 @keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
 .hdr-actions{display:flex;align-items:center;gap:6px}
 .btn-save-all{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;letter-spacing:.3px;transition:background .2s;white-space:nowrap}
 .btn-save-all:hover{opacity:.8}
 .btn-save-all.loading{opacity:.6;pointer-events:none}
 [data-theme="dark"] .btn-save-all{background:#333;color:#fff}
-@media(max-width:600px){.hdr-actions .btn-save-all{font-size:.7em;padding:5px 10px}}
-.row{display:flex;gap:20px;max-width:1100px;margin:0 auto;flex-wrap:wrap}
-.card{background:var(--card-bg);border-radius:12px;padding:24px;flex:1;min-width:340px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
-.card h2{font-size:.95em;color:var(--txt);margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.3px}
-.card h2 .ico{width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;background:var(--hover);color:var(--txt);flex-shrink:0}
-label{display:block;font-size:.74em;color:var(--txt-sec);margin:12px 0 3px;letter-spacing:.3px;text-transform:uppercase;font-weight:500}
-input,select{width:100%;padding:9px 12px;border:1px solid var(--input-border);border-radius:6px;background:var(--input-bg);color:var(--txt);font-size:.88em;outline:0;transition:border .2s,box-shadow .2s}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,.08)}
-input.error,select.error{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.1)}
-.hint{font-size:.72em;color:var(--txt-muted);margin:3px 0 0}
-.errmsg{font-size:.72em;color:#c62828;margin:2px 0 0;display:none}
+@media(max-width:600px){.hdr{padding:6px 8px;font-size:.85em}.hdr-actions .btn-save-all{font-size:.65em;padding:4px 8px}.hdr-btn{font-size:.65em;padding:3px 6px}}
+.card{background:var(--card-bg);border-radius:12px;padding:24px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
+.card h2{font-size:.85em;color:var(--txt);margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
+.card h2 .ico{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;background:var(--hover);color:var(--txt);flex-shrink:0}
+label{display:block;font-size:.68em;color:var(--txt-sec);margin:8px 0 2px;letter-spacing:.3px;text-transform:uppercase;font-weight:500}
+input,select{width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:5px;background:var(--input-bg);color:var(--txt);font-size:.8em;outline:0;transition:border .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
+select{padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px 6px;cursor:pointer}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+.hint{font-size:.66em;color:var(--txt-muted);margin:2px 0 0}
+.errmsg{font-size:.66em;color:#c62828;margin:1px 0 0;display:none}
 input.error+.errmsg,select.error+.errmsg{display:block}
-.btn{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;width:100%;font-size:.88em;font-weight:500;margin-top:16px;transition:background .2s;letter-spacing:.3px}
+.btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;width:100%;font-size:.78em;font-weight:500;margin-top:10px;transition:background .2s;letter-spacing:.3px;flex-shrink:0}
 .btn:hover{opacity:.85}
 .btn:active{transform:scale(.98)}
 .btn.loading{opacity:.7;pointer-events:none}
 [data-theme="dark"] .btn{background:#333;color:#fff}
-.btn-sm{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:6px 14px;border-radius:5px;cursor:pointer;font-size:.78em;margin-top:10px;width:auto;transition:background .2s}
+.btn-sm{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.7em;margin-top:6px;width:auto;transition:background .2s;flex-shrink:0}
 .btn-sm:hover{background:var(--card-border)}
-.btn-danger{background:transparent;color:#c00;border:1px solid rgba(198,40,40,.2);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.82em;margin-top:12px;width:100%;transition:background .2s;text-align:center}
+.btn-danger{background:transparent;color:#c00;border:1px solid rgba(198,40,40,.2);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:.72em;margin-top:6px;width:100%;transition:background .2s;text-align:center;flex-shrink:0}
 .btn-danger:hover{background:rgba(198,40,40,.08)}
-.chk{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-.chk label{display:inline-flex;align-items:center;gap:6px;font-size:.82em;width:auto;margin:0;cursor:pointer;background:var(--hover);padding:6px 12px;border-radius:5px;border:1px solid var(--line);text-transform:none;color:var(--txt-sec);transition:background .2s}
+.chk{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
+.chk label{display:inline-flex;align-items:center;gap:4px;font-size:.73em;width:auto;margin:0;cursor:pointer;background:var(--hover);padding:4px 10px;border-radius:4px;border:1px solid var(--line);text-transform:none;color:var(--txt-sec);transition:background .2s}
 .chk label:hover{background:var(--card-border)}
 .chk input{width:auto}
 pre{background:var(--hover);padding:16px;border-radius:6px;font-size:.78em;overflow-x:auto;line-height:1.6;margin-top:8px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;border:1px solid var(--line)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:750px){.row{padding:0}.card{min-width:100%}.grid2{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:750px){.grid2{grid-template-columns:1fr}}
 .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.82em}
 .status-grid .sg-label{color:var(--txt-muted);padding:4px 0}
 .status-grid .sg-val{color:var(--txt);text-align:right;font-weight:500;padding:4px 0}
 .status-grid .sg-full{grid-column:1/-1;border-top:1px solid var(--line);margin-top:4px;padding-top:8px;font-size:.85em}
-.guide{font-size:.76em;color:var(--txt-sec);line-height:1.6;margin:10px 0;padding:12px;background:var(--hover);border-radius:6px;border-left:3px solid var(--accent)}
+.guide{font-size:.7em;color:var(--txt-sec);line-height:1.4;margin:6px 0;padding:8px 10px;background:var(--hover);border-radius:5px;border-left:3px solid var(--accent);cursor:pointer;user-select:none;position:relative;transition:max-height .3s ease;flex-shrink:0}
+.guide.collapsed{max-height:2.2em;overflow:hidden}
+.sec-div{display:flex;align-items:center;gap:10px;margin:18px 0 6px;color:var(--txt-sec);font-size:.72em;font-weight:500;text-transform:uppercase;letter-spacing:.6px}
+.sec-div::after{content:'';flex:1;height:1px;background:var(--line)}
+.guide.collapsed::after{content:"\25BC click to expand";position:absolute;bottom:0;right:8px;font-size:.65em;color:var(--accent);background:var(--hover);padding:0 4px;letter-spacing:.3px;font-weight:500}
+.guide:not(.collapsed)::after{content:"\25B2";position:absolute;bottom:3px;right:8px;font-size:.6em;color:var(--txt-muted);opacity:.4}
 .guide a{color:var(--txt);text-decoration:none;font-weight:500}
 .guide a:hover{text-decoration:underline}
-.ota-zone{border:2px dashed var(--line);border-radius:8px;padding:24px;text-align:center;transition:border-color .2s;cursor:pointer;color:var(--txt-muted)}
+.ota-zone{border:2px dashed var(--line);border-radius:8px;padding:14px;text-align:center;transition:border-color .2s;cursor:pointer;color:var(--txt-muted);flex-shrink:0}
 .ota-zone:hover{border-color:var(--txt-muted)}
 .ota-zone.dragover{border-color:var(--accent);background:var(--hover)}
 .ota-zone .ico-big{font-size:2em;opacity:.5;margin-bottom:10px}
-hr{border:none;border-top:1px solid var(--line);margin:14px 0}
-.footer{text-align:center;margin-top:24px;font-size:.75em;color:var(--txt-muted)}
+hr{border:none;border-top:1px solid var(--line);margin:8px 0;flex-shrink:0}
+.footer{text-align:center;margin-top:4px;font-size:.65em;color:var(--txt-muted);flex-shrink:0}
 .footer a{color:var(--txt-muted);text-decoration:none}
 .footer a:hover{color:var(--txt);text-decoration:underline}
 .hdr-btn{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-family:inherit}
@@ -89,50 +193,41 @@ code{background:var(--hover);padding:2px 6px;border-radius:3px;font-size:.9em;co
 .tag-beta{background:#fff8e1;color:#f57f17;border:1px solid #ffe082}
 .tag-na{background:#f5f5f5;color:#999;border:1px solid #ddd}
 .tag-warning{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a}
-fieldset{border:1px solid var(--line);border-radius:6px;padding:14px;margin:10px 0;position:relative}
-fieldset legend{font-size:.74em;color:var(--txt-muted);padding:0 6px;font-weight:500}
+fieldset{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin:8px 0;position:relative}
+fieldset legend{font-size:.66em;color:var(--txt-sec);padding:0 6px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
 fieldset.beta legend{color:#f57f17}
 fieldset.beta{opacity:.6;border-color:#ffe082}
 fieldset.beta input,fieldset.beta select{pointer-events:auto}
 fieldset.disabled{opacity:.4;pointer-events:none}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
-.overlay.show{display:flex}
-.modal{background:var(--card-bg);border-radius:12px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .25s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal h3{font-size:1.05em;color:#c62828;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.modal p{font-size:.85em;color:var(--txt-sec);line-height:1.6;margin-bottom:18px}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end}
-.modal-actions button{padding:9px 20px;border-radius:6px;border:none;font-size:.85em;cursor:pointer;font-weight:500;transition:background .2s}
-.modal-actions .btn-cancel{background:var(--hover);color:var(--txt)}
-.modal-actions .btn-cancel:hover{background:var(--card-border)}
-.modal-actions .btn-danger{background:#c62828;color:#fff}
-.modal-actions .btn-danger:hover{background:#e53935}
-.disclaimer{text-align:center;margin-top:20px;padding:14px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:.74em;color:#b76e00;line-height:1.6;max-width:1100px;margin-left:auto;margin-right:auto}
-@media(prefers-color-scheme:dark){.disclaimer{background:#2a2000;border-color:#665000;color:#e0b000}}[data-theme="dark"] .disclaimer{background:#2a2000;border-color:#665000;color:#e0b000}
-.disclaimer strong{color:#c62828}
-.toast-overlay{display:none;position:fixed;inset:0;z-index:9998}
-.toast-overlay.show{display:block}
-.toast-center{position:fixed;top:50%;left:50%;z-index:9999;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:none;width:90%;max-width:400px}
-.toast{padding:18px 24px;border-radius:10px;font-size:.88em;line-height:1.5;box-shadow:0 12px 40px rgba(0,0,0,.18);pointer-events:auto;opacity:0;transform:scale(.85) translateY(10px);transition:opacity .3s ease,transform .3s ease;width:100%;text-align:center;font-weight:500}
-.toast.show{opacity:1;transform:scale(1) translateY(0)}
-.toast.ok{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
-.toast.err{background:#fbe9e7;color:#c62828;border:1px solid #ef9a9a;box-shadow:0 12px 40px rgba(198,40,40,.15)}
-.toast .toast-close{float:right;background:none;border:none;font-size:1.1em;cursor:pointer;color:inherit;opacity:.5;padding:0 0 0 10px;line-height:1}
-.toast .toast-close:hover{opacity:1}
-.toast .toast-icon{display:inline-block;margin-right:8px;font-size:1.1em}
-.toast-err-bg{position:fixed;inset:0;z-index:9997;background:rgba(198,40,40,.06);pointer-events:none;opacity:0;transition:opacity .3s ease}
-.toast-err-bg.show{opacity:1}
-#toast-progress{position:absolute;bottom:0;left:0;height:3px;background:currentColor;opacity:.3;border-radius:0 0 10px 10px;transition:width 2.5s linear}
-.toast{position:relative;overflow:hidden}
 
+.disclaimer{text-align:center;margin:0 0 6px;padding:8px 14px;background:#fff3e0;border:1px solid #e65100;border-radius:8px;font-size:.64em;color:#bf360c;line-height:1.5;flex-shrink:0;border-left:4px solid #e65100}
+@media(prefers-color-scheme:dark){.disclaimer{background:#2a1400;border-color:#bf360c;color:#ff8a65}}[data-theme="dark"] .disclaimer{background:#2a1400;border-color:#bf360c;color:#ff8a65}
+.disclaimer strong{color:#c62828}
+.toast-center{position:fixed;top:50%;left:50%;z-index:9999;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:90%;max-width:400px}
+.toast{padding:12px 20px;border-radius:8px;font-size:.85em;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.15);pointer-events:auto;opacity:0;transform:translateY(-8px);transition:opacity .25s ease,transform .25s ease;width:100%;text-align:center;font-weight:500}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--card-bg);color:var(--txt);border:1px solid var(--line)}
+.toast.err{background:var(--card-bg);color:#c62828;border:1px solid #c62828;box-shadow:0 4px 16px rgba(198,40,40,.12)}
+.toast .toast-close{float:right;background:none;border:none;font-size:1.1em;cursor:pointer;color:inherit;opacity:.4;padding:0 0 0 10px;line-height:1}
+.toast .toast-close:hover{opacity:1}
+.toast .toast-icon{display:inline-block;margin-right:8px;font-size:1em}
+/* Betaflight-style spinner numeric inputs */
+.spinner-wrap{display:inline-flex;align-items:center;width:100%}
+.spinner-btn{width:26px;height:30px;padding:0;border:1px solid var(--input-border);background:var(--hover);color:var(--txt);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.spinner-btn:hover{background:var(--card-border)}
+.spinner-btn:active{background:var(--accent);color:#fff}
+.spinner-dec{border-radius:4px 0 0 4px;border-right:none}
+.spinner-inc{border-radius:0 4px 4px 0;border-left:none}
+.spinner-wrap input{border-radius:0;text-align:center;min-width:60px;width:100%;-moz-appearance:textfield}
+.spinner-wrap input::-webkit-inner-spin-button,.spinner-wrap input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 /* ---------- Terminal ---------- */
-.term-container{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card-bg);margin-top:10px}
-.term-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--hover);color:var(--txt-sec);font-size:.78em}
+.term-container{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card-bg);margin-top:6px;display:flex;flex-direction:column;flex:1;min-height:0}
+.term-header{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--hover);color:var(--txt-sec);font-size:.7em;flex-shrink:0}
 .term-title{font-weight:500;color:var(--txt)}
 .term-toolbar{display:flex;gap:4px}
 .term-toolbar .btn-sm{background:none;border:1px solid var(--line);color:var(--txt-muted);padding:2px 10px;font-size:.75em;margin:0}
 .term-toolbar .btn-sm:hover{background:var(--hover);color:var(--txt)}
-.term-output{height:260px;overflow-y:auto;padding:8px 12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.75em;line-height:1.5;background:#1e1e1e;color:#ccc}
+.term-output{overflow-y:auto;padding:4px 10px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.68em;line-height:1.4;background:#1e1e1e;color:#ccc;flex:1;min-height:30px}
 .term-output .line{padding:1px 0;white-space:pre-wrap;word-break:break-all}
 .term-output .line.lv-I{color:#8bc34a}
 .term-output .line.lv-W{color:#ffc107}
@@ -141,8 +236,8 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .term-output .line.lv-V{color:#aaa}
 .term-output .line .ts{color:#666;margin-right:8px}
 .term-placeholder{color:#555;font-style:italic;padding:20px 0;text-align:center}
-.term-input-row{display:flex;gap:4px;padding:6px 8px;background:var(--hover);border-top:1px solid var(--line)}
-.term-input-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--txt);padding:7px 10px;border-radius:4px;font-size:.78em;font-family:inherit;outline:0}
+.term-input-row{display:flex;gap:4px;padding:4px 6px;background:var(--hover);border-top:1px solid var(--line);flex-shrink:0}
+.term-input-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--txt);padding:4px 8px;border-radius:4px;font-size:.7em;font-family:inherit;outline:0}
 .term-input-row input:focus{border-color:var(--accent)}
 
 ::-webkit-scrollbar{width:8px;height:8px}
@@ -155,39 +250,58 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 [data-theme="dark"] .term-output::-webkit-scrollbar-track{background:#252525}
 .term-input-row input::placeholder{color:#555}
 
-/* ---------- View modes ---------- */
-.view{display:none}
-.view.active{display:block}
-.mode-tabs{display:flex;gap:4px;background:var(--hover);border-radius:8px;padding:3px}
-.mode-tab{padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;background:transparent;color:var(--txt-muted);transition:all .2s;white-space:nowrap}
-.mode-tab:hover{color:var(--txt)}
-.mode-tab.active{background:var(--card-bg);color:var(--txt);box-shadow:0 1px 3px var(--shadow)}
-.mode-tab .ico{margin-right:4px}
-@media(max-width:600px){.mode-tab{padding:5px 10px;font-size:.7em}}
+/* ---------- Tab system ---------- */
+.tab-pane{display:none;flex-direction:column;flex:1;min-height:0}
+.tab-pane.active{display:flex;overflow-y:auto;overflow-x:hidden}
+
+/* ---------- Sidebar ---------- */
+.layout{display:flex;gap:0;flex:1;min-height:0;overflow:hidden}
+.sidebar{width:180px;flex-shrink:0;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px 0 0 10px;padding:6px;display:flex;flex-direction:column;gap:1px;box-shadow:0 1px 3px var(--shadow)}
+.sidebar .nav-item{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.78em;color:var(--txt-sec);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;font-weight:500;flex-shrink:0}
+.sidebar .nav-item:hover{background:var(--hover);color:var(--txt)}
+.sidebar .nav-item.active{background:var(--hover);color:var(--txt);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+.sidebar .nav-icon{font-size:1em;width:20px;text-align:center;flex-shrink:0}
+.sidebar .nav-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar .nav-group-label{padding:8px 12px 2px;font-size:.62em;font-weight:600;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.main-content{flex:1;min-width:0;background:var(--card-bg);border:1px solid var(--card-border);border-left:none;border-radius:0 10px 10px 0;padding:12px 16px;box-shadow:0 1px 3px var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.main-content .tab-pane>.card{border:none;box-shadow:none;padding:0;margin:0;background:transparent}
+.main-content .card h2{margin-top:0}
+.main-content .guide{margin-top:0}
+
+@media(max-width:800px){
+body{padding:4px 8px}
+.hdr{padding:6px 10px;gap:4px;font-size:.9em}
+#side-swipe-zone{display:block}
+.layout{flex-direction:column}
+.sidebar{width:100%;border-radius:10px;flex-direction:row;overflow-x:auto;padding:4px;gap:1px;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;min-height:auto;flex-shrink:0}
+.sidebar .nav-item{flex-shrink:0;padding:5px 8px;font-size:.68em;white-space:nowrap}
+.sidebar .nav-item.active{box-shadow:none;border-bottom:2px solid var(--accent);border-radius:4px}
+.main-content{border-left:1px solid var(--card-border);border-top:none;border-radius:10px;margin-top:0;padding:8px 10px}
+.disclaimer{font-size:.55em;padding:4px 8px}
+}
 
 /* ---------- Dashboard ---------- */
-.dash{max-width:650px;margin:0 auto;padding:10px 0}
-.dash-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.dash-hdr h2{font-size:1em;color:var(--txt);margin:0}
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.dash-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:18px;min-height:100px;position:relative}
-.dash-card .dc-label{font-size:.7em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.dash-card .dc-val{font-size:1.15em;font-weight:600;color:var(--txt)}
-.dash-card .dc-val.dc-large{font-size:1.6em}
-.dash-card .dc-sub{font-size:.75em;color:var(--txt-muted);margin-top:2px}
-.dash-sub-row{display:flex;align-items:center;gap:8px;margin-top:2px}
+.dash{max-width:100%;padding:0;display:flex;flex-direction:column;flex:1;min-height:0}
+.dash-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0}
+.dash-hdr h2{font-size:.9em;color:var(--txt);margin:0}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;flex-shrink:0}
+.dash-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;min-height:60px;position:relative}
+.dash-card .dc-label{font-size:.6em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.dash-card .dc-val{font-size:1em;font-weight:600;color:var(--txt)}
+.dash-card .dc-val.dc-large{font-size:1.3em}
+.dash-card .dc-sub{font-size:.68em;color:var(--txt-muted);margin-top:1px}
+.dash-sub-row{display:flex;align-items:center;gap:6px;margin-top:1px}
 .dash-sub-row .dc-sub{margin-top:0}
 .dash-card.gps-ok{border-left:3px solid #2e7d32}
 .dash-card.gps-no{border-left:3px solid #c62828}
 .dash-card.proto{text-align:center}
 .dash-card.proto .dc-val{font-size:1.4em}
 
-/* Mini bar chart for transmission */
-.dash-chart{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:18px}
-.dash-chart .ch-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.dash-chart .ch-title{font-size:.78em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:500}
-.dash-chart .ch-total{font-size:.72em;color:var(--txt-muted)}
-.bar-chart{display:flex;gap:12px;align-items:flex-end;height:100px;padding:0 4px}
+.dash-chart{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;flex-shrink:0}
+.dash-chart .ch-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dash-chart .ch-title{font-size:.7em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.dash-chart .ch-total{font-size:.65em;color:var(--txt-muted)}
+.bar-chart{display:flex;gap:8px;align-items:flex-end;height:50px;padding:0 2px}
 .bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
 .bar-track{width:100%;height:100%;background:var(--hover);border-radius:4px 4px 0 0;position:relative;overflow:hidden;display:flex;align-items:flex-end}
 .bar-fill{width:100%;border-radius:4px 4px 0 0;transition:height .6s cubic-bezier(.4,0,.2,1);min-height:2px;position:relative}
@@ -198,9 +312,8 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .bar-value{font-size:.95em;font-weight:700;color:var(--txt)}
 .bar-label{font-size:.62em;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.3px}
 
-/* Signal gauge */
-.signal-gauge{display:flex;gap:4px;align-items:center;margin-top:6px}
-.signal-gauge .sg-bar{width:6px;border-radius:2px;background:var(--hover);transition:all .4s ease}
+.signal-gauge{display:flex;gap:3px;align-items:center;margin-top:2px}
+.signal-gauge .sg-bar{width:4px;border-radius:2px;background:var(--hover);transition:all .4s ease;height:12px}
 .signal-gauge .sg-bar.active{background:#2e7d32}
 .signal-gauge .sg-bar.active.warn{background:#f57f17}
 .signal-gauge .sg-bar.active.err{background:#c62828}
@@ -213,54 +326,100 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .dash-btn-config{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.82em;font-weight:500;transition:background .2s;white-space:nowrap}
 .dash-btn-config:hover{opacity:.8}
 
-.dash-bottom{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
+.dash-bottom{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:0;margin-top:6px}
 @media(max-width:750px){.dash-bottom{grid-template-columns:1fr}}
-.dash-bottom .card{margin:0;min-width:0}
-.dash-bottom .card h2{font-size:.82em;margin-bottom:10px;padding-bottom:6px}
-.dash-bottom .status-grid{font-size:.78em}
+.dash-bottom .card{margin:0;min-width:0;display:flex;flex-direction:column;min-height:0}
+.dash-bottom .card h2{font-size:.75em;margin-bottom:4px;padding-bottom:4px;flex-shrink:0}
+.dash-bottom .status-grid{font-size:.7em}
+.dash-bottom .term-container{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:0}
+.dash-bottom .term-output{flex:1;min-height:0;height:auto}
 
-/* Float animation for bar values */
 @keyframes floatUp{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
 .bar-group .bar-value{animation:floatUp .4s ease}
 </style>
 </head>
 <body>
+<div id="splash">
+<div class="logo">ESP DRONE REMOTEID</div>
+<div class="sub">Open DroneID Transmitter</div>
+<div class="spinner"></div>
+<div class="bar-wrap"><div class="bar-fill"></div></div>
+</div>
+<div id="side-swipe-zone" onclick="toggleMobileMenu()"></div>
 
-<div class="toast-err-bg" id="toast-err-bg"></div>
 <div class="toast-center" id="toast-center"></div>
 
 <div class="hdr">
+<button class="hdr-menu-btn" id="menu-btn" onclick="toggleMobileMenu()" title="Menu">&#x2630;</button>
+<button class="hdr-reveal-btn" id="reveal-btn" onclick="toggleReveal()" title="Toggle header">&#x276f;</button>
 <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="brand">
 <span class="logo-txt">ESP DRONE REMOTEID<span class="sub">Open DroneID Transmitter</span></span>
 </a>
-<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<div class="badge" id="status-badge"><span class="health-dot" id="health-dot"></span> Connecting...</div>
-<div class="hdr-actions">
-<div class="mode-tabs" id="mode-tabs">
-<button class="mode-tab active" data-view="dashboard" onclick="setView('dashboard')"><span class="ico">&#x1f4ca;</span>Dashboard</button>
-<button class="mode-tab" data-view="advanced" onclick="setView('advanced')"><span class="ico">&#x2699;</span>Config</button>
+<div class="hdr-chips">
+<div class="hdr-chip proto" id="hdr-chip-proto"><span class="dot" id="hdr-dot"></span><span class="chip-icon">&#x1f4e1;</span><span id="hdr-proto">Connecting</span></div>
+<div class="hdr-chip gps" id="hdr-chip-gps"><span class="chip-icon">&#x1f7e2;</span><span id="hdr-gps">GPS --</span></div>
+<div class="hdr-chip" id="hdr-chip-bat"><span class="chip-icon">&#x1f50b;</span><span id="hdr-bat">BAT --</span></div>
+<div class="hdr-chip" id="hdr-chip-rssi"><span class="chip-icon">&#x1f4f6;</span><span id="hdr-rssi">RSSI --</span></div>
+<div class="hdr-chip tx" id="hdr-chip-tx"><span class="chip-icon">&#x1f4e4;</span><span id="hdr-tx">0</span></div>
+<div class="hdr-chip" id="hdr-chip-fw"><span class="chip-icon">&#x2699;</span><span id="hdr-fw">v0.0.1</span></div>
 </div>
+<div class="hdr-sensors" id="hdr-sensors">
+<span class="hdr-sensor" id="hdr-sns-gps"><span class="sd"></span>GPS</span>
+<span class="hdr-sensor" id="hdr-sns-wifi"><span class="sd"></span>WiFi</span>
+<span class="hdr-sensor" id="hdr-sns-nan"><span class="sd"></span>NAN</span>
+<span class="hdr-sensor" id="hdr-sns-ble4"><span class="sd"></span>BLE4</span>
+<span class="hdr-sensor" id="hdr-sns-ble5"><span class="sd"></span>BLE5</span>
+</div>
+<div class="hdr-actions">
 <button class="btn-save-all" id="btn-save-all" onclick="saveAll()">&#x1f4be; Save All</button>
 <button class="hdr-btn" onclick="exportCfg()">&#x1f4e5; Export</button>
 <button class="hdr-btn" onclick="document.getElementById('import-file').click()">&#x1f4e4; Import</button>
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCfg(this)">
 <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" class="hdr-btn github">GitHub</a>
+<button class="hdr-btn" id="btn-reconnect" onclick="getCfg()" title="Reconnect / Refresh">&#x1f504;</button>
+<button class="hdr-btn" onclick="showIssues()" title="Check for problems" style="font-size:.9em">&#x1f6a8;</button>
 <button id="dark-toggle" onclick="toggleDark()" class="hdr-btn" style="font-size:.9em;padding:4px 8px" title="Toggle dark mode">&#x263e;</button>
 </div>
 </div>
+
+<div class="disclaimer">
+<strong>&#x26a0; IMPORTANT DISCLAIMER:</strong> This firmware is provided <strong>&quot;as-is&quot;</strong>, without any warranty or guarantee of any kind, either express or implied. The creators, contributors, and maintainers of this project <strong>shall not be held responsible or liable</strong> for any damages, fines, penalties, legal consequences, accidents, equipment damage, personal injury, or any other liability arising from the use, misuse, or inability to use this firmware or device. It is your sole responsibility to ensure full compliance with all applicable local, national, and international laws and regulations regarding drone Remote ID (including but not limited to FAA, EASA, and other aviation authorities). By using this firmware, you acknowledge that you understand and accept these terms. If you do not agree, do not use this software.
 </div>
 
-<div class="disclaimer" style="margin:0 auto 20px;max-width:1100px;width:calc(100% - 20px)">
-<strong>&#x26a0; Disclaimer:</strong> This firmware is provided as-is. The creators are <strong>not responsible</strong> for any fines, penalties, accidents, damage to equipment, personal injury, or any other liability arising from the use of this device. It is your responsibility to ensure compliance with local regulations regarding drone Remote ID. Use at your own risk.
-</div>
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+    <div class="nav-group-label">Monitor</div>
+<button class="nav-item active" data-tab="dashboard" onclick="setView('dashboard')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button>
+<button class="nav-item" data-tab="map" onclick="setView('map')"><span class="nav-icon">&#x1f5fa;</span><span class="nav-label">Map</span></button>
+<div class="nav-group-label">Configuration</div>
+<button class="nav-item" data-tab="identity" onclick="setView('identity')"><span class="nav-icon">&#x1f464;</span><span class="nav-label">Identity</span></button>
+<button class="nav-item" data-tab="transmission" onclick="setView('transmission')"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button>
+<button class="nav-item" data-tab="ap" onclick="setView('ap')"><span class="nav-icon">&#x1f4f6;</span><span class="nav-label">Access Point</span></button>
+<button class="nav-item" data-tab="fc" onclick="setView('fc')" data-fc-needed="true"><span class="nav-icon">&#x1f433;</span><span class="nav-label">Flight Controller</span></button>
+<div class="nav-group-label">Hardware</div>
+<button class="nav-item" data-tab="hardware" onclick="setView('hardware')"><span class="nav-icon">&#x1f4a1;</span><span class="nav-label">Hardware</span></button>
+<div class="nav-group-label">Advanced</div>
+<button class="nav-item" data-tab="system" onclick="setView('system')"><span class="nav-icon">&#x1f512;</span><span class="nav-label">System</span></button>
+<button class="nav-item" data-tab="firmware" onclick="setView('firmware')"><span class="nav-icon">&#x1f4e4;</span><span class="nav-label">Firmware</span></button>
+<div class="nav-group-label">Tools</div>
+<button class="nav-item" data-tab="console" onclick="setView('console')"><span class="nav-icon">&#x1f4bb;</span><span class="nav-label">Console</span></button>
+<button class="nav-item" data-tab="presets" onclick="setView('presets')"><span class="nav-icon">&#x1f4cb;</span><span class="nav-label">Presets</span></button>
+<button class="nav-item" data-tab="logging" onclick="setView('logging')"><span class="nav-icon">&#x1f4dd;</span><span class="nav-label">Logging</span></button>
+<button class="nav-item" data-tab="sensors" onclick="setView('sensors')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Sensors</span></button>
+<button class="nav-item" data-tab="compliance" onclick="setView('compliance')"><span class="nav-icon">&#x2696;</span><span class="nav-label">Compliance</span></button>
+<button class="nav-item" data-tab="security" onclick="setView('security')"><span class="nav-icon">&#x1f510;</span><span class="nav-label">Security</span></button>
+<button class="nav-item" data-tab="help" onclick="setView('help')"><span class="nav-icon">&#x2753;</span><span class="nav-label">Help</span></button>
+</nav>
 
-<div id="view-dashboard" class="view">
+<main class="main-content">
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab-pane active">
 <div class="dash">
 <div class="dash-hdr">
 <h2>&#x1f4ca; ESP DRONE REMOTEID Dashboard</h2>
 <div>
 <span class="dash-badge live" id="dash-status-badge">&#x25cf; LIVE</span>
-<button class="dash-btn-config" onclick="setView('advanced')" style="margin-left:8px">&#x2699; Configure</button>
 </div>
 </div>
 <div class="dash-grid">
@@ -278,11 +437,17 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <div class="dc-label">&#x1f4cd; Position</div>
 <div class="dc-val" id="dash-lat">-</div>
 <div class="dc-sub" id="dash-lon">-</div>
+<div class="dc-sub" id="dash-map-link" style="display:none;margin-top:2px"><a href="#" target="_blank" id="dash-map-a" style="font-size:.75em;color:var(--accent)">&#x1f5fa; Open in Maps</a></div>
 </div>
 <div class="dash-card" id="dash-move-card">
 <div class="dc-label">&#x1f3c3; Movement</div>
 <div class="dc-val" id="dash-alt">-</div>
 <div class="dc-sub" id="dash-speed">-</div>
+</div>
+<div class="dash-card" id="dash-net-card">
+<div class="dc-label">&#x1f4f6; Network</div>
+<div class="dc-val" id="dash-rssi" style="font-size:.85em">RSSI --</div>
+<div class="dc-sub" id="dash-temp">CPU --</div>
 </div>
 </div>
 
@@ -300,8 +465,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <div style="margin-top:10px;font-size:.72em;color:var(--txt-muted);text-align:center">Auto-updates every 2 seconds</div>
 </div>
 
-<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-<button class="hdr-btn" onclick="setView('advanced')" style="flex:1;justify-content:center">&#x2699; Open Config</button>
+<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;flex-shrink:0">
 <button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Restarting...'))" style="flex:1;justify-content:center">&#x1f504; Restart</button>
 <button class="hdr-btn danger" onclick="showModal('reset')" style="flex:1;justify-content:center">&#x21bb; Factory Reset</button>
 </div>
@@ -313,7 +477,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </div>
 <div class="card">
 <h2><span class="ico">&#x1f4bb;</span> Console</h2>
-<div class="term-container" style="margin-top:0">
+<div class="term-container">
 <div class="term-header">
 <span class="term-title">&#x1f4bb; Console Output</span>
 <div class="term-toolbar">
@@ -323,7 +487,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <button class="btn-sm" id="term-scroll-btn2" onclick="toggleTermScroll2()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
 </div>
 </div>
-<div class="term-output" id="term-output2" style="height:220px">
+<div class="term-output" id="term-output2">
 <div class="term-placeholder">Waiting for logs...</div>
 </div>
 <div class="term-input-row">
@@ -336,14 +500,12 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </div>
 </div>
 
-<div id="view-advanced" class="view active">
-<div class="row">
-
 <!-- IDENTITY -->
+<div id="tab-identity" class="tab-pane">
 <div class="card">
 <h2><span class="ico">&#x1f464;</span> Identity <span class="tag tag-stable">Stable</span></h2>
 <form id="f1">
-<div class="guide">
+<div class="guide" onclick="toggleGuide(this)">
 <b>Basic ID</b> &mdash; The UAS ID identifies your drone to receivers. Use a serial number (ANSI/CTA-2063) or your CAA registration number, max 20 characters. The UA Type must match your aircraft.
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
@@ -379,9 +541,8 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <label>Operator ID</label>
 <input id="op_id" maxlength="20" placeholder="e.g. OP-MARIO-12345">
 
-<hr>
-
-<h3 style="font-size:.82em;margin:0 0 4px;color:var(--txt-sec)">Second Basic ID <span style="font-weight:400;color:var(--txt-muted)">(optional)</span></h3>
+<fieldset style="margin-top:16px">
+<legend>Second Basic ID &#x1f4cb; <span style="font-weight:400;color:var(--txt-muted)">optional</span></legend>
 <div class="grid2">
 <div><label>UAS ID 2</label><input id="uas_id2" maxlength="20" placeholder="Secondary ID"><div id="id2-hint" class="hint" style="color:#c62828;display:none;margin-top:2px"></div></div>
 <div><label>ID Type 2</label><select id="id_type2"><option value="0">None</option><option value="1">Serial</option><option value="2">CAA</option><option value="3">UTM</option><option value="4">Session</option></select></div>
@@ -391,28 +552,38 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <option value="0">None</option><option value="1">Aeroplane</option><option value="2">Multirotor</option><option value="3">Gyroplane</option>
 <option value="4">Hybrid</option><option value="5">Ornithopter</option><option value="6">Glider</option><option value="15">Other</option>
 </select>
+</fieldset>
+
 <button class="btn" type="submit">Save Identity</button>
 </form>
 </div>
+</div>
 
 <!-- TRANSMISSION -->
+<div id="tab-transmission" class="tab-pane">
 <div class="card">
-<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span></h2>
+<h2><span class="ico">&#x1f4e1;</span> Transmission <span class="tag tag-stable">Stable</span> <button class="btn-sm" type="button" onclick="document.getElementById('f2').querySelector('.btn').click()" style="margin:0 0 0 auto;padding:3px 10px;font-size:.75em" title="Save without scrolling">&#x1f4be; Quick Save</button></h2>
 <form id="f2">
-<div class="guide">
+<div class="guide" onclick="toggleGuide(this)">
 <b>Tx Modes</b> &mdash; Select which radio technologies to broadcast on. WiFi Beacon is the most compatible. BLE 5.0 Coded PHY offers longer range. Rates are in Hz (packets per second).
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
 <label>Enabled Channels</label>
 <div class="chk">
-    <label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
+<label><input type="checkbox" id="tx_wifi_bcn" checked> WiFi Beacon <span class="tag tag-stable">Stable</span></label>
 <label><input type="checkbox" id="tx_wifi_nan"> WiFi NAN <span class="tag tag-beta">Beta</span></label>
 <label><input type="checkbox" id="tx_ble4" checked> BLE 4.0 <span class="tag tag-stable">Stable</span></label>
 <label style="opacity:.6"><input type="checkbox" id="tx_ble5"> BLE 5.0 LR <span class="tag tag-beta">Beta</span></label>
 </div>
+<div style="display:flex;gap:6px;margin-top:4px">
+<button class="btn-sm" type="button" onclick="setAllTx(true)">&#x2713; Enable All</button>
+<button class="btn-sm" type="button" onclick="setAllTx(false)">&#x2717; Disable All</button>
+</div>
 <div class="hint">BLE 5.0 LR is experimental (ESP32-S3/C3). WiFi NAN experimental.</div>
 <div id="tx-mode-hint" class="hint" style="color:#2e7d32;margin-top:4px"></div>
+
+<div class="sec-div">Radio Configuration</div>
 
 <div class="grid2">
 <div>
@@ -431,6 +602,7 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </div>
 </div>
 
+<div class="sec-div">Rates &amp; Power</div>
 <div class="grid2">
 <div><label>WiFi Beacon Rate (Hz)</label><input id="wifi_bcn" type="number" min="0" max="5" step=".1" value="1"></div>
 <div><label>WiFi NAN Rate (Hz)</label><input id="wifi_nan" type="number" min="0" max="5" step=".1" value="0"></div>
@@ -446,13 +618,15 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <button class="btn" type="submit">Save Transmission</button>
 </form>
 </div>
+</div>
 
-<!-- WIFI AP & SERIAL -->
+<!-- ACCESS POINT -->
+<div id="tab-ap" class="tab-pane">
 <div class="card">
-<h2><span class="ico">&#x1f4f6;</span> WiFi AP &amp; Serial <span class="tag tag-stable">Stable</span></h2>
+<h2><span class="ico">&#x1f4f6;</span> Access Point <span class="tag tag-stable">Stable</span></h2>
 <form id="f3">
-<div class="guide">
-<b>Access Point</b> &mdash; Configure the ESP32's management WiFi network. After connecting to <code>ESP-RID</code>, open <code>http://192.168.4.1</code> in your browser. Set the UART baud rate to match your flight controller.
+<div class="guide" onclick="toggleGuide(this)">
+<b>Management Network</b> &mdash; Configure the ESP32's configuration WiFi. After connecting to the SSID below, open <code>http://192.168.4.1</code> in your browser.
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
 </div>
 
@@ -470,14 +644,20 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </label>
 </div>
 
-<label>UART Baud Rate</label>
-<select id="baud">
-<option value="9600">9600</option><option value="19200">19200</option>
-<option value="38400">38400</option><option value="57600" selected>57600</option>
-<option value="115200">115200</option><option value="230400">230400</option>
-<option value="460800">460800</option><option value="921600">921600</option>
-</select>
-<div class="hint">Must match your flight controller serial port speed.</div>
+<button class="btn" type="submit">Save Access Point</button>
+</form>
+</div>
+</div>
+
+<!-- FLIGHT CONTROLLER -->
+<div id="tab-fc" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f433;</span> Flight Controller <span class="tag tag-stable">Stable</span></h2>
+<form id="f3b">
+<div class="guide" onclick="toggleGuide(this)">
+<b>Serial &amp; Protocol</b> &mdash; Configure the UART connection to your flight controller. Set the baud rate and protocol to match your FC. MAVLink, MSP, and NMEA are supported.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-config" target="_blank">Wiki &rarr;</a>
+</div>
 
 <label>FC Protocol</label>
 <select id="protocol">
@@ -487,7 +667,18 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <option value="3">NMEA</option>
 <option value="4">None (no FC)</option>
 </select>
-<div class="hint">Set to Auto unless the detection fails. Manual override forces a specific protocol.</div>
+<div class="hint">Set to Auto unless detection fails. Manual override forces a specific protocol.</div>
+
+<label>UART Baud Rate</label>
+<select id="baud">
+<option value="9600">9600</option><option value="19200">19200</option>
+<option value="38400">38400</option><option value="57600" selected>57600</option>
+<option value="115200">115200</option><option value="230400">230400</option>
+<option value="460800">460800</option><option value="921600">921600</option>
+</select>
+<div class="hint">Must match your flight controller serial port speed.</div>
+
+<div class="sec-div">Advanced</div>
 
 <div class="grid2">
 <div><label>MAVLink SysID</label><input id="mav_sysid" type="number" min="0" max="254" value="0"><div class="hint">0 = auto-detect</div><div id="mav-hint" class="hint" style="color:#f57f17;display:none;margin-top:2px">&#x26a0; Required when Protocol is MAVLink</div></div>
@@ -497,15 +688,39 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 </label>
 </div>
 </div>
-<button class="btn" type="submit">Save AP &amp; Serial</button>
+
+<button class="btn" type="submit">Save Flight Controller</button>
 </form>
+</div>
+</div>
+
+<!-- HARDWARE -->
+<div id="tab-hardware" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f4a1;</span> Hardware <span class="tag tag-stable">Stable</span></h2>
+<form id="f5">
+<div class="guide" onclick="toggleGuide(this)">
+<b>Status LED</b> &mdash; Configure GPIO pins for the RGB status LED. Red = no GPS fix, Green = GPS valid. Set unused channels to -1.
+</div>
+
+<div class="grid2">
+<div><label>Red Pin</label><input id="led_r_gpio" type="number" min="-1" max="48" value="-1"></div>
+<div><label>Green Pin</label><input id="led_g_gpio" type="number" min="-1" max="48" value="-1"></div>
+<div><label>Blue Pin</label><input id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
+</div>
+<div class="hint">Set the GPIO numbers connected to your RGB LED cathode pins. Use -1 for unused channels.</div>
+
+<button class="btn" type="submit">Save Hardware</button>
+</form>
+</div>
 </div>
 
 <!-- SYSTEM -->
+<div id="tab-system" class="tab-pane">
 <div class="card">
-<h2><span class="ico">&#x1f512;</span> System <span class="tag tag-warning">Warning</span></h2>
+<h2><span class="ico">&#x1f512;</span> System <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
 <form id="f4">
-<div class="guide">
+<div class="guide" onclick="toggleGuide(this)">
 <b>Security &amp; Options</b> &mdash; Lock level 0 is normal. Level 1 restricts to signed commands. Level 2 burns efuses permanently. Public keys enable signed command authentication.
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-security" target="_blank">Wiki &rarr;</a>
 </div>
@@ -525,31 +740,46 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 <label><input type="checkbox" id="opt_print"> Print MAVLink RID messages</label>
 </div>
 
-            <hr>
-            <h3 style="font-size:.82em;margin:0 0 4px;color:var(--txt-sec)">Status LED GPIOs <span style="font-weight:400;color:var(--txt-muted)">(-1 to disable)</span></h3>
-            <div class="grid2">
-            <div><label>Red Pin</label><input id="led_r_gpio" type="number" min="-1" max="48" value="-1"></div>
-            <div><label>Green Pin</label><input id="led_g_gpio" type="number" min="-1" max="48" value="-1"></div>
-            <div><label>Blue Pin</label><input id="led_b_gpio" type="number" min="-1" max="48" value="-1"></div>
-            </div>
-            <div class="hint">Set the GPIO numbers connected to your RGB LED. Use -1 for unused channels. Changes apply after saving.</div>
-
-            <label>Public Key 1</label><input id="pubkey1" maxlength="64" placeholder="PUBLIC_KEYV1:...">
-<label>Public Key 2</label><input id="pubkey2" maxlength="64" placeholder="PUBLIC_KEYV1:...">
-<label>Public Key 3</label><input id="pubkey3" maxlength="64" placeholder="PUBLIC_KEYV1:...">
-<label>Public Key 4</label><input id="pubkey4" maxlength="64" placeholder="PUBLIC_KEYV1:...">
-<label>Public Key 5</label><input id="pubkey5" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<fieldset style="margin-top:16px">
+<legend>Public Keys &#x1f511;</legend>
+<label>Key 1</label><input id="pubkey1" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Key 2</label><input id="pubkey2" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Key 3</label><input id="pubkey3" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Key 4</label><input id="pubkey4" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+<label>Key 5</label><input id="pubkey5" maxlength="64" placeholder="PUBLIC_KEYV1:...">
+</fieldset>
 
 <button class="btn" type="submit">Save System</button>
 </form>
 <button class="btn-danger" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
 <button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Device restarting...'))" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
 </div>
+</div>
 
-<!-- TERMINAL + STATUS -->
+<!-- FIRMWARE -->
+<div id="tab-firmware" class="tab-pane">
 <div class="card">
-<h2><span class="ico">&#x1f4ca;</span> Status &amp; Console <span class="tag tag-stable">Stable</span></h2>
-<div class="guide">
+<h2><span class="ico">&#x1f4e4;</span> Firmware Update <span class="tag tag-warning">Warning</span> <span class="tag" style="background:#e65100;color:#fff">Expert</span></h2>
+<div class="guide" style="border-left-color:#c62828">
+&#x26a0; Upload a firmware <code>.bin</code> file to update over-the-air. <strong>Do NOT disconnect power during the update.</strong> The device reboots automatically. Use the correct .bin for your ESP32 model.
+<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-ota" target="_blank">Wiki &rarr;</a>
+</div>
+<div class="ota-zone" id="ota-zone">
+<div class="ico-big">&#x1f4c1;</div>
+<input type="file" id="fwfile" accept=".bin" style="display:none">
+<button class="btn-sm" type="button" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
+<span id="fw_name" style="font-size:.8em;color:var(--txt-muted);display:block;margin-top:8px">No file selected</span>
+<button class="btn" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn">Upload Firmware</button>
+<div id="ota_progress" style="margin-top:10px;font-size:.82em;color:var(--txt-muted)"></div>
+</div>
+</div>
+</div>
+
+<!-- CONSOLE -->
+<div id="tab-console" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f4bb;</span> Console &amp; Telemetry</h2>
+<div class="guide" onclick="toggleGuide(this)">
 Live telemetry and serial console from the ESP DRONE REMOTEID. Refreshes every 2 seconds. Status shows GPS data and transmission counters. Console captures real-time log output from the device.
 <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-webui" target="_blank">Wiki &rarr;</a>
 </div>
@@ -561,7 +791,9 @@ Live telemetry and serial console from the ESP DRONE REMOTEID. Refreshes every 2
 <button class="btn-sm" onclick="copyTerm('term-output')" title="Copy console">&#x1f4cb; Copy</button>
 <button class="btn-sm" onclick="copyAllLogs()" title="Copy all logs from device">&#x1f4cb; All</button>
 <button class="btn-sm" onclick="clearTerm()" title="Clear console">&#x1f5d1; Clear</button>
+<button class="btn-sm" onclick="showCliDialog()" title="Open CLI in dialog">&#x26a1; CLI</button>
 <button class="btn-sm" id="term-scroll-btn" onclick="toggleTermScroll()" title="Toggle auto-scroll">&#x1f53d; Auto</button>
+<span class="term-scroll-icon" id="scrollicon" title="Auto-scroll active">&#x2193;</span>
 </div>
 </div>
 <div class="term-output" id="term-output">
@@ -576,42 +808,261 @@ Live telemetry and serial console from the ESP DRONE REMOTEID. Refreshes every 2
 <hr style="margin:16px 0">
 
 <h3 style="font-size:.82em;margin:0 0 10px;color:var(--txt-sec)">&#x1f4ca; Live Telemetry</h3>
-<div id="status" style="min-height:60px">Loading...</div>
+<div id="status-console" style="min-height:60px">Loading...</div>
+</div>
 </div>
 
-<!-- OTA -->
+<div class="clear-both"></div>
+
+<!-- PRESETS -->
+<div id="tab-presets" class="tab-pane">
 <div class="card">
-<h2><span class="ico">&#x1f4e4;</span> Firmware Update <span class="tag tag-warning">Warning</span></h2>
-<div class="guide" style="border-left-color:#c62828">
-&#x26a0; Upload a firmware <code>.bin</code> file to update over-the-air. <strong>Do NOT disconnect power during the update.</strong> The device reboots automatically. Use the correct .bin for your ESP32 model.
-<a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/#guide-ota" target="_blank">Wiki &rarr;</a>
+<h2>&#x1f4cb; Presets <span class="tag tag-stable">Stable</span></h2>
+<div class="guide">Save and load named configuration profiles. Profiles are stored in your browser and can be quickly applied. Use Export Config for sharing.</div>
+<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;flex-shrink:0">
+<input id="preset-name" style="flex:1;min-width:120px;font-size:.8em;padding:6px 10px;border-radius:6px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--txt)" placeholder="New preset name...">
+<button class="btn-sm" onclick="savePreset()">&#x1f4be; Save</button>
+<button class="btn-sm" onclick="exportAllPresets()">&#x1f4e5; Export All</button>
+<button class="btn-sm" onclick="document.getElementById('preset-import-file').click()">&#x1f4e4; Import</button>
+<input type="file" id="preset-import-file" accept=".json" style="display:none" onchange="importPresets(this)">
 </div>
-<div class="ota-zone" id="ota-zone">
-<div class="ico-big">&#x1f4c1;</div>
-<input type="file" id="fwfile" accept=".bin" style="display:none">
-<button class="btn-sm" type="button" onclick="document.getElementById('fwfile').click()">Select .bin file</button>
-<span id="fw_name" style="font-size:.8em;color:var(--txt-muted);display:block;margin-top:8px">No file selected</span>
-<button class="btn" type="button" onclick="showModal('ota')" style="margin-top:12px" id="ota-btn">Upload Firmware</button>
-<div id="ota_progress" style="margin-top:10px;font-size:.82em;color:var(--txt-muted)"></div>
+<div id="preset-list" style="font-size:.82em">No presets saved yet.</div>
 </div>
 </div>
 
+<!-- LOGGING -->
+<div id="tab-logging" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f4dd;</span> Data Logging <span class="tag tag-beta">Beta</span></h2>
+<div class="guide">
+<b>Tethered Logging</b> &mdash; Records live telemetry from the device into browser memory. Data is captured every poll cycle (~2s). Click <b>Start</b> to begin recording, <b>Stop</b> to finish and download a CSV file.
+<div style="margin-top:4px">Leaving this tab will <b>not</b> cancel recording — logging continues in the background.</div>
 </div>
 
-<div class="overlay" id="modal">
-<div class="modal">
-<h3 id="modal-icon">&#x26a0;</h3>
-<h3 id="modal-title">Warning</h3>
-<p id="modal-text">Are you sure?</p>
-<div class="modal-actions">
-<button class="btn-cancel" onclick="closeModal()">Cancel</button>
-<button class="btn-danger" id="modal-confirm" onclick="closeModal()">Confirm</button>
+<div class="sec-div">Data Fields</div>
+<div style="font-size:.76em;line-height:1.6;color:var(--txt-sec)">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 16px;margin:6px 0">
+<span>&#x1f7e2; Timestamp (epoch ms)</span>
+<span>&#x1f7e2; GPS fix</span>
+<span>&#x1f7e2; Satellites</span>
+<span>&#x1f7e2; Latitude</span>
+<span>&#x1f7e2; Longitude</span>
+<span>&#x1f7e2; Altitude (m)</span>
+<span>&#x1f7e2; Speed (m/s)</span>
+<span>&#x1f7e2; Heading (&deg;)</span>
+<span>&#x1f7e2; Protocol</span>
+<span>&#x1f7e2; Tx Total</span>
+<span>&#x1f7e2; Tx Rate (/s)</span>
+<span>&#x1f7e2; WiFi Bcn</span>
+<span>&#x1f7e2; WiFi NAN</span>
+<span>&#x1f7e2; BLE 4.0</span>
+<span>&#x1f7e2; BLE 5.0</span>
+<span>&#x1f7e2; RSSI (dBm)</span>
+<span>&#x1f7e2; Battery (V)</span>
+<span>&#x1f7e2; CPU Temp (&deg;C)</span>
+</div>
+</div>
+
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
+<button class="btn-sm" id="log-start-btn" onclick="startLogging()">&#x25b6; Start Logging</button>
+<button class="btn-sm" id="log-stop-btn" onclick="stopLogging()" style="display:none">&#x23f9; Stop Logging</button>
+<button class="btn-sm" id="log-dl-btn" onclick="downloadLog()" style="display:none">&#x1f4e5; Download CSV</button>
+<button class="btn-sm" id="log-clr-btn" onclick="clearLog()" style="display:none">&#x1f5d1; Clear</button>
+<span style="margin-left:auto;font-size:.72em;color:var(--txt-muted)">Entries: <span id="log-count">0</span></span>
+<span style="font-size:.72em;color:var(--txt-muted)">Duration: <span id="log-duration">00:00</span></span>
+</div>
+
+<pre id="log-preview" style="max-height:200px;overflow:auto;font-size:.68em;padding:8px;margin-top:4px;color:var(--txt-muted)">Start logging to capture data...</pre>
+</div>
+</div>
+
+<!-- SENSORS -->
+<div id="tab-sensors" class="tab-pane">
+<div class="card">
+<h2>&#x1f4ca; Sensor Data <span class="tag tag-stable">Stable</span></h2>
+<div class="guide">Live sensor readings from the device. Refreshes every 2 seconds.</div>
+<div id="sensor-grid" class="sensor-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78em">
+<div class="sg-item"><span class="sg-label">Firmware</span><span class="sg-value" id="sns-fw">--</span></div>
+<div class="sg-item"><span class="sg-label">Protocol</span><span class="sg-value" id="sns-proto">--</span></div>
+<div class="sg-item"><span class="sg-label">GPS Fix</span><span class="sg-value" id="sns-gps">--</span></div>
+<div class="sg-item"><span class="sg-label">Satellites</span><span class="sg-value" id="sns-sats">--</span></div>
+<div class="sg-item"><span class="sg-label">Latitude</span><span class="sg-value" id="sns-lat">--</span></div>
+<div class="sg-item"><span class="sg-label">Longitude</span><span class="sg-value" id="sns-lon">--</span></div>
+<div class="sg-item"><span class="sg-label">Altitude</span><span class="sg-value" id="sns-alt">--</span></div>
+<div class="sg-item"><span class="sg-label">Speed</span><span class="sg-value" id="sns-speed">--</span></div>
+<div class="sg-item"><span class="sg-label">Heading</span><span class="sg-value" id="sns-heading">--</span></div>
+<div class="sg-item"><span class="sg-label">Fix Type</span><span class="sg-value" id="sns-fixtype">--</span></div>
+<div class="sg-item"><span class="sg-label">Home Dist</span><span class="sg-value" id="sns-home">--</span></div>
+<div class="sg-item"><span class="sg-label">DOP</span><span class="sg-value" id="sns-dop">--</span></div>
+<div class="sg-item"><span class="sg-label">Tx Total</span><span class="sg-value" id="sns-tx-total">--</span></div>
+<div class="sg-item"><span class="sg-label">Tx Rate</span><span class="sg-value" id="sns-tx-rate">--</span></div>
+<div class="sg-item"><span class="sg-label">WiFi Beacon</span><span class="sg-value" id="sns-tx-wifi">--</span></div>
+<div class="sg-item"><span class="sg-label">WiFi NAN</span><span class="sg-value" id="sns-tx-nan">--</span></div>
+<div class="sg-item"><span class="sg-label">BLE 4.0</span><span class="sg-value" id="sns-tx-ble4">--</span></div>
+<div class="sg-item"><span class="sg-label">BLE 5.0</span><span class="sg-value" id="sns-tx-ble5">--</span></div>
+<div class="sg-item"><span class="sg-label">RSSI</span><span class="sg-value" id="sns-rssi">--</span></div>
+<div class="sg-item"><span class="sg-label">CPU Temp</span><span class="sg-value" id="sns-temp">--</span></div>
+<div class="sg-item"><span class="sg-label">Uptime</span><span class="sg-value" id="sns-uptime">--</span></div>
 </div>
 </div>
 </div>
 
-<div class="footer">&mdash; ESP DRONE REMOTEID v0.0.1-dev &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">GitHub</a> &mdash; <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">Wiki</a></div>
+<!-- HELP -->
+<div id="tab-help" class="tab-pane">
+<div class="card">
+<h2>&#x2753; Help &amp; References</h2>
+<div class="guide">Quick reference for the ESP32 Drone Remote ID configuration tool.</div>
+<div style="font-size:.82em;line-height:1.8">
+<p><strong>&#x1f310; Resources</strong></p>
+<ul style="margin:6px 0 14px 20px;color:var(--txt-sec)">
+<li><a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank">GitHub Repository</a></li>
+<li><a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/" target="_blank">Wiki &amp; Guide</a></li>
+<li><a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues" target="_blank">Report an Issue</a></li>
+</ul>
+<p><strong>&#x1f6a8; Quick Tips</strong></p>
+<ul style="margin:6px 0 14px 20px;color:var(--txt-sec)">
+<li><strong>Dashboard</strong> — Monitor GPS, transmission rates, and FC status in real time</li>
+<li><strong>Identity</strong> — Set your UAS ID, type, and operator ID for FAA/EASA compliance</li>
+<li><strong>Transmission</strong> — Configure WiFi Beacon, NAN, BLE 4.0/5.0 rates and power</li>
+<li><strong>Access Point</strong> — Configure the management WiFi network</li>
+<li><strong>Flight Controller</strong> — Set UART baud rate and protocol (MAVLink/MSP/NMEA)</li>
+<li><strong>Hardware</strong> — Configure RGB LED GPIO pins</li>
+<li><strong>System</strong> — Lock level, eFuse, public keys, factory reset</li>
+<li><strong>Firmware</strong> — OTA update (upload .bin file)</li>
+<li><strong>Console</strong> — Live logs, telemetry, and CLI commands</li>
+</ul>
+<p><strong>&#x2699; Version Info</strong></p>
+<div style="margin:6px 0 14px 20px;color:var(--txt-sec)">
+<div>Firmware: <span id="help-fw">--</span></div>
+<div>Web UI: <span id="help-ui">v1.0</span></div>
+<div>Protocol: <span id="help-proto">--</span></div>
+</div>
+<p><strong>&#x1f4ca; Build Info</strong></p>
+<div style="margin:6px 0 14px 20px;color:var(--txt-sec);font-size:.92em">
+<div>MSP API: <span id="help-msp">--</span></div>
+<div>Build Date: <span id="help-build-date">--</span></div>
+<div>Build Type: <span id="help-build-type">--</span></div>
+<div>Build Info: <span id="help-build-info">--</span></div>
+<div>Board/CPU: <span id="help-board">--</span></div>
+</div>
+</div>
+</div>
+</div>
 
+<!-- MAP -->
+<div id="tab-map" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f5fa;</span> Live Map <span class="tag tag-beta">Beta</span></h2>
+<div class="guide" onclick="toggleGuide(this)">
+<b>Real-time position</b> &mdash; Shows drone and operator (home) positions updated live from telemetry. The drone icon follows GPS updates from the flight controller. Use the toolbox to export the current track as KML.
+</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+<button class="btn-sm" id="map-fit-btn" onclick="fitMap()" style="padding:3px 10px">&#x1f5b3; Fit All</button>
+<button class="btn-sm" onclick="exportKml()" style="padding:3px 10px">&#x1f4e5; Export KML</button>
+<span class="hdr-chip" style="font-size:.72em;padding:2px 8px"><span class="dot" id="map-gps-dot"></span> GPS: <span id="map-gps-stat">--</span></span>
+<span class="hdr-chip" style="font-size:.72em;padding:2px 8px">&#x1f4cd; Home: <span id="map-home-dist">--</span></span>
+</div>
+<div id="map-container" style="height:460px;border-radius:8px;border:1px solid var(--card-border);background:var(--input-bg);position:relative;overflow:hidden">
+<canvas id="map-canvas" width="800" height="460" style="width:100%;height:100%;position:absolute;inset:0;z-index:2"></canvas>
+<div id="map-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt-muted);font-size:.9em;gap:8px;z-index:1">
+<div style="font-size:2em">&#x1f5fa;</div>
+<div>Waiting for GPS position data...</div>
+<div style="font-size:.72em">Connect to the drone and ensure GPS lock</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- COMPLIANCE -->
+<div id="tab-compliance" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x2696;</span> Compliance Checklist <span class="tag tag-beta">Beta</span></h2>
+<div class="guide" onclick="toggleGuide(this)">
+<b>Regulatory compliance</b> &mdash; Verify your configuration against FAA (USA) and EASA (EU) requirements. Select your region to see which fields are mandatory.
+</div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+<label style="font-weight:500">Region:</label>
+<select id="compliance-region" onchange="updateCompliance()" style="width:auto;min-width:120px">
+<option value="auto">Auto-detect</option>
+<option value="FAA">FAA (USA)</option>
+<option value="EASA">EASA (EU)</option>
+<option value="CAA">CAA (UK)</option>
+<option value="ENAC">ENAC (Italy)</option>
+</select>
+<button class="btn-sm" onclick="updateCompliance()" style="padding:3px 12px">&#x1f504; Refresh</button>
+</div>
+<div id="compliance-list"></div>
+</div>
+</div>
+
+<!-- SECURITY -->
+<div id="tab-security" class="tab-pane">
+<div class="card">
+<h2><span class="ico">&#x1f510;</span> Security <span class="tag tag-beta">Beta</span></h2>
+<div class="guide" onclick="toggleGuide(this)">
+<b>Panel access control</b> &mdash; Set a password to protect the web configuration panel. When enabled, a login screen will be shown on first access. Password is stored in the device and can be cleared via hardware reset.
+</div>
+<form id="f-security" onsubmit="saveSecurity(event)">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:360px">
+<label>Access Password</label>
+<div style="display:flex;gap:6px">
+<input type="password" id="sec-password" maxlength="32" placeholder="Leave empty to disable" style="flex:1">
+<button type="button" class="btn-sm" onclick="toggleSecPwd()" style="padding:3px 10px" id="sec-pwd-toggle">&#x1f441;</button>
+</div>
+<div class="hint">Min 4 chars. If set, login is required to access any page.</div>
+<label>Session Timeout (minutes)</label>
+<select id="sec-timeout" style="width:auto;min-width:100px">
+<option value="5">5 min</option>
+<option value="15" selected>15 min</option>
+<option value="30">30 min</option>
+<option value="60">60 min</option>
+<option value="0">Never</option>
+</select>
+<button class="btn" type="submit" style="width:auto;align-self:flex-start">Save Security</button>
+</div>
+</form>
+</div>
+</div>
+
+</main>
+</div>
+<dialog class="dialog-modal" id="dialog-modal">
+<div class="dialog-box">
+<h3 class="dialog-modal-icon" id="modal-icon">&#x26a0;</h3>
+<h3 class="dialog-modal-title" id="modal-title">Warning</h3>
+<div class="dialog-content" id="modal-text">Are you sure?</div>
+<ul class="dialog-report-list" id="modal-report-list" style="display:none"></ul>
+<div class="modal-actions" id="modal-actions"></div>
+</div>
+</dialog>
+
+<dialog class="dialog-wait" id="dialog-wait">
+<div class="dialog-wait-box">
+<h3 id="dialog-wait-title">Please wait...</h3>
+<div class="dialog-wait-content" id="dialog-wait-content"></div>
+</div>
+</dialog>
+
+
+<dialog class="dialog-interactive" id="dialog-interactive">
+<div class="dialog-box" style="max-height:80vh;display:flex;flex-direction:column">
+<h3 id="dialog-int-title">CLI Console</h3>
+<div class="dialog-int-output" id="dialog-int-output" style="flex:1;overflow-y:auto;min-height:200px;max-height:50vh;background:var(--input-bg);border-radius:6px;padding:8px;font-family:monospace;font-size:.78em;white-space:pre-wrap;word-break:break-all"></div>
+<div class="cli-input-row" style="display:flex;gap:6px;margin-top:8px">
+<input type="text" id="dialog-int-input" style="flex:1;font-family:monospace;font-size:.8em" placeholder="Type a command..." onkeydown="if(event.key==='Enter')sendDialogCmd()">
+<button class="btn-sm" onclick="sendDialogCmd()" style="flex-shrink:0">Send</button>
+</div>
+<div class="modal-actions" style="margin-top:8px">
+<button class="btn-cancel" onclick="closeDialog('dialog-interactive')">Close</button>
+</div>
+</div>
+</dialog>
+
+<div id="loading-overlay" class="loading-overlay" style="display:none">
+<div class="loading-box">
+<div class="loading-spinner"></div>
+<p id="loading-text">Loading configuration...</p>
+</div>
 </div>
 
 <script>
@@ -622,10 +1073,10 @@ function $(id){return document.getElementById(id)}
 /* ---------- View modes ---------- */
 function setView(v){
   currentView = v;
-  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
-  var el = $(v==='advanced'?'view-advanced':'view-dashboard');
+  document.querySelectorAll('.tab-pane').forEach(function(el){el.classList.remove('active')});
+  var el = $('tab-'+v);
   if(el) el.classList.add('active');
-  document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-view')===v)});
+  document.querySelectorAll('.sidebar .nav-item').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-tab')===v)});
   try{localStorage.setItem('rid_view',v)}catch(e){}
 }
 
@@ -672,164 +1123,237 @@ function onTxModeChange(){
   var bcn=$('tx_wifi_bcn'),nan=$('tx_wifi_nan'),ble4=$('tx_ble4'),ble5=$('tx_ble5');
   if(nan.checked&&!bcn.checked)nan.checked=false;
   if(ble5.checked&&!ble4.checked)ble5.checked=false;
+  nan.disabled=!bcn.checked;
+  ble5.disabled=!ble4.checked;
 }
 
+var _splashDone=false,_toastQ=[]
+function flushToastQ(){_toastQ.forEach(function(a){a()});_toastQ=[]}
 function showMsg(t,e){
+  if(!_splashDone){_toastQ.push(function(){showMsg(t,e)});return}
   var c=$('toast-center');
-  var bg=$('toast-err-bg');
   var el=document.createElement('div');
   el.className='toast '+(e?'err':'ok');
   var icon=e?'&#x26a0;':'&#x2705;';
-  el.innerHTML='<span class="toast-icon">'+icon+'</span>'+t.replace(/</g,'&lt;')+'<button class="toast-close" onclick="this.parentElement.remove();if(this.parentElement.classList.contains(\'err\')){$(\'toast-err-bg\').classList.remove(\'show\')}">&times;</button>';
+  el.innerHTML='<span class="toast-icon">'+icon+'</span>'+t.replace(/</g,'&lt;')+'<button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
   c.appendChild(el);
   var dur=e?5e3:2500;
-  if(e){bg.classList.add('show')}
   requestAnimationFrame(function(){el.classList.add('show')});
-  var p=document.createElement('div');
-  p.id='toast-progress';
-  p.style.width='100%';
-  el.appendChild(p);
-  requestAnimationFrame(function(){p.style.width='0%'});
   setTimeout(function(){
     el.classList.remove('show');
-    if(e){setTimeout(function(){bg.classList.remove('show')},300)}
-    setTimeout(function(){el.remove()},300)
+    setTimeout(function(){el.remove()},250)
   },dur)
 }
 
-var modalAction = null;
+function setModalButtons(buttons){
+var a=$('modal-actions');a.textContent='';
+buttons.forEach(function(b){
+var btn=document.createElement('button');
+btn.textContent=b.label;
+btn.className=b.className||'btn-cancel';
+btn.onclick=function(){closeDialog('dialog-modal');if(b.action)b.action()};
+a.appendChild(btn)})}
 
-function showModal(type){
-var m = $('modal');
-var icon = $('modal-icon');
-var title = $('modal-title');
-var text = $('modal-text');
-var confirmBtn = $('modal-confirm');
+function showModal(type, confirmAction){
+if(!_splashDone){_toastQ.push(function(){showModal(type,confirmAction)});return}
+var m=$('dialog-modal'),icon=$('modal-icon'),title=$('modal-title'),text=$('modal-text');
+var list=$('modal-report-list');list.style.display='none';
 if(type==='reset'){
-icon.textContent = '&#x26a0;';
-title.textContent = 'Factory Reset';
-text.textContent = 'All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
-confirmBtn.textContent = 'Reset';
-confirmBtn.className = 'btn-danger';
-modalAction = function(){fetch('/api/reset',{method:'POST'}).then(r=>showMsg('Factory reset OK, rebooting...'))};
+icon.textContent='\u26a0';title.textContent='Factory Reset';
+text.textContent='All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
+setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Reset',className:'btn-danger',action:function(){fetch('/api/reset',{method:'POST'}).then(function(r){showMsg('Factory reset OK, rebooting...')})}}])
 }else if(type==='ota'){
-icon.textContent = '&#x26a0;';
-title.textContent = 'Firmware Update';
-text.textContent = 'Upload a new firmware binary. The device will reboot after the update. Do NOT disconnect power during the process. Ensure the .bin file is for your ESP32 model.';
-confirmBtn.textContent = 'Upload';
-confirmBtn.className = 'btn-danger';
-modalAction = function(){otaUpdate()};
+icon.textContent='\u26a0';title.textContent='Firmware Update';
+text.textContent='Upload a new firmware binary. The device will reboot after the update. Do NOT disconnect power during the process. Ensure the .bin file is for your ESP32 model.';
+setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Upload',className:'btn-danger',action:function(){otaUpdate()}}])
 }else if(type==='efuse'){
-icon.textContent = '&#x26a0;&#xfe0f;';
-title.textContent = 'eFuse Permanent Lock';
-text.textContent = 'Lock level 2 burns eFuses and is IRREVERSIBLE. The device will be permanently locked. This can brick your device if you lose the signing keys. Are you absolutely sure?';
-confirmBtn.textContent = 'I Understand, Lock';
-confirmBtn.className = 'btn-danger';
-modalAction = function(){return true};
+icon.textContent='\u26a0\ufe0f';title.textContent='eFuse Permanent Lock';
+text.textContent='Lock level 2 burns eFuses and is IRREVERSIBLE. The device will be permanently locked. This can brick your device if you lose the signing keys. Are you absolutely sure?';
+setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'I Understand, Lock',className:'btn-danger'}])
 }else if(type==='danger'){
-icon.textContent = '&#x26a0;';
-title.textContent = 'Dangerous Setting';
-text.textContent = 'You are about to apply settings that could cause issues. The creators of this firmware are not responsible for any fines, damage, or accidents. Do you want to proceed?';
-confirmBtn.textContent = 'Proceed';
-confirmBtn.className = 'btn-danger';
-modalAction = function(){doSave()};
+icon.textContent='\u26a0';title.textContent='Dangerous Setting';
+text.textContent='You are about to apply settings that could cause issues. The creators of this firmware are not responsible for any fines, damage, or accidents. Do you want to proceed?';
+setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Proceed',className:'btn-danger',action:confirmAction||function(){doSave()}}])
 }
-m.classList.add('show');
-}
+if(typeof m.showModal==='function')m.showModal()}
 
-function closeModal(){var m=$('modal');m.classList.remove('show');modalAction=null}
+function showInfo(title,msg){
+if(!_splashDone){_toastQ.push(function(){showInfo(title,msg)});return}
+$('modal-icon').textContent='\u2139\ufe0f';
+$('modal-title').textContent=title||'Information';
+$('modal-text').innerHTML=msg||'';
+$('modal-report-list').style.display='none';
+setModalButtons([{label:'OK',className:'btn-cancel'}]);
+if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
 
-$('modal-confirm').onclick=function(){
-var action = modalAction;
-closeModal();
-if(action) action();
-}
+function showError(title,msg){
+if(!_splashDone){_toastQ.push(function(){showError(title,msg)});return}
+$('modal-icon').textContent='\u26a0';
+$('modal-title').textContent=title||'Error';
+$('modal-text').innerHTML=msg||'';
+$('modal-report-list').style.display='none';
+setModalButtons([{label:'OK',className:'btn-danger'}]);
+if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
+
+function showConfirm(title,msg,yesCb,noCb){
+if(!_splashDone){_toastQ.push(function(){showConfirm(title,msg,yesCb,noCb)});return}
+$('modal-icon').textContent='\u2753';
+$('modal-title').textContent=title||'Confirm';
+$('modal-text').textContent=msg||'';
+$('modal-report-list').style.display='none';
+setModalButtons([{label:'No',className:'btn-cancel',action:noCb},{label:'Yes',className:'btn-danger',action:yesCb}]);
+if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
+
+function showReport(issues){
+if(!_splashDone){_toastQ.push(function(){showReport(issues)});return}
+var list=$('modal-report-list');
+if(!issues||!issues.length){showInfo('All Clear','No problems detected.');return}
+$('modal-icon').textContent='\u26a0';
+$('modal-title').textContent='Problems Detected';
+$('modal-text').textContent='';
+list.style.display='';list.textContent='';
+issues.forEach(function(i){var li=document.createElement('li');li.textContent=i;list.appendChild(li)});
+setModalButtons([{label:'Close',className:'btn-cancel'}]);
+if(typeof $('dialog-modal').showModal==='function')$('dialog-modal').showModal()}
+
+function showIssues(){
+var s=lastStatusForReport;
+if(!s){showInfo('Status Unknown','No status data received yet.');return}
+var issues=[];
+if(!s.gps_valid)issues.push('GPS: No fix (no satellites locked)');
+if(s.protocol===0||s.protocol===4)issues.push('Flight Controller: Not connected (no FC data)');
+if(!s.tx_total||s.tx_total===0)issues.push('Transmission: No packets sent yet');
+if(issues.length)showReport(issues);else showInfo('All Clear','Everything looks good!')}
 
 function lockLevelWarn(sel){
 if(parseInt(sel.value)===2){
 showModal('efuse');
 }
+var lockVal=parseInt(sel.value);
+if(lockVal>=1){
+var hasKey=false;
+for(var i=1;i<=5;i++){if($('pubkey'+i).value.trim())hasKey=true}
+if(!hasKey){showMsg('Warning: Lock Level '+lockVal+' without any public key will make the device unreachable via unsigned commands!',1)}
+}
 }
 
 $('fwfile').onchange=function(){var f=this.files[0];$('fw_name').textContent=f?f.name+' ('+(f.size/1024).toFixed(0)+' KB)':'No file selected';$('fw_name').style.color=f?'#222':'#999'}
 
-// Drag & drop OTA
 var otaZone=$('ota-zone');
 otaZone.ondragover=function(e){e.preventDefault();this.classList.add('dragover')}
 otaZone.ondragleave=function(){this.classList.remove('dragover')}
 otaZone.ondrop=function(e){e.preventDefault();this.classList.remove('dragover');var f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.bin')){$('fwfile').files=e.dataTransfer.files;$('fwfile').onchange()}else{showMsg('Please drop a .bin file',1)}}
 otaZone.onclick=function(){if(!$('fwfile').files.length){$('fwfile').click()}}
 
-// Toggle password
 $('toggle-pass').onclick=function(){
   var p=$('wifi_pass');
   if(p.type==='password'){p.type='text';this.textContent='Hide Password'}
   else{p.type='password';this.textContent='Show Password'}
 }
 
+function validateUasId(s){
+  s=s.toUpperCase();
+  if(s.length<6||s.length>20)return{ok:false,msg:'Must be 6\u201320 characters (4-char mfr code + length code + serial)'};
+  var mfr=s.slice(0,4);
+  if(!/^[A-Z0-9]{4}$/.test(mfr))return{ok:false,msg:'First 4 chars must be alphanumeric manufacturer code'};
+  var lc=s[4];
+  var lcVal=lc>='1'&&lc<='9'?parseInt(lc):lc>='A'&&lc<='F'?lc.charCodeAt(0)-55:-1;
+  if(lcVal<1||lcVal>15)return{ok:false,msg:'Position 5 must be length code 1\u20139 or A\u2013F (1\u201315)'};
+  var serial=s.slice(5);
+  if(serial.length!==lcVal)return{ok:false,msg:'Serial length ('+serial.length+') does not match length code ('+lcVal+')'};
+  if(/[OI]/i.test(serial))return{ok:false,msg:'Serial must not contain letters O or I'};
+  if(!/^[A-Z0-9]+$/.test(serial))return{ok:false,msg:'Serial must be alphanumeric uppercase only'};
+  return{ok:true}}
+function validatePublicKey(s){
+  if(!s||s.trim()==='')return{ok:true};
+  var v=s.trim();
+  if(!/^PUBLIC_KEYV1:/i.test(v))return{ok:false,msg:'Must start with PUBLIC_KEYV1:'};
+  return{ok:true}}
+function updateFieldStatus(el,state,msg){
+  el.classList.remove('ok','err','warn');
+  if(state){el.classList.add(state)}
+  var st=el.parentNode.querySelector('.val-st');
+  if(!st&&msg){st=document.createElement('span');st.className='val-st';el.parentNode.appendChild(st)}
+  if(!st)return;
+  st.className='val-st';
+  if(state==='ok'){st.className='val-st ok';st.textContent='\u2713'}
+  else if(state==='err'){st.className='val-st err';st.textContent='\u2717';st.title=msg||''}
+  else if(state==='warn'){st.className='val-st warn';st.textContent='\u26a0';st.title=msg||''}
+  else{st.className='val-st pending';st.textContent='\u25cb'}}
 var rules={
-  uas_id:{required:true,maxlen:20,ascii:true,msg:'Required, max 20 ASCII chars'},
+  uas_id:{required:true,maxlen:20,ascii:true,custom:function(v){return validateUasId(v)},msg:'Invalid UAS ID format'},
   op_id:{maxlen:20,ascii:true,msg:'Max 20 ASCII chars'},
   uas_id2:{maxlen:20,ascii:true,msg:'Max 20 ASCII chars'},
   wifi_ssid:{required:true,maxlen:20,msg:'Required, max 20 chars'},
-  wifi_pass:{maxlen:20,minlen:8,msg:'Must be 8–20 chars or empty'},
-  wifi_pwr:{min:2,max:20,step:.5,msg:'Must be 2–20 dBm'},
-  wifi_bcn:{min:0,max:5,step:.1,msg:'Must be 0–5 Hz'},
-  wifi_nan:{min:0,max:5,step:.1,msg:'Must be 0–5 Hz'},
-  bt4_rate:{min:0,max:5,step:.1,msg:'Must be 0–5 Hz'},
-  bt4_pwr:{min:-27,max:18,msg:'Must be -27–18 dBm'},
-  bt5_rate:{min:0,max:5,step:.1,msg:'Must be 0–5 Hz'},
-  bt5_pwr:{min:-27,max:18,msg:'Must be -27–18 dBm'},
-  mav_sysid:{min:0,max:254,msg:'Must be 0–254'},
-  led_r_gpio:{min:-1,max:48,msg:'Must be -1–48'},
-  led_g_gpio:{min:-1,max:48,msg:'Must be -1–48'},
-  led_b_gpio:{min:-1,max:48,msg:'Must be -1–48'}
+  wifi_pass:{maxlen:20,minlen:8,msg:'Must be 8\u201320 chars or empty'},
+  wifi_pwr:{min:2,max:20,step:.5,msg:'Must be 2\u201320 dBm'},
+  wifi_bcn:{min:0,max:5,step:.1,msg:'Must be 0\u20135 Hz'},
+  wifi_nan:{min:0,max:5,step:.1,msg:'Must be 0\u20135 Hz'},
+  bt4_rate:{min:0,max:5,step:.1,msg:'Must be 0\u20135 Hz'},
+  bt4_pwr:{min:-27,max:18,msg:'Must be -27\u201318 dBm'},
+  bt5_rate:{min:0,max:5,step:.1,msg:'Must be 0\u20135 Hz'},
+  bt5_pwr:{min:-27,max:18,msg:'Must be -27\u201318 dBm'},
+  mav_sysid:{min:0,max:254,msg:'Must be 0\u2013254'},
+  led_r_gpio:{min:-1,max:48,msg:'Must be -1\u201348'},
+  led_g_gpio:{min:-1,max:48,msg:'Must be -1\u201348'},
+  led_b_gpio:{min:-1,max:48,msg:'Must be -1\u201348'}
 }
-
 function setError(el,msg){
   el.classList.add('error')
   var err=el.parentNode.querySelector('.errmsg')
   if(!err){err=document.createElement('span');err.className='errmsg';el.parentNode.insertBefore(err,el.nextSibling)}
   err.textContent=msg;err.style.display='block'
-}
+  updateFieldStatus(el,'err',msg)}
 function isValidAscii(s){return/^[\x20-\x7E]*$/.test(s)}
-
 function clearError(el){
   el.classList.remove('error')
   var err=el.parentNode.querySelector('.errmsg')
   if(err) err.style.display='none'
-}
-
+  updateFieldStatus(el)}
 function validateField(id){
   var el=$(id),r=rules[id]
   if(!r) return true
-  var val=el.value.trim()
-  if(r.required&&!val){setError(el,r.msg);return false}
-  if(r.maxlen&&val.length>r.maxlen){setError(el,r.msg);return false}
-  if(r.minlen&&val.length>0&&val.length<r.minlen){setError(el,r.msg);return false}
-  if(r.ascii&&val&&!isValidAscii(val)){setError(el,r.msg);return false}
-  if(r.min!==undefined){var n=parseFloat(val);if(isNaN(n)||n<r.min||n>r.max){setError(el,r.msg);return false}}
+  var val=el.value.trim(),ok=true,msg=''
+  if(r.required&&!val){msg=r.msg;ok=false}
+  else if(val&&r.maxlen&&val.length>r.maxlen){msg=r.msg;ok=false}
+  else if(val&&r.minlen&&val.length<r.minlen){msg=r.msg;ok=false}
+  else if(val&&r.ascii&&!isValidAscii(val)){msg=r.msg;ok=false}
+  else if(val&&r.min!==undefined){var n=parseFloat(val);if(isNaN(n)||n<r.min||n>r.max){msg=r.msg;ok=false}}
+  else if(val&&r.custom){var c=r.custom(val);if(!c.ok){msg=c.msg||r.msg;ok=false}}
+  if(!ok){setError(el,msg);return false}
+  if(val){var hasExtra=r.min!==undefined||r.custom;if(hasExtra)updateFieldStatus(el,'ok')}
   clearError(el);return true
 }
-
 function validateForm(formId){
-  var fields={f1:['uas_id','op_id','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass','mav_sysid'],f4:['lock_lvl','led_r_gpio','led_g_gpio','led_b_gpio']}
+  var fields={f1:['uas_id','op_id','uas_id2'],f2:['wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr'],f3:['wifi_ssid','wifi_pass'],f3b:['mav_sysid'],f4:['lock_lvl'],f5:['led_r_gpio','led_g_gpio','led_b_gpio']}
   var ids=fields[formId]||[],ok=true
   ids.forEach(function(id){if(!validateField(id))ok=false})
+  if(formId==='f1'&&parseInt($('ua_type').value)===0){showMsg('UA Type must be set to a valid aircraft type — \"None\" is not accepted by receivers',1);ok=false}
   if(formId==='f2'&&!$('tx_wifi_bcn').checked&&!$('tx_wifi_nan').checked&&!$('tx_ble4').checked&&!$('tx_ble5').checked){showMsg('At least one transmission mode must be enabled',1);ok=false}
   if(formId==='f1'&&parseInt($('id_type2').value)!==0&&!$('uas_id2').value.trim()){setError($('uas_id2'),'Required when ID Type 2 is set');ok=false}
-  if(formId==='f4'){for(var i=1;i<=5;i++){var pk=$('pubkey'+i);if(pk.value.trim()&&!/^PUBLIC_KEYV1:/i.test(pk.value.trim())){setError(pk,'Should start with PUBLIC_KEYV1:');ok=false}}}
+  if(formId==='f4'){
+    for(var i=1;i<=5;i++){var pk=$('pubkey'+i);if(pk.value.trim()&&!/^PUBLIC_KEYV1:/i.test(pk.value.trim())){setError(pk,'Must start with PUBLIC_KEYV1:');ok=false}}
+    var lockVal=parseInt($('lock_lvl').value);
+    if(lockVal>=1){
+      var hasKey=false;
+      for(var j=1;j<=5;j++){if($('pubkey'+j).value.trim())hasKey=true}
+      if(!hasKey){showMsg('Lock Level '+lockVal+' requires at least one public key or device will be unreachable!',1)}
+    }
+  }
   return ok
 }
-
 document.querySelectorAll('input,select').forEach(function(el){
   if(rules[el.id]){
-    el.addEventListener('input',function(){clearError(el)})
-    el.addEventListener('change',function(){clearError(el)})
+    el.addEventListener('input',function(){clearError(el);if(el.value.trim())validateField(el.id)})
+    el.addEventListener('change',function(){clearError(el);if(el.value.trim())validateField(el.id)})
     el.addEventListener('blur',function(){validateField(el.id)})
   }
 })
-for(var i=1;i<=5;i++){(function(id){var el=$(id);el.addEventListener('blur',function(){var v=el.value.trim();if(v&&!/^PUBLIC_KEYV1:/i.test(v)){setError(el,'Should start with PUBLIC_KEYV1:')}else{clearError(el)}});el.addEventListener('input',function(){clearError(el)})})('pubkey'+i)}
+for(var i=1;i<=5;i++){(function(id){var el=$(id);el.addEventListener('blur',function(){var v=el.value.trim();var r=validatePublicKey(v);if(!r.ok){setError(el,r.msg)}else{clearError(el);if(v)updateFieldStatus(el,'ok')}});el.addEventListener('input',function(){clearError(el)})})('pubkey'+i)}
+
+function toggleGuide(el){
+    el.classList.toggle('collapsed');
+}
 
 function setPlaceholders(){
   ['uas_id','op_id','uas_id2','wifi_ssid','wifi_pass','wifi_pwr','wifi_bcn','wifi_nan','bt4_rate','bt4_pwr','bt5_rate','bt5_pwr','mav_sysid','led_r_gpio','led_g_gpio','led_b_gpio'].forEach(function(id){
@@ -838,6 +1362,7 @@ function setPlaceholders(){
   $('status').textContent='Loading configuration...'
 }
 function getCfg(){
+showLoading('Loading configuration...');
 fetch('/api/config').then(r=>r.json()).then(c=>{
 $('uas_id').value=c.uas_id||''
 $('id_type').value=c.id_type||1
@@ -861,11 +1386,11 @@ $('baud').value=c.baud_rate||57600
 $('protocol').value=c.protocol!==undefined?c.protocol:255
 $('mav_sysid').value=c.mavlink_sysid||0
 $('bcast_pwr').checked=!!c.bcast_powerup
-    $('lock_lvl').value=c.lock_level||0
-    $('led_r_gpio').value=c.led_r_gpio!==undefined?c.led_r_gpio:-1
-    $('led_g_gpio').value=c.led_g_gpio!==undefined?c.led_g_gpio:-1
-    $('led_b_gpio').value=c.led_b_gpio!==undefined?c.led_b_gpio:-1
-    $('opt_arm').checked=!!(c.options&1)
+$('lock_lvl').value=c.lock_level||0
+$('led_r_gpio').value=c.led_r_gpio!==undefined?c.led_r_gpio:-1
+$('led_g_gpio').value=c.led_g_gpio!==undefined?c.led_g_gpio:-1
+$('led_b_gpio').value=c.led_b_gpio!==undefined?c.led_b_gpio:-1
+$('opt_arm').checked=!!(c.options&1)
 $('opt_nosave').checked=!!(c.options&2)
 $('opt_print').checked=!!(c.options&4)
 for(var i=1;i<=5;i++){$('pubkey'+i).value=c['public_key_'+i]||''}
@@ -875,9 +1400,11 @@ $('tx_ble4').checked=!!(c.tx_modes&4)
 $('tx_ble5').checked=!!(c.tx_modes&8)
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
   applyDeviceConstraints();
+  hideLoading();
 }).catch(function(){
   document.querySelectorAll('input,select').forEach(function(el){el.style.opacity=''})
-  showMsg('Cannot connect to ESP DRONE REMOTEID. Make sure you are connected to the device WiFi.',1)
+  hideLoading();
+  showError('Connection Failed','Cannot connect to ESP DRONE REMOTEID.<br><br>Make sure you are connected to the device WiFi network and try again.');
 })}
 
 function collectForm(){return{
@@ -937,10 +1464,9 @@ function saveForm(e){
 var btn=e.target.querySelector('.btn');
 if(!validateForm(e.target.id)){return}
 var c = collectForm();
-if(c.lock_level===2 || c.options&1){
-showModal('danger');
-modalAction = function(){doSave(btn)};
-}else{
+  if(c.lock_level===2 || c.options&1){
+  showModal('danger', function(){doSave(btn)});
+  }else{
 doSave(btn);
 }
 }
@@ -959,20 +1485,49 @@ function importCfg(el){
   r.readAsText(f)
   el.value=''
 }
-setPlaceholders();getCfg()
-;['f1','f2','f3','f4'].forEach(function(id){var f=$(id);f.onsubmit=function(e){e.preventDefault();saveForm(e)};f.querySelectorAll('input,select').forEach(function(el){el.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='Enter'){f.querySelector('.btn').click()}})})})
+setPlaceholders();getCfg();addSpinners();var fts=$('footer-ts');if(fts)fts.textContent=new Date().toLocaleString();homeLat=null;homeLon=null
+;['f1','f2','f3','f3b','f4','f5'].forEach(function(id){var f=$(id);if(!f)return;f.onsubmit=function(e){e.preventDefault();saveForm(e)};f.querySelectorAll('input,select').forEach(function(el){el.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='Enter'){f.querySelector('.btn').click()}})})})
 ;['protocol','ua_type'].forEach(function(id){var el=$(id);if(el){el.addEventListener('change',applyDeviceConstraints)}})
 ;['uas_id2','id_type2'].forEach(function(id){var el=$(id);if(el){el.addEventListener('input',applyDeviceConstraints);el.addEventListener('change',applyDeviceConstraints)}})
 ;['tx_wifi_bcn','tx_wifi_nan','tx_ble4','tx_ble5'].forEach(function(id){var el=$(id);if(el){el.addEventListener('change',onTxModeChange)}})
+function setAllTx(enabled){
+  ['tx_wifi_bcn','tx_wifi_nan','tx_ble4','tx_ble5'].forEach(function(id){var el=$(id);if(el){el.checked=enabled;onTxModeChange()}})
+}
+function addSpinners(){
+  document.querySelectorAll('input[type="number"]').forEach(function(inp){
+    if(inp.parentNode.classList.contains('spinner-wrap'))return;
+    var wrap=document.createElement('div');wrap.className='spinner-wrap';
+    inp.parentNode.insertBefore(wrap,inp);wrap.appendChild(inp);
+    var dec=document.createElement('button');dec.type='button';dec.className='spinner-btn spinner-dec';dec.textContent='\u2212';
+    dec.onclick=function(){var st=parseFloat(inp.step)||1;var v=(parseFloat(inp.value)||0)-st;var mn=inp.min!==''?parseFloat(inp.min):-Infinity;if(v<mn)v=mn;inp.value=v;inp.dispatchEvent(new Event('change',{bubbles:true}))};
+    var inc=document.createElement('button');inc.type='button';inc.className='spinner-btn spinner-inc';inc.textContent='+';
+    inc.onclick=function(){var st=parseFloat(inp.step)||1;var v=(parseFloat(inp.value)||0)+st;var mx=inp.max!==''?parseFloat(inp.max):Infinity;if(v>mx)v=mx;inp.value=v;inp.dispatchEvent(new Event('change',{bubbles:true}))};
+    wrap.insertBefore(dec,inp);wrap.appendChild(inc);
+  })
+}
+function havDist(lat1,lon1,lat2,lon2){
+  var R=6371000;var dLat=(lat2-lat1)*Math.PI/180;var dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ---------- Presets ---------- */
+function loadPresets(){try{var d=localStorage.getItem('rid_presets');return d?JSON.parse(d):{}}catch(e){return{}}}
+function savePresets(d){try{localStorage.setItem('rid_presets',JSON.stringify(d))}catch(e){}}
+function getPresetList(){var p=loadPresets(),keys=Object.keys(p).sort(),list=$('preset-list');if(!list)return;if(!keys.length){list.innerHTML='<div style="color:var(--txt-muted);padding:8px;font-size:.85em">No presets saved yet. Save your current configuration as a named profile.</div>';return};list.textContent='';keys.forEach(function(k){var item=p[k];var div=document.createElement('div');div.className='preset-item';div.innerHTML='<span class="preset-name">'+escHtml(k)+'</span><span class="preset-ts">'+(item.ts||'')+'</span><button class="btn-sm" onclick="applyPreset(\''+k.replace(/'/g,"\\'")+'\')" title="Apply" style="margin:0;padding:1px 6px;font-size:.8em">&#x25b6;</button><button class="btn-sm" onclick="deletePreset(\''+k.replace(/'/g,"\\'")+'\')" title="Delete" style="margin:0;padding:1px 6px;font-size:.8em;color:#c62828">&#x2716;</button>';list.appendChild(div)})}
+function savePreset(){var name=$('preset-name');if(!name||!name.value.trim()){showMsg('Enter a preset name',1);return};var n=name.value.trim();name.value='';fetch('/api/config').then(function(r){return r.json()}).then(function(c){var p=loadPresets();p[n]={config:c,ts:new Date().toLocaleString()};savePresets(p);getPresetList();showMsg('Preset "'+n+'" saved')}).catch(function(){showMsg('Failed to fetch config',1)})}
+function applyPreset(name){var p=loadPresets();if(!p[name]){showMsg('Preset not found',1);return};showConfirm('Apply Preset','Load "'+name+'" configuration? This will overwrite current settings.',function(){fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p[name].config)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(){showMsg('Preset "'+name+'" applied');getCfg()}).catch(function(e){showMsg('Failed: '+e.message,1)})})}
+function deletePreset(name){var p=loadPresets();if(!p[name])return;delete p[name];savePresets(p);getPresetList();showMsg('Preset "'+name+'" deleted')}
+function exportAllPresets(){var p=loadPresets();var keys=Object.keys(p);if(!keys.length){showMsg('No presets to export',1);return};var b=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='esp-rid-presets.json';a.click();showMsg('Exported '+keys.length+' preset(s)')}
+function importPresets(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result);var p=loadPresets();var c=0;Object.keys(d).forEach(function(k){if(!p[k])c++;p[k]=d[k]});savePresets(p);getPresetList();showMsg('Imported '+c+' new preset(s)')}catch(ex){showMsg('Invalid file',1)};el.value=''};r.readAsText(f)}
 
 function saveAll(){
-  var ok=['f1','f2','f3','f4'].every(function(id){return validateForm(id)})
+  var ok=['f1','f2','f3','f3b','f4','f5'].every(function(id){return $(id)?validateForm(id):true})
   if(!ok){return}
   var btn=$('btn-save-all');
   var c=collectForm();
   if(c.lock_level===2||c.options&1){
-    showModal('danger');
-    modalAction=function(){btn.classList.add('loading');doSaveAll(btn,c)}
+    showModal('danger', function(){btn.classList.add('loading');doSaveAll(btn,c)})
   }else{btn.classList.add('loading');doSaveAll(btn,c)}
 }
 function doSaveAll(btn,c){
@@ -1024,6 +1579,44 @@ function renderTermTo(outId, entries){
   })
   if(shouldScroll)out.scrollTop=out.scrollHeight
 }
+/* ---------- Sensor data (Betaflight-style) ---------- */
+function updateSensorData(s){
+  if(!s)return;
+  var m=function(id,v){var e=$(id);if(e)e.textContent=v!==undefined&&v!==null&&v!==''?String(v):'--'};
+  m('sns-fw',s.fw_version||'v0.0.1-dev');
+  m('sns-proto',['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]);
+  m('sns-gps',s.gps_valid&&s.fix_type>=2?['No Fix','No Fix','2D Fix','3D Fix','3D Fix+'][s.fix_type]||'Fix '+s.fix_type:'No Fix');
+  m('sns-sats',s.satellites||0);
+  m('sns-lat',s.lat?s.lat.toFixed(6):'--');
+  m('sns-lon',s.lon?s.lon.toFixed(6):'--');
+  m('sns-alt',s.alt?s.alt.toFixed(1)+' m':'--');
+  m('sns-speed',s.speed!==undefined?s.speed.toFixed(1)+' m/s':'--');
+  m('sns-heading',s.heading!==undefined?s.heading+'\u00b0':'--');
+  m('sns-fixtype',s.fix_type!==undefined?['No Fix','No Fix','2D','3D','3D+'][s.fix_type]||'Fix '+s.fix_type:'--');
+  /* Home distance from first GPS fix */
+  if(s.gps_valid&&s.fix_type>=2&&s.lat&&s.lon){
+    if(!homeLat){homeLat=s.lat;homeLon=s.lon}
+    var d=havDist(homeLat,homeLon,s.lat,s.lon);
+    m('sns-home',d.toFixed(1)+' m');
+  }else{m('sns-home','--')}
+  m('sns-dop',s.dop!==undefined?s.dop.toFixed(1):'--');
+  m('sns-tx-total',(s.tx_total||0).toLocaleString());
+  m('sns-tx-rate',lastTxTotal>0?((s.tx_total-lastTxTotal)/2).toFixed(0)+'/s':'0/s');
+  m('sns-tx-wifi',(s.tx_wifi_bcn||0).toLocaleString());
+  m('sns-tx-nan',(s.tx_wifi_nan||0).toLocaleString());
+  m('sns-tx-ble4',(s.tx_ble4||0).toLocaleString());
+  m('sns-tx-ble5',(s.tx_ble5||0).toLocaleString());
+  m('sns-rssi',s.rssi!==undefined?s.rssi+' dBm':'--');
+  m('sns-temp',s.temperature!==undefined?s.temperature+'\u00b0C':'--');
+  var h=$('help-fw');if(h)h.textContent=s.fw_version||'--';
+  var hp=$('help-proto');if(hp)hp.textContent=['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]||'--';
+  /* Build info (from status or config) */
+  var hm=$('help-msp');if(hm)hm.textContent=s.msp_version||'--';
+  var hbd=$('help-build-date');if(hbd)hbd.textContent=s.build_date||'--';
+  var hbt=$('help-build-type');if(hbt)hbt.textContent=s.build_type||'--';
+  var hbi=$('help-build-info');if(hbi)hbi.textContent=s.build_info||'--';
+  var hbr=$('help-board');if(hbr)hbr.textContent=s.board||s.cpu||'--';
+}
 function pollLogs(){
   fetch('/api/logs').then(r=>r.json()).then(entries=>{
     if(entries.length===0)return
@@ -1065,6 +1658,8 @@ function toggleTermScrollTo(btnId){
   if(!btn)return
   btn.textContent=termAutoScroll?'\u{1f53d} Auto':'\u{1f53d} Manual'
   btn.style.opacity=termAutoScroll?'1':'.5'
+  var si=$('scrollicon');
+  if(si)si.className='term-scroll-icon'+(termAutoScroll?' active':'');
 }
 function toggleTermScroll(){toggleTermScrollTo('term-scroll-btn')}
 function toggleTermScroll2(){toggleTermScrollTo('term-scroll-btn2')}
@@ -1103,6 +1698,11 @@ function updateDashboard(s){
   $('dash-proto-sub').textContent=s.protocol===0?'No data received':'Flight controller connected';
   $('dash-lat').textContent=s.lat?s.lat.toFixed(6):'---';
   $('dash-lon').textContent=s.lon?s.lon.toFixed(6):'---';
+  var mapLink=$('dash-map-link'),mapA=$('dash-map-a');
+  if(mapLink&&mapA){
+    if(s.lat&&s.lon){mapLink.style.display='block';mapA.href='https://www.openstreetmap.org/?mlat='+s.lat+'&mlon='+s.lon+'#map=15/'+s.lat+'/'+s.lon}
+    else{mapLink.style.display='none'}
+  }
   $('dash-alt').textContent=s.alt?s.alt.toFixed(1)+' m':'---';
   $('dash-speed').textContent=s.speed!==undefined?s.speed.toFixed(1)+' m/s ('+(s.heading!==undefined?s.heading+'\u00b0':'---')+')':'---';
   $('dash-tx-total').textContent='Total: '+(s.tx_total||0).toLocaleString();
@@ -1112,7 +1712,6 @@ function updateDashboard(s){
   $('dash-tx-ble5').textContent=(s.tx_ble5||0).toLocaleString();
   var live=$('dash-status-badge');
   if(ok && s.protocol>0){live.className='dash-badge live';live.textContent='\u25cf RUNNING'}
-  else if(s.protocol===0){live.className='dash-badge warn';live.textContent='\u26a0 WAITING'}
   else if(s.protocol===0){live.className='dash-badge warn';live.textContent='\u26a0 WAITING'}
   else{live.className='dash-badge err';live.textContent='\u274c NO GPS'}
   /* bar chart */
@@ -1132,11 +1731,20 @@ function updateDashboard(s){
 }
 
 var lastStatusTime=0
+var firstConnectTime=0
+var homeLat=null,homeLon=null
 var timeoutWarningShown=false
 var termLogTimer=0
+var lastTxTotal=0
+var consoleVisible=true
+var fcConnected=false
+var lastStatus=null
 setInterval(function(){
   termLogTimer++;if(termLogTimer%2===0){pollLogs()}
-  fetch('/api/status').then(function(r){return r.json()}).then(function(s){
+   fetch('/api/status').then(function(r){return r.json()}).then(function(s){
+          lastStatus=s;
+          if(firstConnectTime===0)firstConnectTime=Date.now();
+          lastStatusForReport=s;
           lastStatusTime=Date.now()
           timeoutWarningShown=false
   var h=document.createElement('div');h.className='status-grid'
@@ -1160,21 +1768,141 @@ setInterval(function(){
   addRow('WiFi NAN',s.tx_wifi_nan||0)
   addRow('BLE 4.0',s.tx_ble4)
   addRow('BLE 5.0',s.tx_ble5||0)
-  var st=$('status');st.textContent='';st.appendChild(h)
+  var st=$('status');
+  if(st){st.textContent='';st.appendChild(h.cloneNode(true))}
+  var stc=$('status-console');
+  if(stc){stc.textContent='';stc.appendChild(h)}
           var proto=s.protocol!==undefined?['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]:'Disconnected'
-          var dot=$('health-dot')
-          if(proto==='No FC'){dot.className='health-dot warn'}else if(proto==='Disconnected'){dot.className='health-dot err'}else{dot.className='health-dot ok'}
-          $('status-badge').innerHTML='<span class="health-dot '+dot.className.split(' ')[1]+'"></span> '+proto
+          var hdrDot=$('hdr-dot'),hdrProto=$('hdr-proto')
+          if(hdrProto)hdrProto.textContent=proto
+          if(hdrDot){
+            if(proto==='No FC'){hdrDot.className='dot warn'}else if(proto==='Disconnected'||proto==='Unknown'){hdrDot.className='dot err'}else{hdrDot.className='dot ok'}
+          }
+          var hdrGps=$('hdr-gps')
+          if(hdrGps)hdrGps.textContent=(s.gps_valid&&s.satellites)?'GPS '+s.satellites:(s.gps_valid?'GPS OK':'GPS --')
+          var hdrTx=$('hdr-tx')
+          if(hdrTx)hdrTx.textContent=(s.tx_total||0).toLocaleString()
+          var hdrFw=$('hdr-fw')
+          if(hdrFw&&s.fw_version)hdrFw.textContent=s.fw_version
+          /* Sensor status strip */
+          function setSensor(id,on,warn){
+            var el=$(id);
+            if(!el)return;
+            if(on){el.className='hdr-sensor on'+(warn?' warn':'');}else{el.className='hdr-sensor';}
+          }
+          setSensor('hdr-sns-gps',!!(s.gps_valid&&s.fix_type>=2));
+          setSensor('hdr-sns-wifi',(s.tx_wifi_bcn||0)>0);
+          setSensor('hdr-sns-nan',(s.tx_wifi_nan||0)>0);
+          setSensor('hdr-sns-ble4',(s.tx_ble4||0)>0);
+          setSensor('hdr-sns-ble5',(s.tx_ble5||0)>0);
+          /* Status bar */
+          var stProto=$('st-bar-proto');
+          if(stProto)stProto.textContent=proto;
+          var stBarStatus=$('st-bar-status');
+          if(stBarStatus){
+            var txActive=s.tx_total>0&&s.protocol>0;
+            stBarStatus.innerHTML=txActive?'<span style="color:#2e7d32">&#x25cf;</span> <span id="st-bar-proto">'+proto+'</span>':'<span style="color:#aaa">&#x25cf;</span> <span id="st-bar-proto">'+proto+'</span>';
+          }
+          /* TX rate */
+          var stRate=$('st-bar-rate');
+          if(stRate){
+            var rate=lastTxTotal>0?((s.tx_total-lastTxTotal)/2).toFixed(0):'0';
+            stRate.textContent=rate;
+          }
+          lastTxTotal=s.tx_total||0;
+          /* Header chips (Betaflight-style) */
+          var hdrBat=$('hdr-bat');
+          if(hdrBat){
+            var v=s.battery?parseFloat(s.battery):0;
+            if(v>0){
+              var cells=v<5?1:v<9?2:v<13?3:v<17?4:v<21?5:v<26?6:Math.round(v/4.2);
+              hdrBat.textContent=v.toFixed(1)+'V ('+cells+'S)';
+            }else{hdrBat.textContent='BAT --'}
+          }
+          var hdrRssi=$('hdr-rssi');
+          if(hdrRssi)hdrRssi.textContent=s.rssi!==undefined?'RSSI '+s.rssi+'dBm':'RSSI --';
+          var dashRssi=$('dash-rssi');
+          if(dashRssi)dashRssi.textContent=s.rssi!==undefined?'RSSI: '+s.rssi+' dBm':'RSSI: --';
+          var dashTemp=$('dash-temp');
+          if(dashTemp)dashTemp.textContent=s.temperature!==undefined?'CPU: '+s.temperature+'\u00b0C':'CPU: --';
+          /* Warning indicator */
+          var stWarn=$('st-bar-warn');
+          if(stWarn){
+            var issues=[];
+            if(!s.gps_valid)issues.push('No GPS');
+            if(s.protocol===0||s.protocol===4)issues.push('No FC');
+            if(issues.length){stWarn.style.display='inline-flex';stWarn.title=issues.join(', ')}else{stWarn.style.display='none'}
+          }
+          var stPkts=$('st-bar-pkts');
+          if(stPkts)stPkts.textContent=(s.tx_total||0).toLocaleString();
+          var stUptime=$('st-bar-uptime');
+          if(stUptime){
+            var sec=Math.floor((Date.now()-lastStatusTime)/1000);
+            var m=Math.floor(sec/60),s=sec%60;
+            stUptime.textContent=('0'+m).slice(-2)+':'+('0'+s).slice(-2);
+          }
+          /* Connection time (hours:minutes) */
+          var stConn=$('st-bar-conntime');
+          if(stConn){
+            var cSec=Math.floor((Date.now()-firstConnectTime)/1000);
+            var cH=Math.floor(cSec/3600),cM=Math.floor((cSec%3600)/60);
+            stConn.textContent=('0'+cH).slice(-2)+':'+('0'+cM).slice(-2);
+          }
+          /* CPU load (Betaflight-style) */
+          var stCpu=$('st-bar-cpu');
+          var stCpuWrap=$('st-bar-cpu-wrap');
+          if(stCpu&&stCpuWrap){
+            if(s.cpu_load!==undefined){stCpu.textContent=s.cpu_load;stCpuWrap.style.display='inline'}
+            else{stCpuWrap.style.display='none'}
+          }
+          /* Footer timestamp */
+          var fts=$('footer-ts');
+          if(fts)fts.textContent=new Date().toLocaleString();
+          var ffw=$('footer-fw');
+          if(ffw&&s.fw_version)ffw.textContent=s.fw_version;
           updateDashboard(s);
+          updateMap(s);
+          updateCompliance();
+          pushLogEntry(s);
+          updateSensorData(s);
+          /* Connection state tab filtering (Betaflight-style) */
+          var wasFc=fcConnected;
+          fcConnected=s.protocol>0&&s.protocol<4;
+          if(wasFc!==fcConnected){
+            var fcItems=document.querySelectorAll('[data-fc-needed]');
+            fcItems.forEach(function(el){el.style.display=fcConnected?'flex':'none'});
+            if(!fcConnected&&currentView==='fc'){setView('dashboard')}
+          }
+          /* Bottom status icons (Betaflight-style) */
+          var armedIcon=$('st-icon-armed');
+          if(armedIcon)armedIcon.className='st-icon armed'+(s.tx_total>0&&s.protocol>0?' active':'');
+          var failIcon=$('st-icon-failsafe');
+          var hasIssues=!s.gps_valid||s.protocol===0||s.protocol===4;
+          if(failIcon){failIcon.style.display=hasIssues?'inline-flex':'none'}
+          var linkIcon=$('st-icon-link');
+          if(linkIcon)linkIcon.className='st-icon link'+(fcConnected?' active':'');
           }).catch(function(){
-            $('status').textContent='Waiting for connection...'
-            var dot=$('health-dot')
-            dot.className='health-dot err'
-            $('status-badge').innerHTML='<span class="health-dot err"></span> Disconnected'
+            var st=$('status');if(st)st.textContent='Waiting for connection...'
+            var stc=$('status-console');if(stc)stc.textContent='Waiting for connection...'
+            var hdrDot2=$('hdr-dot'),hdrProto2=$('hdr-proto')
+            if(hdrDot2)hdrDot2.className='dot err'
+            if(hdrProto2)hdrProto2.textContent='Disconnected'
+            var stBarProto=$('st-bar-proto');if(stBarProto)stBarProto.textContent='Disconnected'
+            var stBarStatus=$('st-bar-status');if(stBarStatus)stBarStatus.innerHTML='<span style="color:#c62828">&#x25cf;</span> <span id="st-bar-proto">Disconnected</span>'
+            var stBarPkts=$('st-bar-pkts');if(stBarPkts)stBarPkts.textContent='0'
+            var stBarUp=$('st-bar-uptime');if(stBarUp)stBarUp.textContent='00:00'
+            var stConn=$('st-bar-conntime');if(stConn)stConn.textContent='00:00'
+            ;['hdr-sns-gps','hdr-sns-wifi','hdr-sns-nan','hdr-sns-ble4','hdr-sns-ble5'].forEach(function(id){var e=$(id);if(e)e.className='hdr-sensor'})
           })
           if(Date.now()-lastStatusTime>15000&&!timeoutWarningShown){
             timeoutWarningShown=true
-            showMsg('Connection timeout — check that the device is powered on and you are connected to its WiFi',1)
+            $('modal-icon').textContent='\u26a0';
+            $('modal-title').textContent='Connection Lost';
+            $('modal-text').innerHTML='The device is not responding. Check that it is powered on and you are connected to its WiFi network.';
+            $('modal-report-list').style.display='none';
+            setModalButtons([{label:'Dismiss',className:'btn-cancel'},{label:'Reconnect',className:'btn',action:function(){getCfg()}}]);
+            var dm=$('dialog-modal');
+            if(dm&&typeof dm.showModal==='function')dm.showModal();
           }
 },2000)
 
@@ -1182,20 +1910,13 @@ setInterval(function(){
 var savedView = null;
 try{savedView = localStorage.getItem('rid_view')}catch(e){}
 if(savedView && savedView!=='dashboard'){
-  setView(savedView);
+  setView(savedView)
 } else {
-  /* wait for first status to decide: show dashboard if running, else basic */
   setView('dashboard');
-  var iv = setInterval(function(){
-    fetch('/api/status').then(function(r){return r.json()}).then(function(s){
-      if(s.protocol>0 && s.gps_valid){
-        setView('dashboard');
-        clearInterval(iv);
-      }
-    }).catch(function(){});
-  },2000);
-  setTimeout(function(){clearInterval(iv);if(currentView==='dashboard'){setView('advanced')}},6000);
 }
+
+/* ---------- Init presets ---------- */
+getPresetList();
 
 /* ---------- Dark mode toggle ---------- */
 (function(){
@@ -1214,6 +1935,298 @@ function toggleDark(){
     localStorage.setItem('rid_theme','dark');
   }
 }
+function toggleConsole(){
+  consoleVisible=!consoleVisible;
+  document.body.classList.toggle('console-off',!consoleVisible);
+  var btn=$('st-bar-console-btn');
+  if(btn)btn.style.opacity=consoleVisible?'1':'.4';
+  localStorage.setItem('rid_console',consoleVisible?'1':'');
+}
+
+/* ---------- Live Map (canvas-based, no deps) ---------- */
+var mapPoints=[],mapHomeLat=null,mapHomeLon=null,mapDroneLat=null,mapDroneLon=null;
+function updateMap(s){
+  var ph=$('map-placeholder');if(ph)ph.style.display='none';
+  drawMiniMap();
+  updateMapUI();
+  if(s.lat===undefined||s.lon===undefined)return;
+  var lat=parseFloat(s.lat),lon=parseFloat(s.lon);
+  if(!lat&&!lon)return;
+  mapDroneLat=lat;mapDroneLon=lon;
+  if(!mapHomeLat&&!mapHomeLon){mapHomeLat=lat;mapHomeLon=lon;$('map-home-dist').textContent='0m'}
+  mapPoints.push({lat:lat,lon:lon,t:Date.now()});
+  if(mapPoints.length>300)mapPoints.shift();
+  drawMiniMap();
+  updateMapUI();
+}
+function drawMiniMap(){
+  var c=$('map-canvas');if(!c)return;
+  var ctx=c.getContext('2d'),w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  drawMapBg(ctx,w,h);
+  if(mapPoints.length<1){
+    ctx.fillStyle='#888';ctx.font='13px sans-serif';ctx.textAlign='center';
+    ctx.fillText('No GPS data yet — position will appear here',w/2,h/2-10);
+    ctx.font='10px sans-serif';ctx.fillStyle='#aaa';
+    ctx.fillText('Connect flight controller and wait for GPS fix',w/2,h/2+12);
+    ctx.textAlign='start';
+    if(mapHomeLat!==null&&mapDroneLat===null){
+      ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.arc(w/2,h/2-30,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('HOME',w/2-12,h/2-36);
+    }
+    return
+  }
+  var lats=mapPoints.map(function(p){return p.lat}),lons=mapPoints.map(function(p){return p.lon});
+  var minLat=Math.min.apply(null,lats),maxLat=Math.max.apply(null,lats);
+  var minLon=Math.min.apply(null,lons),maxLon=Math.max.apply(null,lons);
+  var pad=0.0005,dr=(maxLat-minLat)||0.001,dl=(maxLon-minLon)||0.001;
+  minLat-=pad;maxLat+=pad;minLon-=pad;maxLon+=pad;
+  var scaleX=w/(maxLon-minLon),scaleY=h/(maxLat-minLat);
+  function px(p){return{x:(p.lon-minLon)*scaleX,y:h-(p.lat-minLat)*scaleY}}
+  ctx.lineWidth=2;ctx.strokeStyle='#1565c0';ctx.beginPath();
+  mapPoints.forEach(function(p,i){var pt=px(p);i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y)});
+  ctx.stroke();
+  if(mapHomeLat!==null){
+    var hp=px({lat:mapHomeLat,lon:mapHomeLon});
+    ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.arc(hp.x,hp.y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('HOME',hp.x-12,hp.y-8);
+  }
+  if(mapDroneLat!==null){
+    var dp=px({lat:mapDroneLat,lon:mapDroneLon});
+    ctx.fillStyle='#c62828';ctx.beginPath();ctx.arc(dp.x,dp.y,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('DRONE',dp.x-14,dp.y-10);
+  }
+}
+function drawMapBg(ctx,w,h){
+  ctx.strokeStyle='#333';ctx.lineWidth=.5;ctx.globalAlpha=.15;
+  for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#555';ctx.font='9px sans-serif';ctx.fillText('N',w-16,14);
+  ctx.beginPath();ctx.moveTo(w-20,18);ctx.lineTo(w-16,6);ctx.lineTo(w-12,18);ctx.closePath();ctx.fillStyle='#555';ctx.fill();
+}
+function updateMapUI(){
+  if(mapHomeLat!==null&&mapDroneLat!==null){
+    var R=6371000,dLat=(mapDroneLat-mapHomeLat)*Math.PI/180,dLon=(mapDroneLon-mapHomeLon)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(mapHomeLat*Math.PI/180)*Math.cos(mapDroneLat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    var dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+    $('map-home-dist').textContent=dist+'m';
+  }
+  $('map-gps-stat').textContent=mapDroneLat!==null?mapDroneLat.toFixed(5)+', '+mapDroneLon.toFixed(5):'--';
+}
+function fitMap(){drawMiniMap()}
+function exportKml(){
+  if(mapPoints.length<2){showMsg('Not enough track points to export',1);return}
+  var kml='<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>ESP Drone Track</name><Placemark><LineString><coordinates>';
+  mapPoints.forEach(function(p){kml+=p.lon+','+p.lat+',0 '});
+  kml=kml.trim()+'</coordinates></LineString></Placemark></Document></kml>';
+  var b=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='esp_drone_track.kml';a.click();
+}
+
+/* ---------- Compliance Checklist ---------- */
+function updateCompliance(){
+  var region=$('compliance-region').value;
+  var items=[
+    {id:'uas_id',label:'UAS ID set',check:function(){return $('uas_id').value.trim().length>0},faa:true,easa:true,caa:true,enac:true},
+    {id:'ua_type',label:'UA Type != None',check:function(){return parseInt($('ua_type').value)!==0},faa:true,easa:true,caa:true,enac:true},
+    {id:'op_id',label:'Operator ID set',check:function(){return $('op_id').value.trim().length>0},faa:false,easa:true,caa:true,enac:true},
+    {id:'tx',label:'At least 1 TX channel enabled',check:function(){return $('tx_wifi_bcn').checked||$('tx_wifi_nan').checked||$('tx_ble4').checked||$('tx_ble5').checked},faa:true,easa:true,caa:true,enac:true},
+    {id:'fc',label:'Flight Controller connected',check:function(){return fcConnected},faa:false,easa:false,caa:false,enac:false},
+    {id:'gps',label:'GPS fix acquired',check:function(){return typeof lastStatus!=='undefined'?!!(lastStatus.gps_valid&&lastStatus.fix_type>=2):false},faa:true,easa:true,caa:true,enac:true},
+    {id:'lock',label:'Lock Level configured securely',check:function(){return parseInt($('lock_lvl').value)>=1},faa:false,easa:false,caa:false,enac:false},
+    {id:'broadcast',label:'Broadcast active (sending packets)',check:function(){return lastTxTotal>0},faa:true,easa:true,caa:true,enac:true}
+  ];
+  var html='<table style="width:100%;border-collapse:collapse;font-size:.85em">';
+  html+='<tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 8px">Requirement</th><th style="text-align:center;padding:6px 8px;width:80px">Status</th><th style="text-align:center;padding:6px 8px;width:60px">Required</th></tr>';
+  items.forEach(function(item){
+    var req=false;
+    if(region==='auto'){req=item.easa}else if(region==='FAA'){req=item.faa}else if(region==='EASA'){req=item.easa}else if(region==='CAA'){req=item.caa}else if(region==='ENAC'){req=item.enac}
+    var ok=item.check();
+    var icon=ok?'&#x2705;':'&#x274c;';
+    var color=ok?'var(--txt)':'#c62828';
+    var reqIcon=req?'&#x1f6a9;':'';
+    html+='<tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 8px;color:'+color+'">'+item.label+'</td><td style="text-align:center;padding:6px 8px">'+icon+'</td><td style="text-align:center;padding:6px 8px">'+reqIcon+'</td></tr>';
+  });
+  html+='</table>';
+  html+='<div style="margin-top:12px;padding:8px 12px;border-radius:6px;font-size:.78em;background:var(--hover)">';
+  var allOk=items.every(function(item){return item.check()||!item.easa});
+  html+=allOk?'&#x2705; All required checks passed for this region.':'&#x26a0; Some required items are missing. Review the table above.';
+  html+='</div>';
+  $('compliance-list').innerHTML=html;
+}
+
+/* ---------- Security / Login ---------- */
+var secTimer=null;
+function toggleSecPwd(){var el=$('sec-password');el.type=el.type==='password'?'text':'password'}
+function saveSecurity(e){
+  e.preventDefault();
+  var pwd=$('sec-password').value.trim();
+  if(pwd.length>0&&pwd.length<4){showMsg('Password must be at least 4 characters',1);return}
+  localStorage.setItem('rid_sec_pwd',pwd?btoa(pwd):'');
+  localStorage.setItem('rid_sec_timeout',$('sec-timeout').value);
+  showMsg('Security settings saved',0);
+}
+function requireLogin(){
+  var pwd=localStorage.getItem('rid_sec_pwd');
+  if(!pwd){return true}
+  var entered=prompt('Enter access password:');
+  if(atob(pwd)===entered){
+    var t=parseInt(localStorage.getItem('rid_sec_timeout')||'15');
+    if(t>0){secTimer=setTimeout(function(){localStorage.removeItem('rid_sec_logged');requireLogin()},t*60000)}
+    localStorage.setItem('rid_sec_logged','1');
+    return true
+  }
+  if(entered!==null){showMsg('Incorrect password',1)}else{return true}
+  return false
+}
+/* ---------- Data Logging (Betaflight-style) ---------- */
+var logData=[],logging=false,logStart=0;
+function startLogging(){
+  logData=[];logging=true;logStart=Date.now();
+  $('log-start-btn').style.display='none';
+  $('log-stop-btn').style.display='inline-flex';
+  $('log-dl-btn').style.display='none';
+  $('log-clr-btn').style.display='none';
+  $('log-preview').textContent='Recording... waiting for first data point.';
+  updateLogUi();
+}
+function stopLogging(){
+  logging=false;
+  $('log-start-btn').style.display='inline-flex';
+  $('log-stop-btn').style.display='none';
+  $('log-dl-btn').style.display='inline-flex';
+  $('log-clr-btn').style.display='inline-flex';
+  updateLogUi();
+  $('log-preview').textContent='Logging stopped. '+logData.length+' entries captured. Click Download CSV to save.';
+}
+function clearLog(){
+  logData=[];logStart=0;
+  $('log-dl-btn').style.display='none';
+  $('log-clr-btn').style.display='none';
+  $('log-count').textContent='0';
+  $('log-duration').textContent='00:00';
+  $('log-preview').textContent='Start logging to capture data...';
+}
+function pushLogEntry(s){
+  if(!logging||!s)return;
+  var proto=['Unknown','MAVLink','MSP','NMEA','No FC'][s.protocol]||'--';
+  var row=[
+    Date.now(),
+    s.gps_valid&&s.fix_type>=2?'Yes':'No',
+    s.satellites||0,
+    s.lat?s.lat.toFixed(6):'',
+    s.lon?s.lon.toFixed(6):'',
+    s.alt!==undefined?s.alt.toFixed(1):'',
+    s.speed!==undefined?s.speed.toFixed(1):'',
+    s.heading!==undefined?s.heading:'',
+    proto,
+    s.tx_total||0,
+    lastTxTotal>0?((s.tx_total-lastTxTotal)/2).toFixed(0):'0',
+    s.tx_wifi_bcn||0,
+    s.tx_wifi_nan||0,
+    s.tx_ble4||0,
+    s.tx_ble5||0,
+    s.rssi!==undefined?s.rssi:'',
+    s.battery?s.battery:'',
+    s.temperature!==undefined?s.temperature:''
+  ];
+  logData.push(row);
+  updateLogUi();
+  var preview=$('log-preview');
+  if(preview&&logData.length<=3){
+    preview.textContent=logData.map(function(r){return r.join(', ')}).join('\n');
+  }else if(preview&&logData.length===4){
+    preview.textContent='... ('+logData.length+' entries captured)';
+  }
+}
+function updateLogUi(){
+  $('log-count').textContent=logData.length.toString();
+  if(logStart){
+    var sec=Math.floor((Date.now()-logStart)/1000);
+    var m=Math.floor(sec/60),s=sec%60;
+    $('log-duration').textContent=('0'+m).slice(-2)+':'+('0'+s).slice(-2);
+  }
+}
+function downloadLog(){
+  if(!logData.length){showMsg('No data recorded',1);return}
+  var header='Timestamp,GPS_Fix,Satellites,Latitude,Longitude,Altitude,Speed,Heading,Protocol,Tx_Total,Tx_Rate,WiFi_Bcn,WiFi_NAN,BLE_4,BLE_5,RSSI,Battery,CPU_Temp';
+  var csv=header+'\n'+logData.map(function(r){return r.join(',')}).join('\n');
+  var b=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);
+  var ts=new Date().toISOString().slice(0,19).replace(/[:-]/g,'');
+  a.download='esp-rid-log-'+ts+'.csv';
+  a.click();showMsg('Downloaded '+logData.length+' entries');
+}
+(function(){
+  if(localStorage.getItem('rid_console')==='0'){
+    consoleVisible=false;
+    document.body.classList.add('console-off');
+    var btn=$('st-bar-console-btn');
+    if(btn)btn.style.opacity='.4';
+  }
+})();
+function toggleMobileMenu(){
+  var s=$('sidebar');
+  if(!s)return;
+  if(window.innerWidth<=800){
+    s.style.display=s.style.display==='none'?'flex':'none';
+  }
+}
+function toggleReveal(){
+  var chips=document.querySelector('.hdr-chips');
+  var sensors=document.querySelector('.hdr-sensors');
+  var actions=document.querySelector('.hdr-actions');
+  var btn=$('reveal-btn');
+  [chips,sensors,actions].forEach(function(el){if(el)el.classList.toggle('collapsed')});
+  if(btn)btn.classList.toggle('open');
+}
+/* ---------- Dialogs (Betaflight-style) ---------- */
+var lastStatusForReport=null;
+function closeDialog(id){var d=$(id);if(d&&typeof d.close==='function')d.close()}
+/* ---------- Loading overlay ---------- */
+function showLoading(msg){var o=$('loading-overlay');if(!o)return;var t=$('loading-text');if(t)t.textContent=msg||'Loading...';o.style.display='flex'}
+function hideLoading(){var o=$('loading-overlay');if(o)o.style.display='none'}
+/* ---------- CLI Interactive dialog ---------- */
+function showCliDialog(){var d=$('dialog-interactive');var out=$('dialog-int-output');if(out)out.textContent=$('term-output')?$('term-output').textContent:'Console ready.';if(typeof d.showModal==='function')d.showModal();var inp=$('dialog-int-input');if(inp){inp.value='';setTimeout(function(){inp.focus()},100)}}
+function sendDialogCmd(){var inp=$('dialog-int-input'),out=$('dialog-int-output');if(!inp||!out)return;var cmd=inp.value.trim();if(!cmd)return;inp.value='';out.textContent+='\n$ '+cmd;fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:cmd}).then(function(r){return r.json()}).then(function(j){if(j.status)out.textContent+='\n'+j.status}).catch(function(){});out.scrollTop=out.scrollHeight}
+function showWait(title,msg){
+  var d=$('dialog-wait');
+  $('dialog-wait-title').textContent=title||'Please wait...';
+  $('dialog-wait-content').textContent=msg||'';
+  if(typeof d.showModal==='function'){d.showModal()}else{d.setAttribute('open','')}
+}
+function hideWait(){
+  var d=$('dialog-wait');
+  if(typeof d.close==='function'){d.close()}else{d.removeAttribute('open')}
+}
+setTimeout(function(){
+  var s=$('splash');if(s)s.classList.add('hide');_splashDone=true;flushToastQ()
+  var pwd=localStorage.getItem('rid_sec_pwd');
+  if(pwd&&!localStorage.getItem('rid_sec_logged')){
+    var ok=requireLogin();if(!ok){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px;background:#121212;color:#fff;font-family:sans-serif"><div style="font-size:3em">&#x1f510;</div><h2>Access Denied</h2><p style="color:#aaa">Reload the page to try again</p></div>'}
+  }
+  var to=localStorage.getItem('rid_sec_timeout');if(to&&to!=='0'){$('sec-timeout').value=to}
+  updateCompliance();
+},1600)
 </script>
+<div class="status-bar" style="flex-wrap:wrap;gap:4px 12px;width:100%;padding:6px 16px;margin:4px 0 0">
+<span style="font-weight:600;font-size:.85em;color:var(--txt);white-space:nowrap">ESP DRONE REMOTEID v0.0.1-dev — 15/06/2026, 22:59:30</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" target="_blank" style="font-size:.85em;color:var(--accent);white-space:nowrap">GitHub</a>
+<a href="#" style="font-size:.85em;color:var(--accent);white-space:nowrap" onclick="setView('help')">Wiki</a>
+<span id="st-bar-status" style="margin-left:auto">&#x25cf; <span id="st-bar-proto">Disconnected</span></span>
+<span title="Packets sent">&#x1f4e4; <span id="st-bar-pkts">0</span></span>
+<span title="Packets per second">&#x26a1; <span id="st-bar-rate">0</span>/s</span>
+<span title="Storage usage"><span class="st-flash-progress" id="st-flash-progress"><span class="st-flash-fill" id="st-flash-fill" style="width:0%"></span></span></span>
+<span title="Uptime">&#x23f1; <span id="st-bar-uptime">00:00</span></span>
+<span title="Connection time">&#x1f517; <span id="st-bar-conntime">00:00</span></span>
+<span title="CPU load" id="st-bar-cpu-wrap" style="display:none">&#x1f4a0; <span id="st-bar-cpu">0</span>%</span>
+<span class="st-icon armed" id="st-icon-armed" title="Broadcasting">&#x25cf;</span>
+<span class="st-icon failsafe" id="st-icon-failsafe" title="Issues detected" style="display:none">&#x26a0;</span>
+<span class="st-icon link" id="st-icon-link" title="FC connected">&#x1f517;</span>
+<span class="hdr-chip" id="st-bar-warn" style="display:none;padding:1px 6px;font-size:.9em;color:#f57f17;cursor:pointer" onclick="showIssues()" title="Click for details">&#x26a0;</span>
+<button class="btn-sm" onclick="showIssues()" style="margin:0;padding:1px 6px;font-size:.82em" title="Check for problems">&#x1f50d;</button>
+<button class="btn-sm" id="st-bar-console-btn" onclick="toggleConsole()" style="margin:0;padding:1px 6px;font-size:.9em" title="Toggle console">&#x1f4bb;</button>
+</div>
 </body>
 </html>
