@@ -6,6 +6,7 @@
 #include "esp_http_server.h"
 #include "esp_wifi.h"
 #include "esp_ota_ops.h"
+#include "mbedtls/sha256.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -133,6 +134,7 @@ static void apply_json(rid_config_t *cfg, const char *json)
 
     tmp = json_str(json, "uas_id"); if (tmp) { strncpy(cfg->uas_id, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
     tmp = json_str(json, "operator_id"); if (tmp) { strncpy(cfg->operator_id, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
+    tmp = json_str(json, "self_id_text"); if (tmp) { strncpy(cfg->self_id_text, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
     tmp = json_str(json, "uas_id_2"); if (tmp) { strncpy(cfg->uas_id_2, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
 
     int iv = json_int(json, "id_type"); if (iv > 0) cfg->id_type = (uint8_t)iv;
@@ -165,6 +167,10 @@ static void apply_json(rid_config_t *cfg, const char *json)
     fv = json_float(json, "ble5_rate_hz"); if (fv >= 0 && fv <= 5) cfg->ble5_rate_hz = fv;
     fv = json_float(json, "ble5_power_dbm"); if (fv >= -27 && fv <= 18) cfg->ble5_power_dbm = fv;
 
+    double dv = json_float(json, "operator_lat"); if (dv != 0) cfg->operator_lat = dv;
+    dv = json_float(json, "operator_lon"); if (dv != 0) cfg->operator_lon = dv;
+    fv = json_float(json, "operator_alt"); cfg->operator_alt = fv;
+
     tmp = json_str(json, "wifi_ssid"); if (tmp) { strncpy(cfg->wifi_ssid, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
     tmp = json_str(json, "wifi_password"); if (tmp) { strncpy(cfg->wifi_password, tmp, ESP_RID_MAX_STR_LEN); free(tmp); }
 
@@ -181,7 +187,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
     snprintf(buf, sz,
         "{"
         "\"protocol\":%u,"
-        "\"uas_id\":\"%s\",\"id_type\":%u,\"ua_type\":%u,\"operator_id\":\"%s\","
+        "\"uas_id\":\"%s\",\"id_type\":%u,\"ua_type\":%u,\"operator_id\":\"%s\",\"self_id_text\":\"%s\","
         "\"uas_id_2\":\"%s\",\"id_type_2\":%u,\"ua_type_2\":%u,"
         "\"tx_modes\":%u,\"wifi_channel\":%u,\"wifi_power_dbm\":%.1f,"
         "\"wifi_bcn_rate_hz\":%.1f,\"wifi_nan_rate_hz\":%.1f,"
@@ -189,13 +195,14 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         "\"ble5_rate_hz\":%.1f,\"ble5_power_dbm\":%.1f,"
         "\"wifi_ssid\":\"%s\",\"wifi_password\":\"%s\",\"webserver_en\":%u,"
         "\"baud_rate\":%lu,\"mavlink_sysid\":%u,\"bcast_powerup\":%u,"
+        "\"operator_lat\":%.6f,\"operator_lon\":%.6f,\"operator_alt\":%.1f,"
         "\"options\":%u,\"lock_level\":%d,"
         "\"led_r_gpio\":%d,\"led_g_gpio\":%d,\"led_b_gpio\":%d,"
         "\"public_key_1\":\"%s\",\"public_key_2\":\"%s\","
         "\"public_key_3\":\"%s\",\"public_key_4\":\"%s\",\"public_key_5\":\"%s\""
         "}",
         (unsigned)c->protocol,
-        c->uas_id, c->id_type, c->ua_type, c->operator_id,
+        c->uas_id, c->id_type, c->ua_type, c->operator_id, c->self_id_text,
         c->uas_id_2, c->id_type_2, c->ua_type_2,
         c->tx_modes, c->wifi_channel, (double)c->wifi_power_dbm,
         (double)c->wifi_bcn_rate_hz, (double)c->wifi_nan_rate_hz,
@@ -203,6 +210,7 @@ static void config_to_json(const rid_config_t *c, char *buf, size_t sz)
         (double)c->ble5_rate_hz, (double)c->ble5_power_dbm,
         c->wifi_ssid, c->wifi_password, c->webserver_en,
         (unsigned long)c->baud_rate, c->mavlink_sysid, c->bcast_powerup,
+        c->operator_lat, c->operator_lon, (double)c->operator_alt,
         c->options, c->lock_level,
         c->led_r_gpio, c->led_g_gpio, c->led_b_gpio,
         c->public_keys[0], c->public_keys[1],
@@ -300,6 +308,37 @@ static esp_err_t handle_factory_reset(httpd_req_t *req)
     return ESP_OK;
 }
 
+static const char hex_chars[] = "0123456789abcdef";
+
+static void bytes_to_hex(const uint8_t *bytes, size_t len, char *out)
+{
+    for (size_t i = 0; i < len; i++) {
+        out[i * 2]     = hex_chars[(bytes[i] >> 4) & 0xF];
+        out[i * 2 + 1] = hex_chars[bytes[i] & 0xF];
+    }
+    out[len * 2] = '\0';
+}
+
+static bool hex_to_bytes(const char *hex, uint8_t *out, size_t out_len)
+{
+    size_t hex_len = strlen(hex);
+    if (hex_len != out_len * 2) return false;
+    for (size_t i = 0; i < out_len; i++) {
+        char hi = hex[i * 2], lo = hex[i * 2 + 1];
+        uint8_t b = 0;
+        if (hi >= '0' && hi <= '9') b = (hi - '0') << 4;
+        else if (hi >= 'a' && hi <= 'f') b = (hi - 'a' + 10) << 4;
+        else if (hi >= 'A' && hi <= 'F') b = (hi - 'A' + 10) << 4;
+        else return false;
+        if (lo >= '0' && lo <= '9') b |= (lo - '0');
+        else if (lo >= 'a' && lo <= 'f') b |= (lo - 'a' + 10);
+        else if (lo >= 'A' && lo <= 'F') b |= (lo - 'A' + 10);
+        else return false;
+        out[i] = b;
+    }
+    return true;
+}
+
 static esp_err_t handle_ota(httpd_req_t *req)
 {
     if (get_lock_level() >= 2) {
@@ -307,6 +346,16 @@ static esp_err_t handle_ota(httpd_req_t *req)
         httpd_resp_send(req, "{\"status\":\"locked\"}", 20);
         return ESP_OK;
     }
+
+    /* Read optional X-Expected-SHA256 header */
+    char expected_hex[65] = {0};
+    bool has_expected = false;
+    size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Expected-SHA256");
+    if (hdr_len > 0 && hdr_len <= 64) {
+        httpd_req_get_hdr_value_str(req, "X-Expected-SHA256", expected_hex, sizeof(expected_hex));
+        has_expected = true;
+    }
+
     esp_ota_handle_t ota_handle = 0;
     const esp_partition_t *ota_part = esp_ota_get_next_update_partition(NULL);
     if (!ota_part) {
@@ -322,12 +371,41 @@ static esp_err_t handle_ota(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    mbedtls_sha256_context sha_ctx;
+    mbedtls_sha256_init(&sha_ctx);
+    mbedtls_sha256_starts(&sha_ctx, 0);
+
     while ((ret = httpd_req_recv(req, buf, sizeof(buf))) > 0) {
+        mbedtls_sha256_update(&sha_ctx, (const unsigned char *)buf, ret);
         if (esp_ota_write(ota_handle, buf, ret) != ESP_OK) {
+            mbedtls_sha256_free(&sha_ctx);
             esp_ota_abort(ota_handle);
             httpd_resp_send_500(req);
             return ESP_FAIL;
         }
+    }
+
+    uint8_t hash[32];
+    mbedtls_sha256_finish(&sha_ctx, hash);
+    mbedtls_sha256_free(&sha_ctx);
+
+    if (has_expected) {
+        uint8_t expected_hash[32];
+        if (!hex_to_bytes(expected_hex, expected_hash, 32) ||
+            memcmp(hash, expected_hash, 32) != 0) {
+            char got_hex[65];
+            bytes_to_hex(hash, 32, got_hex);
+            esp_ota_abort(ota_handle);
+            char err_msg[128];
+            snprintf(err_msg, sizeof(err_msg),
+                "SHA-256 mismatch\nexpected: %s\nreceived: %s",
+                expected_hex, got_hex);
+            httpd_resp_set_type(req, "text/plain");
+            httpd_resp_sendstr(req, err_msg);
+            return ESP_FAIL;
+        }
+    } else {
+        ESP_LOGW(TAG, "OTA: no X-Expected-SHA256 header — skipping hash validation");
     }
 
     if (esp_ota_end(ota_handle) != ESP_OK || esp_ota_set_boot_partition(ota_part) != ESP_OK) {

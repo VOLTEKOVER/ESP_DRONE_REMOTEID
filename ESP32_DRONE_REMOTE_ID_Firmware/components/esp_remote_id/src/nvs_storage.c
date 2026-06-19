@@ -85,6 +85,7 @@ void nvs_storage_save(rid_config_t *cfg)
 
     store_str(h, "uas_id", cfg->uas_id);
     store_str(h, "op_id", cfg->operator_id);
+    store_str(h, "self_id", cfg->self_id_text);
     store_str(h, "uas_id2", cfg->uas_id_2);
     store_str(h, "wifi_ssid", cfg->wifi_ssid);
     store_str(h, "wifi_pass", cfg->wifi_password);
@@ -114,6 +115,10 @@ void nvs_storage_save(rid_config_t *cfg)
     store_f32(h, "bt5_rate", cfg->ble5_rate_hz);
     store_f32(h, "bt5_pwr", cfg->ble5_power_dbm);
 
+    store_f32(h, "op_lat", (float)cfg->operator_lat);
+    store_f32(h, "op_lon", (float)cfg->operator_lon);
+    store_f32(h, "op_alt", cfg->operator_alt);
+
     for (int i = 0; i < ESP_RID_NUM_KEYS; i++) {
         char key[16];
         snprintf(key, sizeof(key), "pubkey%d", i + 1);
@@ -131,6 +136,7 @@ void nvs_storage_load(rid_config_t *cfg)
 
     load_str(h, "uas_id", cfg->uas_id, ESP_RID_MAX_STR_LEN + 1, "");
     load_str(h, "op_id", cfg->operator_id, ESP_RID_MAX_STR_LEN + 1, "");
+    load_str(h, "self_id", cfg->self_id_text, ESP_RID_MAX_STR_LEN + 1, "");
     load_str(h, "uas_id2", cfg->uas_id_2, ESP_RID_MAX_STR_LEN + 1, "");
     load_str(h, "wifi_ssid", cfg->wifi_ssid, ESP_RID_MAX_STR_LEN + 1, "ESP-RID");
     load_str(h, "wifi_pass", cfg->wifi_password, ESP_RID_MAX_STR_LEN + 1, "");
@@ -159,6 +165,10 @@ void nvs_storage_load(rid_config_t *cfg)
     cfg->ble4_power_dbm = load_f32_def(h, "bt4_pwr", cfg->ble4_power_dbm);
     cfg->ble5_rate_hz = load_f32_def(h, "bt5_rate", cfg->ble5_rate_hz);
     cfg->ble5_power_dbm = load_f32_def(h, "bt5_pwr", cfg->ble5_power_dbm);
+
+    cfg->operator_lat = load_f32_def(h, "op_lat", (float)cfg->operator_lat);
+    cfg->operator_lon = load_f32_def(h, "op_lon", (float)cfg->operator_lon);
+    cfg->operator_alt = load_f32_def(h, "op_alt", cfg->operator_alt);
 
     for (int i = 0; i < ESP_RID_NUM_KEYS; i++) {
         char key[16];

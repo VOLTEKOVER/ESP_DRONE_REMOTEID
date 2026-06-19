@@ -12,6 +12,7 @@
 #define RID_OPT_FORCE_ARM_OK      (1 << 0)
 #define RID_OPT_DONT_SAVE_BASIC_ID (1 << 1)
 #define RID_OPT_PRINT_RID_MAVLINK  (1 << 2)
+#define RID_OPT_DEMO_MODE          (1 << 3)
 
 typedef enum {
     RID_PROTOCOL_UNKNOWN = 0,
@@ -41,11 +42,15 @@ typedef struct {
     uint8_t fix_type;
     uint8_t satellites;
     bool armed;
+    double operator_lat;
+    double operator_lon;
+    float operator_alt;
 } rid_gps_data_t;
 
 typedef struct {
     char uas_id[ESP_RID_MAX_STR_LEN + 1];
     char operator_id[ESP_RID_MAX_STR_LEN + 1];
+    char self_id_text[ESP_RID_MAX_STR_LEN + 1];
     uint8_t id_type;
     uint8_t ua_type;
     char uas_id_2[ESP_RID_MAX_STR_LEN + 1];
@@ -85,6 +90,11 @@ typedef struct {
 
     uint8_t mavlink_sysid;
     uint8_t bcast_powerup;
+
+    double operator_lat;
+    double operator_lon;
+    float operator_alt;
+    char self_id_text[ESP_RID_MAX_STR_LEN + 1];
 
     uint8_t options;
     int8_t lock_level;

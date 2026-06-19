@@ -13,6 +13,7 @@ idf_component_register(
         "src/nvs_storage.c"
         "src/led_status.c"
         "src/esp_remote_id.c"
+        "src/rid_patrol.c"
     INCLUDE_DIRS
         "include"
         "mavlink"
@@ -28,6 +29,7 @@ idf_component_register(
         app_update
         esp_driver_uart
         esp_driver_gpio
+        mbedtls
     EMBED_TXTFILES
         "webui/config.html"
 )

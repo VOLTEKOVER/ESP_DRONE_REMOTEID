@@ -1,9 +1,12 @@
 #ifndef WIFI_TX_H
 #define WIFI_TX_H
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "esp_remote_id.h"
 
 void wifi_tx_init(void);
+void wifi_tx_get_mac(uint8_t mac[6]);
 bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity);
 bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t counter);
 

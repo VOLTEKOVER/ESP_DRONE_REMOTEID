@@ -5,8 +5,24 @@
 #include "esp_mac.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
+#include "esp_efuse.h"
+#include "sdkconfig.h"
 
 #define TAG "MAIN"
+
+/* Fallback MAC when eFuse MAC is corrupted (common on ESP32-S0WD) */
+#define FALLBACK_MAC {0x24, 0x0A, 0xC4, 0x12, 0x34, 0x56}
+
+static void fix_mac_if_needed(void)
+{
+    uint8_t mac[6] = {0};
+    esp_err_t err = esp_efuse_mac_get_default(mac);
+    if (err != ESP_OK || (mac[0] == 0 && mac[1] == 0 && mac[2] == 0)) {
+        ESP_LOGW(TAG, "eFuse MAC CRC error — using fallback MAC address");
+        uint8_t fallback[] = FALLBACK_MAC;
+        esp_base_mac_addr_set(fallback);
+    }
+}
 
 #define C_BLU  "\x1b[34m"
 #define C_GRN  "\x1b[32m"
@@ -83,6 +99,7 @@ static void print_splash(void)
 
 void app_main(void)
 {
+    fix_mac_if_needed();
     esp_rid_init();
     esp_rid_start();
 

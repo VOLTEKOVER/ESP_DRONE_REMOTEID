@@ -73,9 +73,15 @@ static void build_legacy_adv(rid_gps_data_t *gps, rid_identity_t *identity, uint
     g_uas_data.Location.HorizAccuracy = ble_horiz_acc(gps->fix_type, gps->satellites);
     g_uas_data.Location.VertAccuracy = ble_vert_acc(gps->fix_type, gps->satellites);
 
+    if (identity->self_id_text[0] != '\0') {
+        g_uas_data.SelfIDValid = 1;
+        g_uas_data.SelfID.DescType = ODID_DESC_TYPE_TEXT;
+        strncpy((char *)g_uas_data.SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
+    }
+
     g_uas_data.SystemValid = 1;
-    g_uas_data.System.OperatorLatitude = gps->latitude;
-    g_uas_data.System.OperatorLongitude = gps->longitude;
+    g_uas_data.System.OperatorLatitude = (gps->operator_lat != 0.0) ? gps->operator_lat : gps->latitude;
+    g_uas_data.System.OperatorLongitude = (gps->operator_lon != 0.0) ? gps->operator_lon : gps->longitude;
 
     g_uas_data.OperatorIDValid = 1;
     strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
