@@ -57,6 +57,7 @@ static void parse_gga(char *fields[])
     if (fields[7]) g_last_gps.satellites = atoi(fields[7]);
     if (fields[9]) {
         g_last_gps.altitude_msl = (float)atof(fields[9]);
+        g_last_gps.altitude_baro = g_last_gps.altitude_msl;
     }
 }
 

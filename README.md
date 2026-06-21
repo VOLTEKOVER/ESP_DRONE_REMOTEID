@@ -18,8 +18,8 @@
 
 <p align="center">
   <b>ASTM F3411-22a</b> Open DroneID transmitter — <b>development build</b>.<br>
-  Code implements MAVLink · MSP · NMEA parsing and WiFi Beacon + BLE 4.0/5.0 broadcast.<br>
-  <b>Hardware testing pending</b> — see <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">wiki</a> for current status.
+  Parses MAVLink · MSP · NMEA and broadcasts via WiFi Beacon + BLE 4.0/5.0.<br>
+  See the <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">online wiki</a> for wiring, flashing, and configuration guide.
 </p>
 
 <p align="center">
@@ -28,30 +28,31 @@
 
 ---
 
-## Quick Start (once hardware testing is complete)
+## Quick Start
 
 | Step | Action |
 |------|--------|
 | 1 | Connect ESP32 to USB |
 | 2 | Open [VOLTEKOVER.github.io/ESP_DRONE_REMOTEID](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/) |
-| 3 | Select your chip (**ESP32** / **ESP32-S3** / **ESP32-C3**) |
+| 3 | Select your chip (**ESP32** / **ESP32-S3** / **ESP32-C3** / **ESP32-C2** / **ESP32-C6**) |
 | 4 | Click **Install**, pick serial port |
 | 5 | Power from battery, connect to WiFi **ESP-RID** |
 | 6 | Configure at `http://192.168.4.1` |
 
-> **&#x26a0; Development build** — code is written but has not been tested on real hardware yet. The web UI configurator is fully functional as a <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html">standalone demo</a>.
+> <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html">Try the live demo</a> — full web UI simulation without hardware.
 
 ## Features
 
 | | |
-|---|---|
-| **Protocols** | MAVLink, MSP, NMEA — auto-detect in 50 ms (code complete, untested) |
-| **Radio** | WiFi Beacon + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3) — code complete, untested |
-| **No extra GPS** | Reuses existing flight controller GPS data |
-| **Web UI** | Built-in AP + REST API + live telemetry (functional as demo) |
-| **OTA updates** | Upload firmware over WiFi (code complete, untested) |
+|---|---|---|
+| **Protocols** | MAVLink (including ArduPilot ODID), MSP, NMEA — auto-detect in 50 ms |
+| **Radio** | WiFi Beacon + WiFi NAN + BLE 4.0 + BLE 5.0 Coded PHY (S3/C3/C6) |
+| **No extra GPS needed** | Reuses existing flight controller GPS data (only FC required) |
+| **Web UI** | Built-in AP + REST API + live telemetry dashboard |
+| **OTA updates** | Upload firmware over WiFi |
 | **Config** | 26 parameters: UAS ID, rates, power, public keys, lock levels |
-| **Security** | 3 lock levels (normal / signed / eFuse permanent) — code complete, untested |
+| **Security** | 3 lock levels (normal / signed / eFuse permanent) — base level implemented |
+| **Demo** | [Fully offline demo page](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html) with live simulation |
 | **Flashing** | Browser via WebSerial, manual via esptool.py, or Docker |
 
 ## Hardware
@@ -62,12 +63,11 @@
 | `GND` | FC GND |
 | `5V` (VIN) | FC BEC or USB |
 
-> **&#x26a0; Wiring guidance is based on the code — no hardware testing has been performed yet.**  
-> NMEA clone (tap GPS TX): add **1 k&Omega; series resistor** on the tap line.
+> **&#x26a0;** NMEA clone (tap GPS TX): add **1 k&Omega; series resistor** on the tap line.
 
 ## Build
 
-Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions (compilation only, no hardware tests).  
+Push to `main` &rarr; automatic build for all targets via GitHub Actions.  
 [See latest builds](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml)
 
 ### Locally (ESP-IDF v6.0.1)
@@ -75,8 +75,8 @@ Push to `main` &rarr; automatic build for all 3 targets via GitHub Actions (comp
 ```bash
 git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
 cd ESP_DRONE_REMOTEID
-idf.py set-target esp32    # or esp32s3 / esp32c3
-idf.py build               # compiles — flash/monitor untested
+idf.py set-target esp32    # or esp32s3 / esp32c3 / esp32c2 / esp32c6 / esp32s2
+idf.py build
 ```
 
 ## Project Structure

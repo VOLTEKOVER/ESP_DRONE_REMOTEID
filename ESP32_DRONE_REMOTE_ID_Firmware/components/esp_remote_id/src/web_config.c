@@ -6,7 +6,7 @@
 #include "esp_http_server.h"
 #include "esp_wifi.h"
 #include "esp_ota_ops.h"
-#include "mbedtls/sha256.h"
+#include "esp_rom_sha256.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -17,8 +17,9 @@
 #include "esp_efuse.h"
 
 #define TAG "WEB_CFG"
-#define BUF_SIZE 2048
+#define BUF_SIZE 4096
 #define MAX_POST 4096
+#define EFUSE_LOCK_MAGIC 0x52494421 // "RID!" stored as uint32_t
 
 extern const char config_html_start[] asm("_binary_config_html_start");
 extern const char config_html_end[] asm("_binary_config_html_end");
@@ -28,6 +29,12 @@ static httpd_handle_t g_server = NULL;
 
 static int get_lock_level(void)
 {
+    uint8_t efuse_data[4] = {0};
+    esp_efuse_read_block(EFUSE_BLK3, efuse_data, 0, 32);
+    uint32_t magic = (uint32_t)efuse_data[0] | ((uint32_t)efuse_data[1] << 8)
+                   | ((uint32_t)efuse_data[2] << 16) | ((uint32_t)efuse_data[3] << 24);
+    if (magic == EFUSE_LOCK_MAGIC) return 2;
+
     rid_config_t cfg;
     esp_rid_get_config(&cfg);
     return cfg.lock_level;
@@ -153,7 +160,29 @@ static void apply_json(rid_config_t *cfg, const char *json)
     iv = json_int(json, "mavlink_sysid"); cfg->mavlink_sysid = (uint8_t)iv;
     iv = json_int(json, "bcast_powerup"); cfg->bcast_powerup = (uint8_t)iv;
     iv = json_int(json, "options"); cfg->options = (uint8_t)iv;
-    iv = json_int(json, "lock_level"); cfg->lock_level = (int8_t)iv;
+    iv = json_int(json, "lock_level");
+
+    /* If transitioning to level 2, burn eFuse for permanence */
+    if (iv >= 2) {
+        uint8_t efuse_data[4] = {0};
+        esp_efuse_read_block(EFUSE_BLK3, efuse_data, 0, 32);
+        uint32_t magic = (uint32_t)efuse_data[0] | ((uint32_t)efuse_data[1] << 8)
+                       | ((uint32_t)efuse_data[2] << 16) | ((uint32_t)efuse_data[3] << 24);
+        if (magic != EFUSE_LOCK_MAGIC) {
+            uint32_t val = EFUSE_LOCK_MAGIC;
+            esp_err_t err = esp_efuse_write_block(EFUSE_BLK3, &val, 0, 32);
+            if (err == ESP_OK) {
+                ESP_LOGI(TAG, "eFuse permanent lock burned");
+            } else {
+                ESP_LOGE(TAG, "eFuse write failed: %s", esp_err_to_name(err));
+            }
+        }
+        cfg->lock_level = 2;
+    } else if (iv >= 1) {
+        cfg->lock_level = (int8_t)iv;
+    } else {
+        cfg->lock_level = 0;
+    }
     iv = json_int(json, "led_r_gpio"); cfg->led_r_gpio = (int8_t)iv;
     iv = json_int(json, "led_g_gpio"); cfg->led_g_gpio = (int8_t)iv;
     iv = json_int(json, "led_b_gpio"); cfg->led_b_gpio = (int8_t)iv;
@@ -389,7 +418,14 @@ static esp_err_t handle_ota(httpd_req_t *req)
     mbedtls_sha256_finish(&sha_ctx, hash);
     mbedtls_sha256_free(&sha_ctx);
 
-    if (has_expected) {
+    if (!has_expected) {
+        esp_ota_abort(ota_handle);
+        httpd_resp_set_type(req, "text/plain");
+        httpd_resp_sendstr(req, "OTA rejected: X-Expected-SHA256 header required");
+        return ESP_FAIL;
+    }
+
+    {
         uint8_t expected_hash[32];
         if (!hex_to_bytes(expected_hex, expected_hash, 32) ||
             memcmp(hash, expected_hash, 32) != 0) {
@@ -404,8 +440,6 @@ static esp_err_t handle_ota(httpd_req_t *req)
             httpd_resp_sendstr(req, err_msg);
             return ESP_FAIL;
         }
-    } else {
-        ESP_LOGW(TAG, "OTA: no X-Expected-SHA256 header — skipping hash validation");
     }
 
     if (esp_ota_end(ota_handle) != ESP_OK || esp_ota_set_boot_partition(ota_part) != ESP_OK) {

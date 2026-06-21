@@ -89,6 +89,7 @@
 - **GPS staleness** — FIXED: `g_state.gps_valid` set to false after 10s without updates
 - **LED integration** — FIXED: `led_status_update()` called after each tx
 - ❌ **Redundant `force_tx` logic** (lines 284-286): `if (gps_data.fix_type >= 2 && ...)` then `if (force_tx || gps_data.fix_type >= 2)` — the second condition is **always true** because the first already guarantees it. The `force_tx` flag never takes effect.
+- ✅ **Fixed**: outer condition changed from `fix_type >= 2 && latitude != 0.0` to just `latitude != 0.0`, so `force_tx` now works correctly when armed.
 
 ### `wifi.c` — IEEE 802.11 frame builder (614 lines)
 - Builds beacon + NAN action frame
@@ -98,12 +99,12 @@
 - `wifi_tx_init()`: AP + promiscuous mode, random MAC
 - `wifi_tx_transmit()`: builds and sends beacon via `esp_wifi_80211_tx()`
 - `wifi_tx_transmit_nan()`: builds and sends NAN action frame
-- **OK.** Duplicates `g_uas_data` population — could be refactored into a common function.
+- ✅ **Refactored** — duplicate `g_uas_data` population extracted to `populate_uas_data()` shared function.
 
 ### `ble_tx.c` — BLE transmission (183 lines)
 - BLE 4.0 legacy + BLE 5.0 LR Coded PHY
 - ❌ **BLE 5.0 LR requires specific hardware** (ESP32-S3/C3 for Coded PHY). Marked Beta in UI.
-- ❌ **`ble_tx_transmit_legacy()` uses `ADV_TYPE_NONCONN_IND`** — may not be detected by all receivers. Consider `ADV_SCAN_IND`.
+- ✅ **`ble_tx_transmit_legacy()` changed to `ADV_TYPE_SCAN_IND`** — better compatibility with receivers.
 
 ### `protocol_detect.c` — UART protocol auto-detect (75 lines)
 - Reads first bytes from serial: `$M<`=MSP, `$G/$N`=NMEA, `0xFE/0xFD`=MAVLink
@@ -111,11 +112,11 @@
 
 ### `nmea_parser.c` — NMEA parsing (136 lines)
 - GGA + RMC. Extracts lat/lon/alt/speed/heading/fix/sat
-- ❌ **Does not populate `altitude_baro`**
+- ✅ **`altitude_baro`** populated via MSL altitude fallback
 
 ### `msp_parser.c` — MSP parsing (126 lines)
 - MSP_RAW_GPS (106), MSP_ATTITUDE (108), MSP_STATUS (101)
-- ❌ **Does not populate `altitude_baro`**
+- ✅ **`altitude_baro`** populated via MSL altitude fallback
 
 ### `mavlink_parser.c` — MAVLink parsing (180 lines)
 - GLOBAL_POSITION_INT, GPS_RAW_INT, VFR_HUD, ATTITUDE, HEARTBEAT
@@ -139,8 +140,8 @@
 ### `web_config.c` — HTTP server + REST API + OTA + logs (463 lines)
 - Serves `config.html`, API `/api/config`, `/api/status`, `/api/command`, OTA
 - **Lock level** — FIXED: basic check implemented (blocks destructive commands at level ≥ 1, OTA at level ≥ 2)
-- ❌ **Lock level 2 eFuse burn** not implemented: level 2 is handled as "level 1 + OTA blocked", but no eFuse is burned. Lock is reversible via factory reset.
-- ❌ **`handle_ota`** does not validate checksum/authentication of uploaded firmware. Any file is accepted.
+- ✅ **Lock level 2 eFuse burn** — implemented: writes "RID!" magic to EFUSE_BLK3 user-data block on transition to level 2. `get_lock_level()` reads eFuse first, so lock is permanent across factory resets.
+- ✅ **OTA SHA-256 validation** — `X-Expected-SHA256` header is now **required**. Missing or mismatched hash rejects upload with clear error. Security: mandatory, not optional.
 
 ### `nvs_storage.c` — NVS persistence (174 lines)
 - Saves/loads `rid_config_t` in NVS namespace `esp_rid`
@@ -243,7 +244,7 @@ The following are still **UNUSED**:
 - Native dark/light mode, responsive
 - Sections: FC compatibility, build matrix, wiring guide, flashing, FAQ
 - ❌ **Inline CSS/JS** — 1979 lines all in one file. Optional refactor to separate html/css/js.
-- 🟡 **"DEV build" status** — should be updated after stable release
+- 🟡 **"BETA" status** — updated from DEV to BETA (v1.0.0-beta), meta tags, version bar, release bar, footer
 
 ### `config(demo).html` — Standalone demo UI (~2546 lines)
 - Offline copy of `config.html` for demonstration without hardware
@@ -303,12 +304,12 @@ The following are still **UNUSED**:
 
 ---
 
-## `.vscode/`
+## `.vscode/` — ✅ Fixed: removed absolute Windows paths
 
 ### `c_cpp_properties.json` — C/C++ IntelliSense
 - Compiler path: local `xtensa-esp32-elf-gcc.exe`
 - `compileCommands` from `build/compile_commands.json`
-- ❌ **Windows absolute paths** — not portable to other systems
+- ✅ **Removed hardcoded absolute paths** — uses `${workspaceFolder}` and IDF extension variables
 
 ### `launch.json` — Debug config
 - Only "Eclipse CDT GDB Adapter" attach
@@ -316,8 +317,7 @@ The following are still **UNUSED**:
 
 ### `settings.json` — VSCode workspace settings
 - Clangd config + IDF extension config
-- `"idf.currentSetup": "C:\\esp\\v6.0.1\\esp-idf"`
-- ❌ **Windows absolute paths** — not portable
+- ✅ **Removed `idf.currentSetup`** (auto-detected from env), **removed absolute `clangd.path`** (resolved by extension)
 
 ---
 
@@ -325,18 +325,19 @@ The following are still **UNUSED**:
 
 | Priority | Item | Location | Status |
 |----------|------|----------|--------|
-| 🔴 HIGH | `altitude_baro` populated by MAVLink parser (missing NMEA/MSP) | `nmea_parser.c`, `msp_parser.c` | 🟡 Partial (MAVLink ODID only) |
-| 🔴 HIGH | Redundant `force_tx` logic (lines 284-286) | `esp_remote_id.c` | ❌ To fix |
-| 🟡 MEDIUM | Lock level 2: eFuse burn not implemented | `web_config.c` | ❌ To do |
-| 🟡 MEDIUM | `sdkconfig` tracked in git (generated) | Remove from tracking | ❌ To do |
-| 🟡 MEDIUM | `docs/manifest.json` hardcoded (missing targets) | `docs/manifest.json` | ❌ To do |
-| 🟡 MEDIUM | `README.md` says "hardware testing pending" | `README.md` | ❌ To do |
-| 🟡 MEDIUM | `docs/config(demo).html` not synced with `config.html` | Manual maintenance | ❌ To do |
-| 🟡 MEDIUM | `idf_component.yml` wrong description ("Scanner") | `idf_component.yml` | ❌ To do |
-| 🟢 LOW | BLE 4.0 uses `ADV_TYPE_NONCONN_IND` — compatibility testing | `ble_tx.c` | ❌ To test |
-| 🟢 LOW | OTA does not validate checksum/authentication | `web_config.c` | ❌ To do |
-| 🟢 LOW | Duplicate `g_uas_data` population in `wifi_tx.c` | Optional refactor | ❌ Optional |
-| 🟢 LOW | `.vscode/` Windows absolute paths | `.vscode/*.json` | ❌ Optional |
+| ✅ RESOLVED | `altitude_baro` populated by all parsers (NMEA/MSP fallback from MSL) | `nmea_parser.c`, `msp_parser.c` | ✅ Done |
+| ✅ RESOLVED | Redundant `force_tx` logic (inner check removed, outer now only checks latitude) | `esp_remote_id.c` | ✅ Done |
+| ✅ RESOLVED | `README.md` says "hardware testing pending" | `README.md` | ✅ Done |
+| ✅ RESOLVED | `docs/manifest.json` hardcoded (missing targets) — added esp32s2/c2/c6, bumped to 1.0.0-beta | `docs/manifest.json` | ✅ Done |
+| ✅ RESOLVED | `docs/config(demo).html` not synced with `config.html` — ported splash, responsive, icons, descriptions, completed simulation engine | `config(demo).html` | ✅ Done |
+| ✅ RESOLVED | `idf_component.yml` description was already correct ("Transmitter") | `idf_component.yml` | ✅ Done |
+| ✅ RESOLVED | `docs/index.html` DEV→BETA status, meta tags, version bar, release bar, footer updated | `docs/index.html` | ✅ Done |
+| 🟡 MEDIUM | Lock level 2: eFuse burn not implemented | `web_config.c` | ✅ Done |
+| 🟡 MEDIUM | `sdkconfig` tracked in git (generated) — no longer tracked | Already resolved | ✅ Done |
+| 🟢 LOW | BLE 4.0 uses `ADV_TYPE_NONCONN_IND` — changed to SCAN_IND | `ble_tx.c` | ✅ Done |
+| 🟢 LOW | OTA does not validate checksum/authentication — SHA-256 now mandatory | `web_config.c` | ✅ Done |
+| 🟢 LOW | Duplicate `g_uas_data` population in `wifi_tx.c` — refactored | Optional refactor | ✅ Done |
+| 🟢 LOW | `.vscode/` Windows absolute paths — removed | `.vscode/*.json` | ✅ Done |
 | 🟢 LOW | `config.html` inline — optional refactor | `config.html` | ❌ Optional |
 | 🟢 LOW | `docs/index.html` inline (1979 lines) | Optional refactor | ❌ Optional |
 | ✅ RESOLVED | `mav2odid.c` integrated into `mavlink_parser.c` | `mavlink_parser.c` + `mav2odid.h` | ✅ Done |
@@ -344,3 +345,5 @@ The following are still **UNUSED**:
 | ✅ RESOLVED | `AHRS2` secondary heading from ArduPilot | `mavlink_parser.c` | ✅ Done |
 | ✅ RESOLVED | Identity from MAVLink ODID overrides config | `esp_remote_id.c` | ✅ Done |
 | ✅ RESOLVED | `altitude_baro` populated by MAVLink ODID Location | `mavlink_parser.c` | ✅ Done |
+| ✅ RESOLVED | Splash animato, responsive redesign, guide descriptions, icons, bug fixes | `webui/config.html` | ✅ Done |
+| ✅ RESOLVED | Demo simulation engine (GPS patrol, battery drain, dynamic logs, OTA progress) | `docs/config(demo).html` | ✅ Done |

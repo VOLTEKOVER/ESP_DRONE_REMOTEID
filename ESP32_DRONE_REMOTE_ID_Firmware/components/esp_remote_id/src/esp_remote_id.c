@@ -337,7 +337,7 @@ static void rid_task(void *arg)
             break;
         }
 
-        if (gps_data.fix_type >= 2 && gps_data.latitude != 0.0) {
+        if (gps_data.latitude != 0.0) {
             bool force_tx = (cfg_opts & RID_OPT_FORCE_ARM_OK) && gps_data.armed;
 
             if (force_tx || gps_data.fix_type >= 2) {

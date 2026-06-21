@@ -30,6 +30,7 @@ idf_component_register(
         esp_driver_uart
         esp_driver_gpio
         mbedtls
+        efuse
     EMBED_TXTFILES
         "webui/config.html"
 )

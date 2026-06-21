@@ -48,6 +48,7 @@ static void parse_msp_gps(uint8_t *data, int len)
     g_last_gps.latitude = lat / 10000000.0;
     g_last_gps.longitude = lon / 10000000.0;
     g_last_gps.altitude_msl = alt / 10.0f;
+    g_last_gps.altitude_baro = g_last_gps.altitude_msl;
     g_last_gps.speed = speed / 100.0f;
     g_last_gps.heading = ground_course / 10;
 }

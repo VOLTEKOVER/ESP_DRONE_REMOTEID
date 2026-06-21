@@ -108,49 +108,54 @@ void wifi_tx_get_mac(uint8_t mac[6])
     memcpy(mac, g_mac, 6);
 }
 
+static void populate_uas_data(ODID_UAS_Data *d, rid_gps_data_t *gps, rid_identity_t *identity)
+{
+    memset(d, 0, sizeof(ODID_UAS_Data));
+
+    d->BasicIDValid[0] = 1;
+    d->BasicID[0].IDType = (ODID_idtype_t)identity->id_type;
+    d->BasicID[0].UAType = (ODID_uatype_t)identity->ua_type;
+    strncpy((char *)d->BasicID[0].UASID, identity->uas_id, ODID_ID_SIZE);
+
+    if (identity->uas_id_2[0] != '\0') {
+        d->BasicIDValid[1] = 1;
+        d->BasicID[1].IDType = (ODID_idtype_t)identity->id_type_2;
+        d->BasicID[1].UAType = (ODID_uatype_t)identity->ua_type_2;
+        strncpy((char *)d->BasicID[1].UASID, identity->uas_id_2, ODID_ID_SIZE);
+    }
+
+    d->LocationValid = 1;
+    d->Location.Latitude = gps->latitude;
+    d->Location.Longitude = gps->longitude;
+    d->Location.AltitudeGeo = gps->altitude_msl;
+    d->Location.Height = gps->altitude_relative;
+    d->Location.SpeedHorizontal = gps->speed;
+    d->Location.Direction = gps->heading;
+    d->Location.SpeedVertical = gps->speed_vertical;
+    d->Location.HorizAccuracy = horiz_acc_from_gps(gps->fix_type, gps->satellites);
+    d->Location.VertAccuracy = vert_acc_from_gps(gps->fix_type, gps->satellites);
+
+    d->SystemValid = 1;
+    d->System.OperatorLatitude = (gps->operator_lat != 0.0) ? gps->operator_lat : gps->latitude;
+    d->System.OperatorLongitude = (gps->operator_lon != 0.0) ? gps->operator_lon : gps->longitude;
+    d->System.AreaCount = 0;
+    d->System.AreaRadius = 0;
+
+    if (identity->self_id_text[0] != '\0') {
+        d->SelfIDValid = 1;
+        d->SelfID.DescType = ODID_DESC_TYPE_TEXT;
+        strncpy((char *)d->SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
+    }
+
+    d->OperatorIDValid = 1;
+    strncpy((char *)d->OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+}
+
 bool wifi_tx_transmit(rid_gps_data_t *gps, rid_identity_t *identity)
 {
     if (!g_initialized || !gps || !identity) return false;
 
-    memset(&g_uas_data, 0, sizeof(ODID_UAS_Data));
-
-    g_uas_data.BasicIDValid[0] = 1;
-    g_uas_data.BasicID[0].IDType = (ODID_idtype_t)identity->id_type;
-    g_uas_data.BasicID[0].UAType = (ODID_uatype_t)identity->ua_type;
-    strncpy((char *)g_uas_data.BasicID[0].UASID, identity->uas_id, ODID_ID_SIZE);
-
-    if (identity->uas_id_2[0] != '\0') {
-        g_uas_data.BasicIDValid[1] = 1;
-        g_uas_data.BasicID[1].IDType = (ODID_idtype_t)identity->id_type_2;
-        g_uas_data.BasicID[1].UAType = (ODID_uatype_t)identity->ua_type_2;
-        strncpy((char *)g_uas_data.BasicID[1].UASID, identity->uas_id_2, ODID_ID_SIZE);
-    }
-
-    g_uas_data.LocationValid = 1;
-    g_uas_data.Location.Latitude = gps->latitude;
-    g_uas_data.Location.Longitude = gps->longitude;
-    g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
-    g_uas_data.Location.Height = gps->altitude_relative;
-    g_uas_data.Location.SpeedHorizontal = gps->speed;
-    g_uas_data.Location.Direction = gps->heading;
-    g_uas_data.Location.SpeedVertical = gps->speed_vertical;
-    g_uas_data.Location.HorizAccuracy = horiz_acc_from_gps(gps->fix_type, gps->satellites);
-    g_uas_data.Location.VertAccuracy = vert_acc_from_gps(gps->fix_type, gps->satellites);
-
-    g_uas_data.SystemValid = 1;
-    g_uas_data.System.OperatorLatitude = (gps->operator_lat != 0.0) ? gps->operator_lat : gps->latitude;
-    g_uas_data.System.OperatorLongitude = (gps->operator_lon != 0.0) ? gps->operator_lon : gps->longitude;
-    g_uas_data.System.AreaCount = 0;
-    g_uas_data.System.AreaRadius = 0;
-
-    if (identity->self_id_text[0] != '\0') {
-        g_uas_data.SelfIDValid = 1;
-        g_uas_data.SelfID.DescType = ODID_DESC_TYPE_TEXT;
-        strncpy((char *)g_uas_data.SelfID.Desc, identity->self_id_text, ODID_STR_SIZE);
-    }
-
-    g_uas_data.OperatorIDValid = 1;
-    strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+    populate_uas_data(&g_uas_data, gps, identity);
 
     static uint8_t buffer[1024];
     uint8_t counter = g_message_counter++;
@@ -178,39 +183,7 @@ bool wifi_tx_transmit_nan(rid_gps_data_t *gps, rid_identity_t *identity, uint8_t
 {
     if (!g_initialized || !gps || !identity) return false;
 
-    memset(&g_uas_data, 0, sizeof(ODID_UAS_Data));
-
-    g_uas_data.BasicIDValid[0] = 1;
-    g_uas_data.BasicID[0].IDType = (ODID_idtype_t)identity->id_type;
-    g_uas_data.BasicID[0].UAType = (ODID_uatype_t)identity->ua_type;
-    strncpy((char *)g_uas_data.BasicID[0].UASID, identity->uas_id, ODID_ID_SIZE);
-
-    if (identity->uas_id_2[0] != '\0') {
-        g_uas_data.BasicIDValid[1] = 1;
-        g_uas_data.BasicID[1].IDType = (ODID_idtype_t)identity->id_type_2;
-        g_uas_data.BasicID[1].UAType = (ODID_uatype_t)identity->ua_type_2;
-        strncpy((char *)g_uas_data.BasicID[1].UASID, identity->uas_id_2, ODID_ID_SIZE);
-    }
-
-    g_uas_data.LocationValid = 1;
-    g_uas_data.Location.Latitude = gps->latitude;
-    g_uas_data.Location.Longitude = gps->longitude;
-    g_uas_data.Location.AltitudeGeo = gps->altitude_msl;
-    g_uas_data.Location.Height = gps->altitude_relative;
-    g_uas_data.Location.SpeedHorizontal = gps->speed;
-    g_uas_data.Location.Direction = gps->heading;
-    g_uas_data.Location.SpeedVertical = gps->speed_vertical;
-    g_uas_data.Location.HorizAccuracy = horiz_acc_from_gps(gps->fix_type, gps->satellites);
-    g_uas_data.Location.VertAccuracy = vert_acc_from_gps(gps->fix_type, gps->satellites);
-
-    g_uas_data.SystemValid = 1;
-    g_uas_data.System.OperatorLatitude = (gps->operator_lat != 0.0) ? gps->operator_lat : gps->latitude;
-    g_uas_data.System.OperatorLongitude = (gps->operator_lon != 0.0) ? gps->operator_lon : gps->longitude;
-    g_uas_data.System.AreaCount = 0;
-    g_uas_data.System.AreaRadius = 0;
-
-    g_uas_data.OperatorIDValid = 1;
-    strncpy((char *)g_uas_data.OperatorID.OperatorId, identity->operator_id, ODID_ID_SIZE);
+    populate_uas_data(&g_uas_data, gps, identity);
 
     static uint8_t buffer[1024];
     int length = odid_wifi_build_message_pack_nan_action_frame(
