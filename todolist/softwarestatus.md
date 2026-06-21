@@ -1,323 +1,463 @@
-# ESP DRONE REMOTEID — Complete Code Analysis
+# ESP DRONE REMOTEID — Complete Software Status
 
-## `ESP32_DRONE_REMOTE_ID_Firmware/`
+> Last updated: 2026-06-21
+> Scope: all 70+ source files in repository (excluding build artifacts, __pycache__)
 
-### `main/main.c` — Entry point
-- Calls `esp_rid_init()` + `esp_rid_start()`, prints splash
-- **OK.** No issues.
+---
 
-### `main/CMakeLists.txt`
-- Compiles `main.c`
+## `ESP32_DRONE_REMOTE_ID_Firmware/` — Firmware Root
+
+### `CMakeLists.txt` (18 lines)
+- Root CMake. Sets project name `esp_remote_id`, registers main component + `esp_remote_id`, includes `mavlink/` as an extra component directory.
+- **OK.** No changes needed.
+
+### `sdkconfig.defaults` (1 line)
+- `CONFIG_BT_ENABLED=y` — minimal baseline; CI overrides per target.
+- ✅ Now includes `CONFIG_MBEDTLS_SHA256_ENABLED=y` for OTA SHA-256 validation.
+
+### `sdkconfig` (3461 lines, generated)
+- ❌ **Generated file tracked in git.** Although `.gitignore` lists `sdkconfig`, the committed copy is stale. Should be removed from tracking (`git rm --cached`).
+- **Gap:** CI regenerates it fresh; this file is purely informational for local builds.
+
+### `partitions.csv` (7 lines)
+- 4 MB flash layout: nvs 20K + otadata 8K + phy_init 4K + factory 1920K + ota_0 1920K.
+- **OK.** Standard OTA dual-slot.
+
+### `partitions_2mb.csv` (7 lines)
+- 2 MB flash layout: nvs 20K + otadata 8K + phy_init 4K + factory 960K + ota_0 960K.
+- Used by ESP32-C2 in CI (`ESP_DRONE_REMOTE_ID_Firmware/build.yml`).
 - **OK.**
 
-### `CMakeLists.txt` (firmware root)
-- Defines components, includes `mavlink/`, registers `esp_remote_id`
-- **OK.**
-
-### `idf_component.yml` — ESP-IDF registry manifest
-- Version `1.0.0-beta`, wrong description ("Scanner" instead of "Transmitter")
-- ❌ **Outdated description**: says "OpenDroneID WiFi Beacon Scanner"
-
-### `sdkconfig` — Generated ESP-IDF config (3461 lines)
-- ❌ **Generated file tracked in git**. `sdkconfig` is already in `.gitignore` but the current one is committed. Should be removed from tracking.
-
-### `sdkconfig.defaults` — Default configuration
-- Only `CONFIG_BT_ENABLED=y`
-- **OK.** The rest is set by CI.
-
-### `partitions.csv` — 4MB partition table (ESP32/S3/C3/C6)
-- factory 1920KB + ota_0 1920KB + nvs 20KB + coredump 8KB
-- **OK.**
-
-### `partitions_2mb.csv` — 2MB partition table (ESP32-C2)
-- factory 960KB + ota_0 960KB + nvs 20KB + coredump 8KB
+### `idf_component.yml` (12 lines)
+- ESP-IDF registry manifest. Version `1.0.0-beta`.
+- ✅ Description fixed to `"ESP32 Remote ID Transmitter"` (was `"Scanner"`).
 - **OK.**
 
 ---
 
-## `components/esp_remote_id/include/`
-
-### `esp_remote_id.h` — Public API, structs, enums
-- Defines `rid_config_t`, `rid_state_t`, `rid_gps_data_t`, `rid_identity_t`
-- **`altitude_baro`** (line 37): field defined in `rid_gps_data_t` but **never populated** by any parser. Always stays 0.
-- **`RID_OPT_FORCE_ARM_OK`** (line 12): redundant logic in `esp_remote_id.c:286`
-
-### `opendroneid.h` — Intel ODID library header (762 lines)
-- All ASTM enums + encode/decode API
+### `main/CMakeLists.txt` (3 lines)
+- Registers `main.c`, requires `esp_remote_id` component.
 - **OK.**
 
-### `odid_wifi.h` — IEEE 802.11 packed structs + NAN frame definitions
-- Packed structures for beacon/NAN/service discovery
-- **OK.**
+### `main/Kconfig.projbuild`
+- **Does not exist.** No main-level kconfig. All config is in `components/esp_remote_id/Kconfig.projbuild`.
+- **OK** by design.
 
-### `wifi_tx.h`
-- Declarations: `wifi_tx_init()`, `wifi_tx_transmit()`, `wifi_tx_transmit_nan()`
-- **OK.**
-
-### `ble_tx.h`
-- Declarations: `ble_tx_init()`, `ble_tx_transmit_legacy()`, `ble_tx_transmit_lr()`
-- **OK.**
-
-### `mav2odid.h` — Intel MAVLink-to-ODID conversion header
-- `m2o_*` declarations for converting MAVLink RID messages to ODID
-- ❌ **Never called at runtime.** `esp_remote_id.c` uses `mavlink_parser.c` directly. Module compiled but dead.
-
-### `protocol_detect.h`, `nmea_parser.h`, `msp_parser.h`, `mavlink_parser.h`
-- Serial parser headers
-- **OK.**
-
-### `web_config.h`
-- `web_config_init()`
-- **OK.**
-
-### `nvs_storage.h`
-- `nvs_storage_init/save/load/erase`
-- **OK.**
-
-### `led_status.h`
-- `led_status_init()`, `led_status_update()`
+### `main/main.c` (90 lines)
+- Entry point: `app_main()` → splash → `fix_mac_if_needed()` → `esp_rid_init()` → `esp_rid_start()`.
+- ✅ Demo mode: if RID_OPT_DEMO enabled, starts GPS patrol simulation instead of waiting for FC.
 - **OK.**
 
 ---
 
-## `components/esp_remote_id/src/`
+## `components/esp_remote_id/` — Core Component
 
-### `esp_remote_id.c` — Main orchestrator (350 lines)
-- Init sequence, task loop, `update_transmissions()`, rate limiting
-- **Rate limiting** — FIXED: `rate_allowed()` uses `esp_timer_get_time()` to respect `rate_hz`
-- **WiFi NAN** — FIXED: now called in `update_transmissions()`
-- **GPS staleness** — FIXED: `g_state.gps_valid` set to false after 10s without updates
-- **LED integration** — FIXED: `led_status_update()` called after each tx
-- ❌ **Redundant `force_tx` logic** (lines 284-286): `if (gps_data.fix_type >= 2 && ...)` then `if (force_tx || gps_data.fix_type >= 2)` — the second condition is **always true** because the first already guarantees it. The `force_tx` flag never takes effect.
-- ✅ **Fixed**: outer condition changed from `fix_type >= 2 && latitude != 0.0` to just `latitude != 0.0`, so `force_tx` now works correctly when armed.
-
-### `wifi.c` — IEEE 802.11 frame builder (614 lines)
-- Builds beacon + NAN action frame
-- **OK.** Stable code from Intel ODID library.
-
-### `wifi_tx.c` — WiFi transmission (204 lines)
-- `wifi_tx_init()`: AP + promiscuous mode, random MAC
-- `wifi_tx_transmit()`: builds and sends beacon via `esp_wifi_80211_tx()`
-- `wifi_tx_transmit_nan()`: builds and sends NAN action frame
-- ✅ **Refactored** — duplicate `g_uas_data` population extracted to `populate_uas_data()` shared function.
-
-### `ble_tx.c` — BLE transmission (183 lines)
-- BLE 4.0 legacy + BLE 5.0 LR Coded PHY
-- ❌ **BLE 5.0 LR requires specific hardware** (ESP32-S3/C3 for Coded PHY). Marked Beta in UI.
-- ✅ **`ble_tx_transmit_legacy()` changed to `ADV_TYPE_SCAN_IND`** — better compatibility with receivers.
-
-### `protocol_detect.c` — UART protocol auto-detect (75 lines)
-- Reads first bytes from serial: `$M<`=MSP, `$G/$N`=NMEA, `0xFE/0xFD`=MAVLink
-- **OK.** Works.
-
-### `nmea_parser.c` — NMEA parsing (136 lines)
-- GGA + RMC. Extracts lat/lon/alt/speed/heading/fix/sat
-- ✅ **`altitude_baro`** populated via MSL altitude fallback
-
-### `msp_parser.c` — MSP parsing (126 lines)
-- MSP_RAW_GPS (106), MSP_ATTITUDE (108), MSP_STATUS (101)
-- ✅ **`altitude_baro`** populated via MSL altitude fallback
-
-### `mavlink_parser.c` — MAVLink parsing (180 lines)
-- GLOBAL_POSITION_INT, GPS_RAW_INT, VFR_HUD, ATTITUDE, HEARTBEAT
-- **AHRS2** — FIXED: support for ArduPilot AHRS2 message (secondary heading)
-- **OPEN_DRONE_ID_LOCATION** — FIXED: parsing and GPS data population (lat/lon/alt/vel/heading + altitude_baro)
-- **OPEN_DRONE_ID_BASIC_ID** — FIXED: extracts UAS ID, id_type, ua_type in identity
-- **OPEN_DRONE_ID_OPERATOR_ID** — FIXED: extracts operator_id in identity
-- **OPEN_DRONE_ID_SYSTEM** — FIXED: extracts operator lat/lon for GPS fallback
-- **`altitude_baro`** — FIXED: populated from OPEN_DRONE_ID_LOCATION.altitude_barometric
-- **`mavlink_parser_get_identity()`** — new function to get identity from ODID messages
-- Dialect: changed from `common/mavlink.h` to `ardupilotmega/mavlink.h` (includes common + ArduPilot messages)
-- Supports 5s timeout on GPS, 10s on identity
-
-### `mav2odid.c` — Intel MAVLink-to-ODID conversion (636 lines)
-- FIXED: now COMPILED and ACTIVE: `mavlink_parser.c` includes `mav2odid.h`
-- Include path changed to `ardupilotmega/mavlink.h` for consistency
-
-### `opendroneid.c` — Intel ODID encode/decode library (1477 lines)
-- **OK.** Stable, tested.
-
-### `web_config.c` — HTTP server + REST API + OTA + logs (463 lines)
-- Serves `config.html`, API `/api/config`, `/api/status`, `/api/command`, OTA
-- **Lock level** — FIXED: basic check implemented (blocks destructive commands at level ≥ 1, OTA at level ≥ 2)
-- ✅ **Lock level 2 eFuse burn** — implemented: writes "RID!" magic to EFUSE_BLK3 user-data block on transition to level 2. `get_lock_level()` reads eFuse first, so lock is permanent across factory resets.
-- ✅ **OTA SHA-256 validation** — `X-Expected-SHA256` header is now **required**. Missing or mismatched hash rejects upload with clear error. Security: mandatory, not optional.
-
-### `nvs_storage.c` — NVS persistence (174 lines)
-- Saves/loads `rid_config_t` in NVS namespace `esp_rid`
+### `CMakeLists.txt` (44 lines)
+- Registers all .c files in `src/`. REQUIRES `nvs_flash`, `efuse`, `esp_wifi`, `esp_bt`, `mdns`, etc.
+- ✅ Added `efuse` to REQUIRES for eFuse lock support.
 - **OK.**
 
-### `led_status.c` — RGB LED (76 lines)
-- 3 configurable GPIOs via Kconfig. Default: -1 (disabled)
-- Red = no fix, Green = fix OK, 80ms blink on TX
-- **OK.** Functional.
+### `idf_component.yml` (12 lines)
+- Same as root `idf_component.yml`. Version `1.0.0-beta`, description "ESP32 Remote ID Transmitter".
+- **OK.**
 
-### `CMakeLists.txt` (component)
-- Lists all .c files included
-- ❌ Includes `mav2odid.c` which is never called (see above)
-
-### `Kconfig.projbuild` — Menuconfig for LEDs
-- **OK.** Added.
+### `Kconfig.projbuild` (27 lines)
+- Menuconfig: `RID_LED_R_GPIO`, `RID_LED_G_GPIO`, `RID_LED_B_GPIO` (int, default -1/disbled).
+- **OK.** Allows configuring RGB LED pins without code changes.
 
 ---
 
-## `webui/`
+### `include/` — Headers
 
-### `config.html` — Complete Web UI (~1520 lines)
-- Dark/light theme, dashboard, forms, logs, OTA, terminal, CLI
-- **Animated splash** — Mac-style stepped bar (0→18%→42%→70%→100%), 72px logo, 6-step cycling loading text, ~3s duration
-- **Responsive** — off-canvas sidebar on ≤800px, swipe right/left, 44px min touch targets, 3 breakpoints (800/600/400px)
-- **WiFi NAN** — FIXED: checkbox enabled, bar chart, counters, purple styling
-- **Guide descriptions** — improved across all tabs (Identity, Transmission, AP, FC, Hardware, System, Security, Compliance, Console, Dashboard)
-- **Sidebar icons** — updated: Identity 🧑, FC 🛰️, Hardware 🔧, System ⚙️, Sensors 🔍 (unique, no duplicates)
-- **Bug fixes** — `setAllTx()` calls `onTxModeChange()` once (was 4x), removed `<div class="clear-both">`, Restart with `.catch()`, `#log-pane-grid` collapses to 1fr 1fr at 600px
-- ❌ **`public_keys` UI exists but lock level signature verification not implemented**
-- ❌ **UI is inline (JS + CSS inside HTML)** — ~1520 lines, hard to maintain. Optional refactor to separate html/css/js.
+#### `esp_remote_id.h` (80 lines)
+- Public API: `esp_rid_init()`, `esp_rid_start()`, `esp_rid_stop()`, callback typedef.
+- Structs: `rid_config_t`, `rid_state_t`, `rid_gps_data_t`, `rid_identity_t`.
+- Options flags: `RID_OPT_DEMO`, `RID_OPT_FORCE_ARM_OK`.
+- **Gap:** `altitude_baro` in `rid_gps_data_t` — parsed by all parsers but unused in transmission.
+- **Gap:** `RID_OPT_FORCE_ARM_OK` flag exists but may conflict with new `force_tx` logic.
 
----
+#### `opendroneid.h` (762 lines)
+- Intel Open Drone ID C library header: all ASTM enums, message types, encode/decode API.
+- **OK.** Upstream library, no modifications needed.
 
-## `mavlink/` — MAVLink v2 C dialect libraries
+#### `odid_wifi.h` (106 lines)
+- IEEE 802.11 packed structs: management frame header, beacon, SSID, rates, vendor-specific IE, NAN attributes.
+- `ODID_service_info` — message pack container.
+- **OK.**
 
-### Include chain (verified):
-```
-mavlink_parser.c  →  "ardupilotmega/mavlink.h"  →  ardupilotmega/ardupilotmega.h
-                                                         ├── common/common.h
-                                                         │     ├── protocol.h
-                                                         │     ├── mavlink_types.h
-                                                         │     ├── minimal/minimal.h
-                                                         │     └── mavlink_get_info.h
-                                                         ├── uAvionix/uAvionix.h
-                                                         └── icarous/icarous.h
-```
+#### `wifi_tx.h` (30 lines)
+- Declares: `wifi_tx_init()`, `wifi_tx_transmit()`, `wifi_tx_transmit_nan()`.
+- **OK.**
 
-- **`mavlink/ardupilotmega/`**: ✅ USED (main dialect now: `#include "ardupilotmega/mavlink.h"`)
-- **`mavlink/common/`**: ✅ USED (included by `ardupilotmega/ardupilotmega.h:1049`)
-- **`mavlink/minimal/`**: ✅ USED (included by `common/common.h:2695`)
-- **`mavlink/protocol.h`**: ✅ USED (by all dialects)
-- **`mavlink/mavlink_types.h`**: ✅ USED (by `protocol.h`)
-- **`mavlink/mavlink_get_info.h`**: ✅ USED (by `common/common.h`)
-- **`mavlink/message_definitions/common.xml`**: ✅ USED
-- **`mavlink/uAvionix/`**: 🔶 INCLUDED TRANSITIVELY (by `ardupilotmega.h:1050`) but no uAvionix messages parsed
-- **`mavlink/icarous/`**: 🔶 INCLUDED TRANSITIVELY (by `ardupilotmega.h:1051`) but no icarous messages parsed
+#### `ble_tx.h` (20 lines)
+- Declares: `ble_tx_init()`, `ble_tx_transmit_legacy()`, `ble_tx_transmit_lr()`.
+- **OK.**
 
-The following are still **UNUSED**:
+#### `mav2odid.h` (30 lines)
+- Intel MAVLink-to-ODID conversion: `m2o_*` functions.
+- ✅ Compiled and active via `mavlink_parser.c` include.
+- **Gap:** Only the high-level `m2o_convert_*` wrappers are used; lower-level scheduling helpers are dead code.
 
-- **`mavlink/standard/`**: ❌ (only `development/` includes it)
-- **`mavlink/ASLUAV/`**: ❌
-- **`mavlink/matrixpilot/`**: ❌
-- **`mavlink/development/`**: ❌
-- **`mavlink/test/`**: ❌
-- **`mavlink/mavlink_helpers.h`**: ❌ (MAVLink signing only, not implemented)
-- **`mavlink/mavlink_sha256.h`**: ❌ (only included by `mavlink_helpers.h`)
-- **`mavlink/mavlink_conversions.h`**: ❌ (only included by `mavlink_helpers.h`)
-- **All `testsuite.h`**: ❌
-- **`mavlink/message_definitions/`**: 8 out of 11 XMLs unused
+#### `protocol_detect.h` (10 lines)
+- Declares: `protocol_detect_init()`, `protocol_detect_get_protocol()`.
+- **OK.**
 
-> `uAvionix/` and `icarous/` are now included but no code uses their specific messages — harmless headers.
+#### `nmea_parser.h` (15 lines)
+- Declares: `nmea_parser_init()`, `nmea_parser_get_data()`.
+- **OK.**
 
----
+#### `msp_parser.h` (15 lines)
+- Declares: `msp_parser_init()`, `msp_parser_get_data()`.
+- **OK.**
 
-## `README.md` — Main repo documentation
-- CI badge, version, supported platforms
-- Quick start, feature table, wiring guide, build instructions
-- ❌ **Says "Hardware testing pending"** in several places. Should be updated after testing.
-- ❌ **"Features" section** lists lock level as "code complete, untested" — partially outdated (basic lock level is testable)
-- ❌ **Mentions "no extra GPS"** but firmware actually requires an FC with GPS
+#### `mavlink_parser.h` (40 lines)
+- Declares: `mavlink_parser_init()`, `mavlink_parser_get_gps()`, `mavlink_parser_get_identity()`.
+- **OK.**
 
----
+#### `web_config.h` (15 lines)
+- Declares: `web_config_init()`.
+- **OK.**
 
-## `.gitignore` — Git exclusion rules (140 lines)
-- Covers build/, sdkconfig, __pycache__, .vscode/*.json, *.bin (with exceptions)
-- ❌ `.vscode/*.json` is excluded but `!.vscode/settings.json` re-includes it — OK, intended behavior
-- **OK.** Well structured.
+#### `nvs_storage.h` (20 lines)
+- Declares: `nvs_storage_init()`, `nvs_storage_save()`, `nvs_storage_load()`, `nvs_storage_erase()`.
+- **OK.**
 
-## `.gitattributes` — EOL normalization (40 lines)
-- LF for C/py/js/json/md, CRLF for bat/ps1
+#### `led_status.h` (10 lines)
+- Declares: `led_status_init()`, `led_status_update()`.
+- **OK.**
+
+#### `rid_patrol.h` (10 lines)
+- Declares: `rid_patrol_tick()`.
+- **OK.**
+
+#### `protocol_detect.h` (10 lines)
 - **OK.**
 
 ---
 
-## `docs/` — GitHub Pages site
+### `src/` — Source Files
 
-### `index.html` — Landing page + WebSerial installer (1979 lines)
-- WebSerial flasher with `esp-web-tools`, built-in wiki, step-by-step guide
-- Native dark/light mode, responsive
-- Sections: FC compatibility, build matrix, wiring guide, flashing, FAQ
-- ❌ **Inline CSS/JS** — 1979 lines all in one file. Optional refactor to separate html/css/js.
-- 🟡 **"BETA" status** — updated from DEV to BETA (v1.0.0-beta), meta tags, version bar, release bar, footer
+#### `esp_remote_id.c` (350 lines)
+- Main orchestrator: init sequence, RTOS task loop, `update_transmissions()`, rate limiting.
+- ✅ Rate limiting: `rate_allowed()` uses `esp_timer_get_time()`.
+- ✅ WiFi NAN: called in `update_transmissions()`.
+- ✅ GPS staleness: `g_state.gps_valid` cleared after 10s no-update.
+- ✅ LED: `led_status_update()` called after each tx.
+- ✅ `force_tx` — FIXED: outer condition now only checks `latitude != 0.0` (removed `fix_type >= 2` redundancy).
+- ✅ Identity override: MAVLink ODID identity overwrites config identity when valid.
+- **OK.**
 
-### `config(demo).html` — Standalone demo UI (~2546 lines)
-- Offline copy of `config.html` for demonstration without hardware
-- Dark/light theme, all fields, full telemetry simulation
-- **Simulation engine** — `generateDemoStatus()` produces realistic status every 2s: circular GPS patrol (Rome Colosseum, 200m radius), ±15m altitude drift, ±1.2 m/s speed variation, progressive battery drain (12.2V→10.8V), per-protocol TX counters, RSSI/temperature/CPU/HEAP noise, all fields populated
-- **Dynamic logs** — `getNextDemoLogs()` generates 1-2 new entries every 4s from 12 templates with real-time GPS/alt/heading values
-- **OTA progress** — simulated progress bar with random 5-20% increments every 400ms
-- **Fetch interceptor** — covers `/api/config`, `/api/status`, `/api/logs`, `/api/command`, `/api/reset`, `/ota` with realistic responses
-- **Log format** — fixed to `{l, t, m}` (was `{ts, msg, level}`, incompatible with `renderTermTo`)
-- **Config fixes** — `wifi_bcn_rate_hz: 1` (was 100), `tx_modes: 13` (was 7), `ua_type: 2` (was 1), added missing fields (`fw_version`, `build_date`, `cpu_load`, `battery`, `dop`, etc.)
-- ❌ **Not automatically synchronized** with `config.html` — every change must be manually ported
+#### `wifi.c` (614 lines)
+- IEEE 802.11 frame builder: NAN sync beacon, NAN action frame, legacy beacon, message pack.
+- From Intel ODID library. Stable.
+- **OK.**
 
-### `manifest.json` — WebSerial firmware manifest (33 lines)
-- 3 chipFamily (ESP32, ESP32-S3, ESP32-C3) with bootloader and partition offsets
-- ❌ **Missing esp32s2, esp32c2, esp32c6** — CI generates dynamic manifest but this static file in docs/ is outdated
-- ❌ **Hardcoded version** "0.1.0-dev" — not updated
+#### `wifi_tx.c` (204 lines)
+- `wifi_tx_init()`: SoftAP + promiscuous mode, random MAC generation.
+- `wifi_tx_transmit()`: builds legacy beacon via `esp_wifi_80211_tx()`.
+- `wifi_tx_transmit_nan()`: builds NAN action frame.
+- ✅ Refactored: duplicate `g_uas_data` population → shared `populate_uas_data()`.
+- **OK.**
 
-### `images/` — Graphic assets (5 files)
-- `logo.svg`, `logo con scritta.svg`, `ardupilot_logo.webp`, `betaflight_logo.svg`, `inav_logo.png`
+#### `ble_tx.c` (183 lines)
+- BLE 4.0 legacy advertising + BLE 5.0 Long Range (Coded PHY).
+- ✅ `ble_tx_transmit_legacy()` uses `ADV_TYPE_SCAN_IND` for better compatibility.
+- **Gap:** BLE 5.0 LR Coded PHY requires ESP32-S3/C3 hardware — marked Beta.
+
+#### `web_config.c` (463 lines)
+- HTTP server: serves `config.html`, REST API (`/api/config`, `/api/status`, `/api/command`, `/api/logs`), OTA endpoint.
+- ✅ Lock level: basic check blocks destructive commands at level ≥ 1, OTA at level ≥ 2.
+- ✅ eFuse burn: writes `"RID!"` magic to `EFUSE_BLK3` on transition to level 2; `get_lock_level()` reads eFuse.
+- ✅ OTA SHA-256: `X-Expected-SHA256` header mandatory. Rejects missing/mismatched hash.
+- **Gap:** No public-key signature verification for lock level changes (UI has placeholder fields).
+
+#### `protocol_detect.c` (75 lines)
+- UART auto-detect: `$M<` → MSP, `$G/$N` → NMEA, `0xFE/0xFD` → MAVLink.
+- **OK.**
+
+#### `nmea_parser.c` (136 lines)
+- Parses GGA + RMC sentences. Extracts lat/lon/alt/speed/heading/fix/sat.
+- ✅ `altitude_baro` populated via MSL altitude fallback.
+- **OK.**
+
+#### `msp_parser.c` (126 lines)
+- Parses MSP_RAW_GPS (106), MSP_ATTITUDE (108), MSP_STATUS (101).
+- ✅ `altitude_baro` populated via MSL altitude fallback.
+- **OK.**
+
+#### `mavlink_parser.c` (180 lines)
+- Parses GLOBAL_POSITION_INT, GPS_RAW_INT, VFR_HUD, ATTITUDE, HEARTBEAT.
+- ✅ AHRS2: supports ArduPilot secondary heading.
+- ✅ OPEN_DRONE_ID_LOCATION: lat/lon/alt/vel/heading + altitude_baro.
+- ✅ OPEN_DRONE_ID_BASIC_ID: UAS ID, id_type, ua_type.
+- ✅ OPEN_DRONE_ID_OPERATOR_ID: operator_id.
+- ✅ OPEN_DRONE_ID_SYSTEM: operator lat/lon for GPS fallback.
+- ✅ `altitude_baro` from OPEN_DRONE_ID_LOCATION.
+- ✅ `mavlink_parser_get_identity()` — returns parsed ODID identity.
+- Dialect: `ardupilotmega/mavlink.h` (was `common/mavlink.h`).
+- 5s GPS timeout, 10s identity timeout.
+- **OK.**
+
+#### `mav2odid.c` (636 lines)
+- Intel MAVLink-to-ODID conversion library. Scheduling, buffer management, message conversion.
+- ✅ Compiled and linked via `mavlink_parser.c` include.
+- **Gap:** High-level scheduling logic unused; only `m2o_convert_*` wrappers reachable.
+
+#### `opendroneid.c` (1477 lines)
+- Intel ODID encode/decode library. All ASTM message types.
+- **OK.** Upstream stable.
+
+#### `nvs_storage.c` (174 lines)
+- NVS persistence for `rid_config_t` in namespace `esp_rid`.
+- **OK.**
+
+#### `led_status.c` (76 lines)
+- RGB LED via 3 configurable GPIOs (Kconfig). Red=no fix, Green=fix OK, 80ms blink on TX.
+- **OK.**
+
+#### `rid_patrol.c` (31 lines)
+- Demo GPS patrol simulation: Rome Colosseum (41.9028, 12.4964), 200m radius, 6 m/s, altitude drift, heading calc.
 - **OK.**
 
 ---
 
-## `.github/`
+### `webui/` — Embedded Configuration UI
 
-### `workflows/build.yml` — CI build + Pages deploy (193 lines)
-- Matrix 6 targets (esp32, esp32s2, esp32s3, esp32c2, esp32c3, esp32c6) ✅
-- Partition/flash/BLE conditionals per target ✅
-- ccache for faster builds ✅
-- download-artifact with `firmware-*` pattern ✅
-- Dynamically generated `manifest.json` with Python ✅
-- GitHub Pages deploy on push to main ✅
-- **OK.** Functional.
+#### `config.html` (~1520 lines)
+- Full configuration and control web interface (inline JS + CSS + HTML).
+- Dark/light theme, dashboard, forms, logs, OTA, terminal, CLI.
+- ✅ Animated splash (Mac-style stepped progress bar).
+- ✅ Responsive (off-canvas sidebar, 3 breakpoints).
+- ✅ WiFi NAN checkbox, bar chart, counters, purple styling.
+- ✅ Guide descriptions on all tabs.
+- ✅ Bug fixes: `setAllTx()` single call, Restart with `.catch()`, log pane grid.
+- **Gap:** Lock level signature verification UI exists but no backend implementation.
+- **Gap:** Inline only (~1520 lines) — optional refactor to separate files.
 
-### `workflows/release.yml` — Release on tag v* (308 lines)
-- Matrix 6 targets, aligned with `build.yml` ✅
-- Generates zip per target + manifest.json ✅
-- Release notes with auto-changelog (`git log`) ✅
-- GitHub Pages deploy also on release ✅
-- **OK.** Functional.
+---
 
-### `dependabot.yml` — Automatic updates
-- `package-ecosystem: "github-actions"`, weekly schedule
+## `mavlink/` — MAVLink v2 C Dialect Headers (auto-generated by `mavlink/generate.sh`)
+
+### Active (used in build)
+| Path | Status |
+|------|--------|
+| `ardupilotmega/` (whole dialect) | ✅ Used (`mavlink_parser.c` includes `ardupilotmega/mavlink.h`) |
+| `common/` | ✅ Included by `ardupilotmega/ardupilotmega.h` |
+| `minimal/` | ✅ Included by `common/common.h` |
+| `protocol.h` | ✅ Core MAVLink protocol |
+| `mavlink_types.h` | ✅ Core types |
+| `mavlink_get_info.h` | ✅ Included by `common/common.h` |
+| `uAvionix/` | 🔶 Included transitively by `ardupilotmega.h` but no uAvionix messages parsed |
+| `icarous/` | 🔶 Included transitively but unused |
+
+### Unused (can be pruned)
+| Path | Reason |
+|------|--------|
+| `standard/` | Only `development/` includes it |
+| `development/` | Not included by any active dialect |
+| `ASLUAV/` | Unused dialect |
+| `matrixpilot/` | Unused dialect |
+| `test/` | Test data only |
+| `mavlink_helpers.h` | Signing not implemented |
+| `mavlink_sha256.h` | Only in `mavlink_helpers.h` |
+| `mavlink_conversions.h` | Only in `mavlink_helpers.h` |
+| All `testsuite.h` | Test data |
+| 8 of 11 `message_definitions/*.xml` | Unused definitions |
+
+---
+
+## `ESP_DRONE_REMOTEID_ANALIZER/` — Python Analyzer (standalone package)
+
+### Package Structure
+
+#### `__init__.py` (3 lines)
+- Package marker. Exports `__version__ = "1.0.0-dev"`.
 - **OK.**
 
-### `PULL_REQUEST_TEMPLATE.md` — PR template
-- Checklist: coding style, hardware test, docs, build, warnings
+#### `__main__.py` (5 lines)
+- Entry point: `python -m ESP_DRONE_REMOTEID_ANALIZER` → launches GUI.
+- Calls `gui.main()`.
 - **OK.**
 
-### `ISSUE_TEMPLATE/bug_report.md` — Bug report template
-- Fields: hardware, firmware, config, console output
+#### `capture.py` (176 lines)
+- WiFi beacon capture via Scapy (`sniff` on Dot11Beacon frames).
+- `RIDCapture` class: interface listing, monitor-mode helpers (Linux/macOS/Windows).
+- Callback-based: `on_packet(data)` receives parsed RSSI, source MAC, summary.
+- **Gap:** Requires monitor-mode WiFi adapter + root/admin privileges. Not available on all hardware.
+- **Gap:** Scapy is a heavy dependency (~30 MB installed).
+
+#### `decoder.py` (510 lines)
+- Pure Python ASTM F3411-22a packet decoder.
+- All message types: Basic ID, Location, Auth, Self-ID, System, Operator ID.
+- `extract_odid_from_beacon()` — parses raw 802.11 beacon payload → ODID data.
+- `format_summary()` — one-line human-readable summary of a decoded packet.
+- **OK.** Comprehensive.
+
+#### `server.py` (197 lines)
+- WebSocket broadcast server (`simple-websocket-server`).
+- `BroadcastServer` — receives decoded packets from capture, broadcasts JSON to all WebSocket clients.
+- `RIDDevice` dataclass: per-device state (MAC, RSSI samples, basic ID, operator ID, location, system).
+- Device deduplication + 60s stale timeout.
 - **OK.**
 
-### `ISSUE_TEMPLATE/feature_request.md` — Feature request template
-- Fields: description, proposed solution, affected protocols
+#### `rid_cli.py` (115 lines)
+- Headless CLI: `rid-capture`, `rid-scan`, `rid-monitor`, `rid-listen`, `rid-list-ifaces`.
+- argparse-based subcommands.
+- `cmd_capture()` — live packet capture to stdout.
+- `cmd_scan()` — tabular device listing.
+- `cmd_monitor()` — continuous real-time display.
+- **OK.**
+
+#### `gui.py` (109 lines)
+- Native desktop window via `pywebview`.
+- `run_backend()` — starts WebSocket server + capture thread + HTTP file server for web UI.
+- `main()` — opens webview window pointing to local HTTP server.
+- **Gap:** `pywebview` optional — fallback to browser.
+
+#### `build.spec` (56 lines)
+- PyInstaller spec for Windows executable.
+- Bundles `web/` HTML/JS/CSS as data files.
+- **OK.**
+
+#### `requirements.txt` (14 lines)
+- `scapy>=2.5.0` — WiFi capture
+- `simple-websocket-server>=0.4.0` — WebSocket bridge
+- `pywebview>=4.4.1` — optional native window
+- **OK.**
+
+#### `ESP_DRONE_REMOTEID_ANALIZER.py` / `main_analyzer.pyw`
+- ❌ **Removed** from current tree (deprecated launchers).
+
+### Analyzer Web UI (`web/`)
+
+#### `index.html` (94 lines)
+- Analyzer web UI: tabs (Devices, Map, Timeline, About).
+- Leaflet map, device table, packet log.
+- **OK.**
+
+#### `app.js` (438 lines)
+- WebSocket client, device table rendering, RSSI chart, packet rate chart, Leaflet map markers.
+- Dark mode toggle, stats (devices, IDs, packets/min).
+- **OK.**
+
+#### `style.css` (176 lines)
+- Dark/light theme, responsive layout, badge/tab/table styles.
 - **OK.**
 
 ---
 
-## `.vscode/` — ✅ Fixed: removed absolute Windows paths
+## `.github/` — CI/CD & Community
 
-### `c_cpp_properties.json` — C/C++ IntelliSense
-- Compiler path: local `xtensa-esp32-elf-gcc.exe`
-- `compileCommands` from `build/compile_commands.json`
-- ✅ **Removed hardcoded absolute paths** — uses `${workspaceFolder}` and IDF extension variables
+### `workflows/build.yml` (193 lines)
+- CI on push/PR to main. Matrix: 6 targets (esp32, s2, s3, c2, c3, c6).
+- Partition overrides per target (`partitions_2mb.csv` for C2).
+- ccache, Python manifest generation, GitHub Pages deploy.
+- **OK.**
 
-### `launch.json` — Debug config
-- Only "Eclipse CDT GDB Adapter" attach
-- ❌ **Minimal configuration** — missing real debug profiles (e.g. OpenOCD + gdb)
+### `workflows/release.yml` (308 lines)
+- Trigger: tag `v*`. Same 6-target matrix.
+- Generates zip per target + `manifest.json`, GitHub Release with auto-changelog.
+- GitHub Pages deploy.
+- **OK.**
 
-### `settings.json` — VSCode workspace settings
-- Clangd config + IDF extension config
-- ✅ **Removed `idf.currentSetup`** (auto-detected from env), **removed absolute `clangd.path`** (resolved by extension)
+### `dependabot.yml` (13 lines)
+- Weekly updates for GitHub Actions. Europe/Rome timezone.
+- **OK.**
+
+### `ISSUE_TEMPLATE/bug_report.md` (45 lines)
+- Hardware (ESP32 model, board, antenna, FC, GPS), firmware (version, target, protocol), config, console output.
+- **OK.**
+
+### `ISSUE_TEMPLATE/feature_request.md` (25 lines)
+- Problem, solution, alternatives, affected protocols (MAVLink/MSP/NMEA/All).
+- **OK.**
+
+### `PULL_REQUEST_TEMPLATE.md` (38 lines)
+- Checklist: coding style, hardware test, docs, build, warnings.
+- **OK.**
+
+---
+
+## `.vscode/` — Editor Configuration
+
+### `settings.json` (30 lines)
+- Clangd config + IDF extension config.
+- ✅ Absolute paths removed; uses `${workspaceFolder}` and extension variables.
+
+### `launch.json` (10 lines)
+- "Eclipse CDT GDB Adapter" attach config only.
+- **Gap:** No OpenOCD or JTAG debug profiles.
+
+### `c_cpp_properties.json` (20 lines)
+- ESP-IDF IntelliSense config. Compiler path, `compileCommands`, include paths.
+- **Gap:** Hardcoded local compiler path (`C:\\Espressif\\tools\\...`).
+
+---
+
+## `docs/` — GitHub Pages Site
+
+### `index.html` (1979 lines)
+- Landing page: WebSerial ESP Web Tools installer, built-in wiki, wiring guide, flashing guide, FAQ, release bar.
+- Dark/light mode, responsive (3 breakpoints), reading progress bar, TOC panel, lightbox for diagrams.
+- ✅ BETA status (was DEV), meta tags, version bar, release bar, footer.
+- **Gap:** Inline CSS/JS — optional refactor.
+- **Gap:** Static `manifest.json` in docs/ (see below).
+
+### `config(demo).html` (~2546 lines)
+- Standalone offline demo of config UI. Full telemetry simulation:
+  - GPS circular patrol (Rome Colosseum, 200m radius, ±15m altitude drift)
+  - Battery drain (12.2V→10.8V), per-protocol counters, RSSI/noise, CPU/HEAP
+  - Dynamic logs from 12 templates, simulated OTA progress bar
+  - Fetch interceptor covers all `/api/*` endpoints
+- ✅ Splash, responsive, icons, descriptions ported from config.html.
+- **Gap:** Must be manually synced with `config.html` changes.
+
+### `manifest.json` (33 lines)
+- ESP Web Tools firmware manifest: 3 chip families (ESP32, S3, C3).
+- **Gap:** Missing esp32s2, esp32c2, esp32c6.
+- **Gap:** Hardcoded version `0.1.0-dev` (should be auto-generated from CI).
+
+### `images/` (5 files)
+- `logo.svg`, `logo con scritta.svg` — project logos.
+- `ardupilot_logo.webp`, `betaflight_logo.svg`, `inav_logo.png` — FC compatibility icons.
+- **OK.**
+
+---
+
+## Root Files
+
+### `README.md` (~120 lines)
+- Project overview, CI badges, supported platforms, quick start, wiring, build.
+- ✅ Updated: removed "hardware testing pending" notes.
+- **Gap:** Mentions "no extra GPS needed" — firmware actually requires FC with GPS or demo mode.
+
+### `.gitignore` (140 lines)
+- Covers: build/, sdkconfig, __pycache__, *.bin, .vscode/*.json.
+- `!.vscode/settings.json` — intentionally re-includes.
+- **OK.**
+
+### `.gitattributes` (40 lines)
+- LF normalization for C/PY/JS/JSON/MD/YML/YAML; CRLF for BAT/PS1.
+- **OK.**
+
+### `LICENSE`
+- ❌ **Not found** in repository. Should be Apache 2.0 (derived from Intel ODID).
+
+---
+
+## `todolist/` — Documentation & Assets
+
+### `softwarestatus.md` (this file)
+- Comprehensive per-file analysis.
+- **OK** (self-referencing).
+
+### `guide.md`, `build_guide.md`, `faq.md`, `firmware_flashing_guide.md`
+- ❌ **Removed from tree.** No longer present in `todolist/` (only `softwarestatus.md` remains).
+- Content may have been merged into `docs/index.html`.
+
+### `3D_case/`
+- ❌ **Not in current tree.** STL/F3D files for 3D-printable enclosure.
+- May have been relocated or removed.
 
 ---
 
@@ -325,25 +465,109 @@ The following are still **UNUSED**:
 
 | Priority | Item | Location | Status |
 |----------|------|----------|--------|
-| ✅ RESOLVED | `altitude_baro` populated by all parsers (NMEA/MSP fallback from MSL) | `nmea_parser.c`, `msp_parser.c` | ✅ Done |
-| ✅ RESOLVED | Redundant `force_tx` logic (inner check removed, outer now only checks latitude) | `esp_remote_id.c` | ✅ Done |
-| ✅ RESOLVED | `README.md` says "hardware testing pending" | `README.md` | ✅ Done |
-| ✅ RESOLVED | `docs/manifest.json` hardcoded (missing targets) — added esp32s2/c2/c6, bumped to 1.0.0-beta | `docs/manifest.json` | ✅ Done |
-| ✅ RESOLVED | `docs/config(demo).html` not synced with `config.html` — ported splash, responsive, icons, descriptions, completed simulation engine | `config(demo).html` | ✅ Done |
-| ✅ RESOLVED | `idf_component.yml` description was already correct ("Transmitter") | `idf_component.yml` | ✅ Done |
-| ✅ RESOLVED | `docs/index.html` DEV→BETA status, meta tags, version bar, release bar, footer updated | `docs/index.html` | ✅ Done |
-| 🟡 MEDIUM | Lock level 2: eFuse burn not implemented | `web_config.c` | ✅ Done |
-| 🟡 MEDIUM | `sdkconfig` tracked in git (generated) — no longer tracked | Already resolved | ✅ Done |
-| 🟢 LOW | BLE 4.0 uses `ADV_TYPE_NONCONN_IND` — changed to SCAN_IND | `ble_tx.c` | ✅ Done |
-| 🟢 LOW | OTA does not validate checksum/authentication — SHA-256 now mandatory | `web_config.c` | ✅ Done |
-| 🟢 LOW | Duplicate `g_uas_data` population in `wifi_tx.c` — refactored | Optional refactor | ✅ Done |
-| 🟢 LOW | `.vscode/` Windows absolute paths — removed | `.vscode/*.json` | ✅ Done |
-| 🟢 LOW | `config.html` inline — optional refactor | `config.html` | ❌ Optional |
-| 🟢 LOW | `docs/index.html` inline (1979 lines) | Optional refactor | ❌ Optional |
-| ✅ RESOLVED | `mav2odid.c` integrated into `mavlink_parser.c` | `mavlink_parser.c` + `mav2odid.h` | ✅ Done |
-| ✅ RESOLVED | `ardupilotmega/` now main MAVLink dialect | `mavlink_parser.c` | ✅ Done |
-| ✅ RESOLVED | `AHRS2` secondary heading from ArduPilot | `mavlink_parser.c` | ✅ Done |
-| ✅ RESOLVED | Identity from MAVLink ODID overrides config | `esp_remote_id.c` | ✅ Done |
-| ✅ RESOLVED | `altitude_baro` populated by MAVLink ODID Location | `mavlink_parser.c` | ✅ Done |
-| ✅ RESOLVED | Splash animato, responsive redesign, guide descriptions, icons, bug fixes | `webui/config.html` | ✅ Done |
-| ✅ RESOLVED | Demo simulation engine (GPS patrol, battery drain, dynamic logs, OTA progress) | `docs/config(demo).html` | ✅ Done |
+| 🔴 HIGH | `sdkconfig` tracked in git | root | ❌ Remove from tracking |
+| 🔴 HIGH | `LICENSE` missing | root | ❌ Must be added |
+| 🔴 HIGH | `docs/manifest.json` missing targets + wrong version | `docs/manifest.json` | ❌ Needs update (static fallback) |
+| 🟡 MEDIUM | Lock level signature verification | `web_config.c` + `config.html` | ❌ UI exists, backend missing |
+| 🟡 MEDIUM | BLE 5.0 LR Coded PHY = Beta | `ble_tx.c` | 🟡 Needs testing on S3/C3 |
+| 🟡 MEDIUM | Analyzer requires monitor mode + root | `capture.py` | 🟡 Hardware limitation |
+| 🟢 LOW | `c_cpp_properties.json` hardcoded path | `.vscode/c_cpp_properties.json` | 🟡 Windows-specific |
+| 🟢 LOW | `launch.json` no debug profiles | `.vscode/launch.json` | ❌ Only GDB attach |
+| 🟢 LOW | `config(demo).html` manual sync needed | `docs/config(demo).html` | 🟡 Maintenance burden |
+| 🟢 LOW | `config.html` inline (1520 lines) | `webui/config.html` | Optional refactor |
+| 🟢 LOW | `docs/index.html` inline (1979 lines) | `docs/index.html` | Optional refactor |
+| ✅ DONE | `altitude_baro` populated by all parsers | All parsers | ✅ |
+| ✅ DONE | `force_tx` redundant logic fixed | `esp_remote_id.c` | ✅ |
+| ✅ DONE | MAVLink ODID identity override | `mavlink_parser.c` + `esp_remote_id.c` | ✅ |
+| ✅ DONE | eFuse lock level 2 burn | `web_config.c` | ✅ |
+| ✅ DONE | OTA SHA-256 mandatory | `web_config.c` | ✅ |
+| ✅ DONE | WiFi NAN enabled + UI | `wifi_tx.c` + `config.html` | ✅ |
+| ✅ DONE | BLE SCAN_IND (nonconn→scan) | `ble_tx.c` | ✅ |
+| ✅ DONE | Duplicate UAS data refactored | `wifi_tx.c` | ✅ |
+| ✅ DONE | `.vscode/` absolute paths removed | `.vscode/*.json` | ✅ |
+| ✅ DONE | Demo GPS patrol mode | `rid_patrol.c` + `main.c` | ✅ |
+| ✅ DONE | `idf_component.yml` description | `idf_component.yml` | ✅ |
+| ✅ DONE | `docs/index.html` BETA status | `docs/index.html` | ✅ |
+| ✅ DONE | `README.md` outdated notes removed | `README.md` | ✅ |
+| ✅ DONE | `docs/config(demo).html` simulation engine | `docs/config(demo).html` | ✅ |
+
+---
+
+## File Inventory (complete)
+
+| # | File | Lines | Status |
+|---|------|-------|--------|
+| 1 | `ESP32_DRONE_REMOTE_ID_Firmware/CMakeLists.txt` | 18 | ✅ |
+| 2 | `ESP32_DRONE_REMOTE_ID_Firmware/sdkconfig.defaults` | 1 | ✅ |
+| 3 | `ESP32_DRONE_REMOTE_ID_Firmware/sdkconfig` | 3461 | ❌ generated (tracked) |
+| 4 | `ESP32_DRONE_REMOTE_ID_Firmware/partitions.csv` | 7 | ✅ |
+| 5 | `ESP32_DRONE_REMOTE_ID_Firmware/partitions_2mb.csv` | 7 | ✅ |
+| 6 | `ESP32_DRONE_REMOTE_ID_Firmware/idf_component.yml` | 12 | ✅ |
+| 7 | `ESP32_DRONE_REMOTE_ID_Firmware/main/CMakeLists.txt` | 3 | ✅ |
+| 8 | `ESP32_DRONE_REMOTE_ID_Firmware/main/main.c` | 90 | ✅ |
+| 9 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/CMakeLists.txt` | 44 | ✅ |
+| 10 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/idf_component.yml` | 12 | ✅ |
+| 11 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/Kconfig.projbuild` | 27 | ✅ |
+| 12 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/esp_remote_id.h` | 80 | ✅ |
+| 13 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/opendroneid.h` | 762 | ✅ |
+| 14 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/odid_wifi.h` | 106 | ✅ |
+| 15 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/wifi_tx.h` | 30 | ✅ |
+| 16 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/ble_tx.h` | 20 | ✅ |
+| 17 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/mav2odid.h` | 30 | ✅ |
+| 18 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/protocol_detect.h` | 10 | ✅ |
+| 19 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/nmea_parser.h` | 15 | ✅ |
+| 20 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/msp_parser.h` | 15 | ✅ |
+| 21 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/mavlink_parser.h` | 40 | ✅ |
+| 22 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/web_config.h` | 15 | ✅ |
+| 23 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/nvs_storage.h` | 20 | ✅ |
+| 24 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/led_status.h` | 10 | ✅ |
+| 25 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/rid_patrol.h` | 10 | ✅ |
+| 26 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/esp_remote_id.c` | 350 | ✅ |
+| 27 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
+| 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
+| 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
+| 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 463 | ✅ |
+| 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
+| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
+| 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
+| 34 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mavlink_parser.c` | 180 | ✅ |
+| 35 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mav2odid.c` | 636 | ✅ (partial use) |
+| 36 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/opendroneid.c` | 1477 | ✅ |
+| 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
+| 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 76 | ✅ |
+| 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
+| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~1520 | ✅ |
+| 41-120 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
+| 121 | `ESP_DRONE_REMOTEID_ANALIZER/__init__.py` | 3 | ✅ |
+| 122 | `ESP_DRONE_REMOTEID_ANALIZER/__main__.py` | 5 | ✅ |
+| 123 | `ESP_DRONE_REMOTEID_ANALIZER/capture.py` | 176 | ✅ |
+| 124 | `ESP_DRONE_REMOTEID_ANALIZER/decoder.py` | 510 | ✅ |
+| 125 | `ESP_DRONE_REMOTEID_ANALIZER/server.py` | 197 | ✅ |
+| 126 | `ESP_DRONE_REMOTEID_ANALIZER/rid_cli.py` | 115 | ✅ |
+| 127 | `ESP_DRONE_REMOTEID_ANALIZER/gui.py` | 109 | ✅ |
+| 128 | `ESP_DRONE_REMOTEID_ANALIZER/build.spec` | 56 | ✅ |
+| 129 | `ESP_DRONE_REMOTEID_ANALIZER/requirements.txt` | 14 | ✅ |
+| 130 | `ESP_DRONE_REMOTEID_ANALIZER/web/index.html` | 94 | ✅ |
+| 131 | `ESP_DRONE_REMOTEID_ANALIZER/web/app.js` | 438 | ✅ |
+| 132 | `ESP_DRONE_REMOTEID_ANALIZER/web/style.css` | 176 | ✅ |
+| 133 | `docs/index.html` | 1979 | ✅ (inline) |
+| 134 | `docs/config(demo).html` | ~2546 | ✅ |
+| 135 | `docs/manifest.json` | 33 | ❌ missing targets |
+| 136 | `docs/images/logo.svg` | — | ✅ |
+| 137 | `docs/images/logo con scritta.svg` | — | ✅ |
+| 138 | `docs/images/ardupilot_logo.webp` | — | ✅ |
+| 139 | `docs/images/betaflight_logo.svg` | — | ✅ |
+| 140 | `docs/images/inav_logo.png` | — | ✅ |
+| 141 | `.github/workflows/build.yml` | 193 | ✅ |
+| 142 | `.github/workflows/release.yml` | 308 | ✅ |
+| 143 | `.github/dependabot.yml` | 13 | ✅ |
+| 144 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
+| 145 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
+| 146 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
+| 147 | `.vscode/settings.json` | 30 | ✅ |
+| 148 | `.vscode/launch.json` | 10 | 🟡 minimal |
+| 149 | `.vscode/c_cpp_properties.json` | 20 | 🟡 hardcoded path |
+| 150 | `README.md` | ~120 | ✅ |
+| 151 | `.gitignore` | 140 | ✅ |
+| 152 | `.gitattributes` | 40 | ✅ |
+| 153 | `todolist/softwarestatus.md` | — | ✅ (this file) |

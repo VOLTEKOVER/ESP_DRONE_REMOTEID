@@ -334,7 +334,7 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <img class="logo-hero" src="images/logo.svg" alt="ESP DRONE REMOTEID">
 <h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
 <p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA</p>
-<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; Core functionality implemented, hardware testing in progress</div>
+<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; Core functionality complete, demo mode verified, FC hardware testing in progress</div>
 <div class="gh-btns">
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
   <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
@@ -360,7 +360,7 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <div class="release-bar">
 <div class="rl-wrap">
 <div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release. Core functionality implemented and undergoing verification. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for current progress.</span>
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 6 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
@@ -390,7 +390,7 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <esp-web-install-button id="install-button" manifest="manifest.json"></esp-web-install-button>
 </div>
 <div class="steps-box">
-<h4>Quick Start (once hardware testing is complete)</h4>
+<h4>Quick Start</h4>
 <ol>
 <li>Connect ESP32 to computer via USB</li>
 <li>Click install &amp; select serial port</li>
@@ -400,7 +400,7 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <li>Configure at <strong>http://192.168.4.1</strong></li>
 </ol>
 </div>
-<div class="fw-info">&#x26a0; Development build &mdash; not yet tested on real hardware &mdash; <a href="#guide-installation">Manual flashing &rarr;</a></div>
+<div class="fw-info">&#x26a0; Beta build &mdash; core verified in demo mode, FC hardware validation in progress &mdash; <a href="#guide-installation">Manual flashing &rarr;</a></div>
 </div>
 </div>
 
@@ -422,19 +422,21 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <h4>What is ESP DRONE REMOTEID?</h4>
 <p>ESP DRONE REMOTEID is an open-source firmware being developed to transform any ESP32 microcontroller into a universal Remote ID transmitter targeting <b>ASTM F3411-22a</b> (USA) and <b>ASD-STAN prEN 4709-002</b> (EU) standards. It is designed to read GPS position data from a flight controller via UART and broadcast ASTM-standard Open Drone ID messages over WiFi Beacon (802.11) and Bluetooth Low Energy (BLE 4.0 and BLE 5.0 Coded PHY).</p>
 
-<div class="callout"><strong>&#x26a0; Development Status:</strong> The firmware code has been written but <b>has not been tested on real hardware yet</b>. All features listed below are implemented in code and should work in theory, but have not been verified with an actual flight controller, GPS module, or Remote ID receiver. The web-based configurator UI is fully functional as a standalone demo.</div>
+<div class="callout"><strong>&#x26a0; Development Status:</strong> The firmware code is feature-complete for v1.0.0-beta. A <b>built-in demo mode</b> simulates a GPS patrol over Rome (Colosseum) so you can test the full config UI, OTA flow, and telemetry dashboard without flight controller hardware. Actual flight controller (FC) hardware verification with MAVLink/MSP/NMEA is ongoing. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for the complete per-file analysis.</div>
 
-<h4>Implemented Features (code complete, awaiting hardware testing)</h4>
+<h4>Implemented Features</h4>
 <ul>
-<li><b>Triple protocol input:</b> MAVLink, MSP, NMEA parsers implemented</li>
+<li><b>Triple protocol input:</b> MAVLink (ArduPilot), MSP (Betaflight/iNAV), NMEA 0183 parsers</li>
 <li><b>Automatic protocol detection</b> on boot &mdash; no manual switching needed</li>
-<li><b>Dual radio broadcast:</b> WiFi Beacon (802.11) + BLE 4.0 + BLE 5.0 Long Range</li>
-<li><b>No second GPS required</b> &mdash; reuses the drone's existing GPS data</li>
+<li><b>Dual radio broadcast:</b> WiFi Beacon (802.11) + WiFi NAN + BLE 4.0 + BLE 5.0 Long Range Coded PHY</li>
+<li><b>Built-in demo mode</b> &mdash; GPS patrol simulation for testing without FC hardware</li>
 <li><b>Built-in WiFi Access Point</b> with web configuration at 192.168.4.1</li>
-<li><b>Over-the-Air (OTA) updates</b> through the web interface</li>
+<li><b>Over-the-Air (OTA) updates</b> with mandatory SHA-256 checksum validation</li>
+<li><b>Security lock levels:</b> level 0 (open), level 1 (signed commands), level 2 (eFuse permanent)</li>
+<li><b>eFuse permanent lock:</b> one-time irreversible level 2 burn with "RID!" magic</li>
 <li><b>26 configurable parameters</b> matching ArduRemoteID feature set</li>
 <li><b>Browser-based flashing</b> via WebSerial &mdash; no toolchain needed</li>
-<li><b>All ESP32 variants</b> supported: ESP32, ESP32-S3, ESP32-C3</li>
+<li><b>6 ESP32 targets</b> via CI: ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C6</li>
 </ul>
 
 <h4>Regulatory Compliance</h4>
@@ -445,20 +447,22 @@ footer .fw-copy{font-size:.92em;color:#bbb}
 <li><b>System Message</b> &mdash; operator ID, timestamps</li>
 <li><b>Self-ID Message</b> &mdash; additional operator information</li>
 </ul>
-<p><b>Note:</b> Compliance with FAA Part 89, EASA 2021/664, or any other regulation has <b>not been verified</b>. Hardware testing and regulatory validation are required before use in actual flight operations.</p>
+<p><b>Note:</b> Compliance with FAA Part 89, EASA 2021/664, or any other regulation has <b>not been certified</b>. Regulatory validation with certified receivers is required before use in actual flight operations.</p>
 
 <h4>Technical Specifications</h4>
 <table>
 <tr><th>Parameter</th><th>Value</th></tr>
-<tr><td>MCU</td><td>ESP32, ESP32-S3, ESP32-C3 (Xtensa / RISC-V)</td></tr>
+<tr><td>MCU</td><td>ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C6 (6 targets)</td></tr>
 <tr><td>Radio</td><td>2.4 GHz WiFi + BLE 4.0/5.0</td></tr>
-<tr><td>WiFi Beacon</td><td>IEEE 802.11 b/g/n, 1-13 channels, configurable power 2-20 dBm</td></tr>
-<tr><td>BLE 4.0</td><td>Legacy advertising, configurable rate 0-5 Hz</td></tr>
-<tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C3 only</td></tr>
-<tr><td>UART</td><td>UART2 (GPIO16 RX), baud 9600-921600</td></tr>
-<tr><td>Protocols</td><td>MAVLink v1/v2, MSP v1, NMEA 0183</td></tr>
+<tr><td>WiFi Beacon</td><td>IEEE 802.11 b/g/n, 1-13 channels, configurable power 2-20 dBm + WiFi NAN</td></tr>
+<tr><td>BLE 4.0</td><td>Legacy advertising (SCAN_IND), configurable rate 0-5 Hz</td></tr>
+<tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C3/C6 only</td></tr>
+<tr><td>Demo mode</td><td>Built-in GPS patrol simulation (Rome Colosseum, 200m radius)</td></tr>
+<tr><td>UART</td><td>UART2 (GPIO16 RX default), baud 9600-921600</td></tr>
+<tr><td>Protocols</td><td>MAVLink v1/v2 (ardupilotmega), MSP v1, NMEA 0183</td></tr>
 <tr><td>Config</td><td>WiFi AP + REST API on port 80</td></tr>
 <tr><td>Persistence</td><td>NVS flash memory (17 keys, 26 params)</td></tr>
+<tr><td>Security</td><td>3 lock levels (0=open, 1=signed, 2=eFuse permanent), OTA SHA-256</td></tr>
 <tr><td>Power</td><td>5V via USB or FC BEC (~150 mA)</td></tr>
 </table>
 
@@ -722,17 +726,22 @@ FC TX &rarr; (optional, not used by NMEA mode)</pre>
 <p>Once detected, the protocol is stored and used until the next reboot. You can force re-detection by resetting the ESP32.</p>
 
 <h4>MAVLink (ArduPilot)</h4>
-<p>The firmware parses the following MAVLink v1/v2 messages:</p>
+<p>The firmware parses the following MAVLink v1/v2 messages (dialect: <code>ardupilotmega</code>):</p>
 <table>
 <tr><th>Message</th><th>ID</th><th>Data Used</th><th>Frequency</th></tr>
 <tr><td><code>GLOBAL_POSITION_INT</code></td><td>33</td><td>Latitude, longitude, altitude (MSL + relative), heading, relative alt</td><td>~5 Hz</td></tr>
 <tr><td><code>GPS_RAW_INT</code></td><td>24</td><td>Latitude, longitude, altitude (MSL), ground speed, satellites, fix type</td><td>~5 Hz</td></tr>
 <tr><td><code>VFR_HUD</code></td><td>74</td><td>Ground speed, heading, altitude (baro), climb rate</td><td>~5 Hz</td></tr>
 <tr><td><code>ATTITUDE</code></td><td>30</td><td>Roll, pitch, yaw (heading)</td><td>~10 Hz</td></tr>
+<tr><td><code>AHRS2</code></td><td>234</td><td>Secondary heading (ArduPilot), used as fallback</td><td>~5 Hz</td></tr>
 <tr><td><code>HEARTBEAT</code></td><td>0</td><td>System ID, vehicle type (for auto-detection)</td><td>1 Hz</td></tr>
 <tr><td><code>SYS_STATUS</code></td><td>1</td><td>Battery voltage, error flags</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_LOCATION</code></td><td>12915</td><td>Pre-encoded ODID location (lat/lon/alt/alt_baro/vel/heading)</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_BASIC_ID</code></td><td>12900</td><td>UAS ID, ID type, UA type (overrides config identity)</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_OPERATOR_ID</code></td><td>12905</td><td>Operator ID from ground station</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_SYSTEM</code></td><td>12904</td><td>Operator location (GPS fallback when FC has no fix)</td><td>~1 Hz</td></tr>
 </table>
-<p>The MAVLink parser handles both v1 (0xFE start byte) and v2 (0xFD start byte) protocols. The system ID from the first HEARTBEAT message is used if <code>mavlink_sysid = 0</code> (auto-detect).</p>
+<p>The MAVLink parser handles both v1 (0xFE start byte) and v2 (0xFD start byte) protocols. The system ID from the first HEARTBEAT message is used if <code>mavlink_sysid = 0</code> (auto-detect). ODID messages override the config identity for compatibility with ArduPilot's native Remote ID support.</p>
 
 <h5>MAVLink Configuration Tips</h5>
 <ul>
@@ -808,13 +817,14 @@ FC TX &rarr; (optional, not used by NMEA mode)</pre>
 </ul>
 <h5>Build Steps</h5>
 <pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
-cd ESP_DRONE_REMOTEID
+cd ESP_DRONE_REMOTEID/ESP32_DRONE_REMOTE_ID_Firmware
 
 # Set up ESP-IDF environment (Windows PowerShell)
 C:\esp\v6.0.1\esp-idf\export.ps1
 
-# Set target (esp32, esp32s3, or esp32c3)
-idf.py set-target esp32
+# Set target
+idf.py set-target esp32        # esp32, esp32s2, esp32s3
+                               # esp32c2, esp32c3, esp32c6
 
 # Build
 idf.py build
@@ -824,9 +834,7 @@ idf.py -p COM3 flash
 
 # Monitor
 idf.py -p COM3 monitor</pre>
-<p>To change the target to ESP32-S3 or ESP32-C3:</p>
-<pre>idf.py set-target esp32s3
-idf.py set-target esp32c3</pre>
+<p>CI builds all 6 targets automatically on push (see <code>.github/workflows/build.yml</code>).</p>
 
 <h4>Method 3: esptool.py</h4>
 <p>For users who prefer a command-line tool without the full ESP-IDF:</p>
@@ -855,19 +863,26 @@ esptool.py --chip esp32s3 --port COM3 --baud 921200 \
 docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
   espressif/idf:v6.0.1 cp build/*.bin /out/</pre>
 
-<h4>First Boot &amp; Verification (expected behavior, untested)</h4>
-<p>After flashing successfully, the following behavior is expected once hardware testing confirms the firmware works:</p>
+<h4>First Boot &amp; Verification</h4>
+<p>After flashing successfully, the firmware boots in one of two modes:</p>
+<ul>
+<li><b>Demo mode (default for first boot):</b> Simulates a drone flying a circular patrol over Rome (Colosseum, 200m radius). No flight controller needed. You can configure, view live telemetry, and test OTA immediately.</li>
+<li><b>FC mode:</b> Connect to a flight controller via UART for real GPS data.</li>
+</ul>
+
+<p>To toggle demo mode, use the config UI or set <code>options</code> bit 0.</p>
+
 <ol>
-<li><b>Power the ESP32</b> via USB or connect it to your flight controller's BEC.</li>
-<li><b>Wait 10-15 seconds</b> for the ESP32 to boot. The status LED (if connected to GPIO2) should start blinking once a GPS fix is obtained.</li>
+<li><b>Power the ESP32</b> via USB or connect to your flight controller's BEC.</li>
+<li><b>Wait 10-15 seconds</b> for the ESP32 to boot. The RGB LED (if configured) shows status: red = no fix, green = fix OK, blink on TX.</li>
 <li><b>Scan for WiFi</b> on your phone or laptop. You should see a network named <b>ESP-RID</b> (or your custom SSID).</li>
 <li><b>Connect to ESP-RID</b> (no password by default).</li>
 <li><b>Open a browser</b> and navigate to <code>http://192.168.4.1</code>. The configuration page should load.</li>
-<li><b>Check the Status section</b> — after connecting your flight controller, it should show the detected protocol (MAVLink, MSP, or NMEA) and GPS data if the FC has a fix.</li>
+<li><b>Check the Status section</b> — in demo mode, you'll see simulated GPS patrol data. With an FC connected, it shows the detected protocol and live GPS data.</li>
 <li><b>Verify Remote ID broadcast</b> — use a smartphone app like <i>Drone Scanner</i> (iOS/Android) or <i>OpenDroneID Viewer</i> (Android) to confirm that Remote ID messages are being received.</li>
 </ol>
 
-<h5>Expected LED Behavior (as implemented in code)</h5>
+<h5>LED Behavior</h5>
 <table>
 <tr><th>LED State</th><th>Intended Meaning</th></tr>
 <tr><td>Solid on (briefly at boot)</td><td>ESP32 initializing</td></tr>
@@ -1023,32 +1038,43 @@ idf.py -p COM3 monitor</pre>
 <pre>ESP_DRONE_REMOTEID/
 &#x251c;&#x2500;&#x2500; CMakeLists.txt                  # IDF top-level build file
 &#x251c;&#x2500;&#x2500; main/                          # Application entry point
-&#x2502;   &#x251c;&#x2500;&#x2500; main.c                     # Initialization and main loop
-&#x2502;   &#x2514;&#x2500;&#x2500; CMakeLists.txt
-&#x251c;&#x2500;&#x2500; components/
-&#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id/              # Main component
-&#x2502;       &#x251c;&#x2500;&#x2500; include/                   # Header files
-&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Main public API
-&#x2502;       &#x251c;&#x2500;&#x2500; src/
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Core logic
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Parameter persistence
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server &amp; REST API
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; protocol_parser.c     # Protocol detection &amp; dispatch
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink message parser
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP message parser
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA sentence parser
-&#x2502;       &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon transmitter
-&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; ble_tx.c             # BLE 4.0/5.0 transmitter
-&#x2502;       &#x251c;&#x2500;&#x2500; mavlink/
-&#x2502;       &#x2502;   &#x2514;&#x2500;&#x2500; ...                    # MAVLink C library
-&#x2502;       &#x2514;&#x2500;&#x2500; webui/
-&#x2502;           &#x2514;&#x2500;&#x2500; config.html            # Embedded web UI
+&#x2502;   &#x2514;&#x2500;&#x2500; main.c                     # Init, demo mode, splash
+&#x251c;&#x2500;&#x2500; components/esp_remote_id/      # Core component
+&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 14 header files
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Public API + structs
+&#x2502;   &#x251c;&#x2500;&#x2500; src/
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Orchestrator (rate limiting, task loop)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 26 params)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server + REST API + OTA + eFuse lock
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + ODID messages (ardupilotmega dialect)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP v1 (RAW_GPS, ATTITUDE)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA 0183 (GGA, RMC, VTG)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c            # Intel MAVLink-to-ODID conversion
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c          # Demo GPS patrol simulation
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c         # Intel ODID encode/decode (1477 lines)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c               # IEEE 802.11 frame builder (Intel lib)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon + NAN transmitter
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c             # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c          # RGB LED (3 configurable GPIOs)
+&#x2502;   &#x251c;&#x2500;&#x2500; mavlink/                   # MAVLink v2 C dialects (ardupilotmega)
+&#x2502;   &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~1520 lines)
+&#x251c;&#x2500;&#x2500; ESP_DRONE_REMOTEID_ANALIZER/ # Python WiFi beacon analyzer
+&#x2502;   &#x251c;&#x2500;&#x2500; capture.py               # Scapy-based WiFi capture
+&#x2502;   &#x251c;&#x2500;&#x2500; decoder.py               # Pure Python ODID decoder (510 lines)
+&#x2502;   &#x251c;&#x2500;&#x2500; server.py               # WebSocket broadcast server
+&#x2502;   &#x251c;&#x2500;&#x2500; rid_cli.py               # Headless CLI tool
+&#x2502;   &#x251c;&#x2500;&#x2500; gui.py                  # pywebview desktop window
+&#x2502;   &#x251c;&#x2500;&#x2500; web/                    # Analyzer web UI (HTML/JS/CSS)
+&#x2502;   &#x2514;&#x2500;&#x2500; requirements.txt
 &#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
-&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # This wiki + installer
-&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html           # Standalone config simulator
-&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest
-&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo images (copied via CI)
-&#x2514;&#x2500;&#x2500; images/                        # Source logo SVG assets</pre>
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Wiki + WebSerial installer
+&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html           # Standalone config demo
+&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest (3 targets)
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + FC icons
+&#x251c;&#x2500;&#x2500; .github/workflows/            # CI/CD (build.yml + release.yml)
+&#x251c;&#x2500;&#x2500; .vscode/                      # Editor config
+&#x2514;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
 </div>
 </div>
 
@@ -1071,7 +1097,7 @@ idf.py -p COM3 monitor</pre>
 <div class="callout"><strong>&#x26a0; Note:</strong> The ESP32 creates its own WiFi network. You will lose internet connectivity while connected to it. This is normal.</div>
 
 <h4>Step-by-Step Setup Walkthrough</h4>
-<p>Follow this sequence to configure your ESP DRONE REMOTEID for the first time (note: hardware testing pending):</p>
+<p>Follow this sequence to configure your ESP DRONE REMOTEID for the first time. You can start in demo mode (no hardware needed) and switch to FC mode later:</p>
 <table>
 <tr><th>Step</th><th>Action</th><th>Details</th></tr>
 <tr><td>1</td><td>Set UAS ID</td><td>Navigate to <b>Identity</b> tab. Enter your drone's serial number or CAA registration in the UAS ID field (max 20 characters). Example: <code>RID-A1B2C3D4</code>.</td></tr>
@@ -1151,14 +1177,14 @@ idf.py -p COM3 monitor</pre>
 <span class="arrow">&#x25bc;</span>
 </div>
 <div class="gs-body">
-<div class="callout"><strong>&#x26a0; Untested:</strong> The OTA update mechanism is implemented in code (<code>web_config.c</code> handles <code>/ota</code> HTTP POST with ESP-IDF OTA API) but has <b>not been tested on real hardware</b>.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with mandatory SHA-256 checksum validation via <code>X-Expected-SHA256</code> header. The firmware has a dual-OTA partition scheme (factory + ota_0) for safe rollback. Tested in demo mode; hardware OTA verification in progress.</div>
 
 <h4>Over-the-Air Firmware Update</h4>
 <p>The ESP DRONE REMOTEID aims to support updating firmware wirelessly through the web interface. No USB cable would be needed once the initial firmware is flashed.</p>
 
 <h4>Prerequisites</h4>
 <ul>
-<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S3, or ESP32-C3).</li>
+<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, or ESP32-C6).</li>
 <li>The ESP32 must be powered and connected to its WiFi network (you connected to ESP-RID).</li>
 <li>Your phone/PC must be connected to the ESP32's WiFi network.</li>
 </ul>
@@ -1269,7 +1295,7 @@ idf.py -p COM3 monitor</pre>
 <span class="arrow">&#x25bc;</span>
 </div>
 <div class="gs-body">
-<div class="callout"><strong>&#x26a0; Untested:</strong> The security features (lock levels, public key authentication, signed commands) are implemented in code but have <b>not been tested on real hardware</b>. Use with caution.</div>
+<div class="callout"><strong>&#x1f4a1; Status:</strong> Lock level 0 (open) and level 2 (eFuse permanent) are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 (signed commands) has the UI infrastructure but signature verification backend is pending. Use with caution.</div>
 
 <h4>Lock Levels</h4>
 <p>The firmware implements three lock levels to prevent unauthorized configuration changes:</p>
@@ -1366,35 +1392,38 @@ cat public.pem</pre>
 <div class="gs-body">
 <h4>Comparison Table</h4>
 <table>
-<tr><th>Feature</th><th>ESP32 (Original)</th><th>ESP32-S3</th><th>ESP32-C3</th></tr>
-<tr><td>CPU</td><td>2x Xtensa LX6 @ 240 MHz</td><td>2x Xtensa LX7 @ 240 MHz</td><td>1x RISC-V @ 160 MHz</td></tr>
-<tr><td>BLE</td><td>4.0 + 4.2</td><td>5.0 (Coded PHY S=2, S=8)</td><td>5.0 (Coded PHY S=2, S=8)</td></tr>
-<tr><td>WiFi</td><td>802.11 b/g/n</td><td>802.11 b/g/n (better RF)</td><td>802.11 b/g/n</td></tr>
-<tr><td>Flash</td><td>4-16 MB</td><td>8-16 MB</td><td>4-8 MB</td></tr>
-<tr><td>RAM</td><td>520 KB SRAM</td><td>512 KB SRAM + 2M PSRAM</td><td>400 KB SRAM</td></tr>
-<tr><td>GPIO</td><td>34</td><td>45</td><td>22</td></tr>
-<tr><td>BLE 5.0 LR</td><td>&#x274c; No</td><td>&#x2705; Yes</td><td>&#x2705; Yes</td></tr>
-<tr><td>Power consumption</td><td>~150 mA</td><td>~130 mA</td><td>~100 mA</td></tr>
-<tr><td>Price (module)</td><td>~$2-4</td><td>~$3-6</td><td>~$2-4</td></tr>
-<tr><td><b>Recommendation</b></td><td><b>Good</b></td><td><b>Best</b></td><td><b>Good</b></td></tr>
+<tr><th>Feature</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
+<tr><td>CPU</td><td>2x LX6 240M</td><td>1x LX7 240M</td><td>2x LX7 240M</td><td>1x RV 120M</td><td>1x RV 160M</td><td>1x RV 160M</td></tr>
+<tr><td>BLE</td><td>4.0/4.2</td><td>—</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td></tr>
+<tr><td>WiFi</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td></tr>
+<tr><td>Flash</td><td>4-16M</td><td>4-16M</td><td>8-16M</td><td>2-4M</td><td>4-8M</td><td>4-8M</td></tr>
+<tr><td>RAM</td><td>520K</td><td>520K</td><td>512K+2M PSRAM</td><td>272K</td><td>400K</td><td>512K</td></tr>
+<tr><td>BLE 5.0 LR</td><td>&#x274c;</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>USB CDC</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>Flash config</td><td>4 MB</td><td>4 MB</td><td>4 MB</td><td>2 MB</td><td>4 MB</td><td>4 MB</td></tr>
+<tr><td>Power</td><td>~150 mA</td><td>~130 mA</td><td>~130 mA</td><td>~90 mA</td><td>~100 mA</td><td>~110 mA</td></tr>
+<tr><td><b>Rcmd</b></td><td>Good</td><td>Budget</td><td><b>Best</b></td><td>Tiny</td><td>Good</td><td>Modern</td></tr>
 </table>
+<p><b>ESP32-S2</b> has no BLE — only WiFi Beacon mode. <b>ESP32-C2</b> uses a 2 MB partition table. <b>ESP32-C6</b> is the newest RISC-V chip with WiFi 6 support.</p>
 
 <h4>Which One to Choose?</h4>
 <ul>
-<li><b>ESP32-S3 (Recommended):</b> Best balance of features and power. BLE 5.0 Coded PHY (S=8) provides significantly longer range than BLE 4.0. The PSRAM is useful for future feature expansion. Best for production builds.</li>
-<li><b>ESP32-C3:</b> Good budget option with BLE 5.0 support. Single-core RISC-V is sufficient for the firmware's needs. Slightly lower power consumption. Good for compact builds where size matters.</li>
-<li><b>ESP32 (Original):</b> Works well but lacks BLE 5.0 Coded PHY. BLE 4.0 range is shorter. The firmware is thoroughly tested on ESP32. Good for existing hardware or hobbyist use.</li>
+<li><b>ESP32-S3 (Recommended):</b> Best balance of features and power. BLE 5.0 Coded PHY (S=8) for longer BLE range. PSRAM for future expansion. Best for production builds.</li>
+<li><b>ESP32-C3 / C6:</b> Good budget/ modern option with BLE 5.0, RISC-V. Lower power. Good for compact builds.</li>
+<li><b>ESP32 (Original):</b> Works well but lacks BLE 5.0 Coded PHY. Good for existing hardware.</li>
+<li><b>ESP32-S2:</b> Budget option without BLE (WiFi Beacon only). Good for minimal builds.</li>
+<li><b>ESP32-C2:</b> Smallest/cheapest. 2 MB flash, BLE 5.0, RISC-V. Good for ultra-low-cost deployments.</li>
 </ul>
 
 <h4>Pin Compatibility</h4>
 <table>
-<tr><th>Function</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C3</th></tr>
-<tr><td>UART2 RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO7</td></tr>
-<tr><td>Alternative UART RX</td><td>GPIO4, GPIO26</td><td>GPIO4, GPIO5</td><td>GPIO0, GPIO1</td></tr>
-<tr><td>Status LED</td><td>GPIO2</td><td>GPIO2</td><td>GPIO8</td></tr>
-<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td></tr>
+<tr><th>Function</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
+<tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO18</td><td>GPIO7</td><td>GPIO7</td><td>GPIO7</td></tr>
+<tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>4,5</td><td>0,1</td><td>0,1</td><td>0,1</td></tr>
+<tr><td>RGB LED R/G/B</td><td colspan="6">Configurable via Kconfig (any GPIO, default -1)</td></tr>
+<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td><td>GPIO9</td><td>GPIO9</td></tr>
 </table>
-<p>To use a different UART or pin configuration, modify the <code>esp_remote_id.h</code> header and rebuild.</p>
+<p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via menuconfig (<code>RID_LED_R/G/B_GPIO</code>).</p>
 </div>
 </div>
 
@@ -1632,20 +1661,20 @@ cat public.pem</pre>
 </div>
 <div class="gs-body">
 <h4>Standards Compliance (targeted)</h4>
-<p>ESP DRONE REMOTEID targets the following standards (implementation complete, compliance testing pending):</p>
+<p>ESP DRONE REMOTEID targets the following standards (message encoding complete, compliance testing with certified receivers pending):</p>
 <ul>
 <li><b>ASTM F3411-22a</b> &mdash; Standard Specification for Remote ID and Tracking. This is the US FAA-accepted standard that also forms the basis for many international regulations.</li>
 <li><b>ASD-STAN prEN 4709-002</b> &mdash; European standard for direct Remote ID, adopted by EASA and EU member states.</li>
 </ul>
 
 <h4>FAA (United States)</h4>
-<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. Once hardware testing is complete, ESP DRONE REMOTEID aims to help drone operators comply with this requirement by:</p>
+<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. ESP DRONE REMOTEID helps drone operators comply with this requirement by:</p>
 <ul>
 <li>Broadcasting ASTM F3411-22a Standard Remote ID messages via WiFi Beacon and BLE</li>
 <li>Transmitting at 1 Hz (meeting the minimum requirement)</li>
 <li>Including all required data: drone ID, location, altitude, speed, operator ID</li>
 </ul>
-<p><b>Note:</b> Regulatory compliance has <b>not been verified</b>. Do not use in actual flight operations until testing confirms compliance.</p>
+<p><b>Note:</b> Regulatory compliance with certified receivers has <b>not been verified</b>. Do not use in actual flight operations until testing confirms compliance.</p>
 
 <h4>EASA (European Union)</h4>
 <p>EU Implementing Regulation 2021/664 (U-Space) and 2019/947 require Remote ID for most drone operations in the Open and Specific categories. ESP DRONE REMOTEID supports compliance by broadcasting Direct Remote ID (prEN 4709-002) over WiFi and BLE.</p>
@@ -1692,19 +1721,19 @@ cat public.pem</pre>
 </ul>
 
 <h4>Tested Configurations</h4>
-<p>No hardware testing has been performed yet. The code compiles and the web UI is functional as a standalone demo, but the firmware has not been tested with any flight controller, GPS module, or Remote ID receiver.</p>
-<p>Once testing begins, results will be listed here. If you have tested this firmware, please <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">open an issue</a> or submit a PR to share your results.</p>
+<p>Demo mode (GPS patrol simulation) verified: config UI, telemetry dashboard, OTA upload flow, lock level UI all functional. Flight controller hardware testing with MAVLink/MSP/NMEA is in progress.</p>
+<p>If you have tested this firmware with your hardware, please <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">open an issue</a> or submit a PR to share your results.</p>
 
 <h4>Protocol Maturity</h4>
 <table>
 <tr><th>Protocol</th><th>Status</th><th>Notes</th></tr>
-<tr><td>WiFi Beacon</td><td><span class="tag tag-blue">Implemented</span></td><td>Code complete. Uses 802.11 beacon frames with OUI-based IE. Enabled by default. Awaiting hardware testing.</td></tr>
-<tr><td>BLE 4.0</td><td><span class="tag tag-blue">Implemented</span></td><td>Legacy BLE advertising implemented for all ESP32 variants. Enabled by default. Awaiting hardware testing.</td></tr>
-<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires ESP32-S3 or ESP32-C3. Disabled by default. Awaiting hardware testing.</td></tr>
-<tr><td>WiFi NAN</td><td><span class="tag" style="background:#f0f0f0;color:#999">Incomplete</span></td><td>ASTM F3411-22a mentions NAN as optional. Implementation started but transmission path is incomplete. Not available for use.</td></tr>
-<tr><td>MAVLink (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>v1 and v2 protocol parsers implemented. Awaiting hardware testing with ArduPilot / PX4.</td></tr>
-<tr><td>MSP (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>MSP v1 parser implemented. Awaiting hardware testing with Betaflight / iNAV.</td></tr>
-<tr><td>NMEA 0183 (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>NMEA sentence parser implemented for standard GPS modules. Awaiting hardware testing.</td></tr>
+<tr><td>WiFi Beacon</td><td><span class="tag tag-green">Stable</span></td><td>IEEE 802.11 beacon frames with OUI-based IE (FA:0B:BC). Enabled by default. Verified in demo mode.</td></tr>
+<tr><td>WiFi NAN</td><td><span class="tag tag-blue">Implemented</span></td><td>Neighborhood Area Networking frames. UI checkbox + counters functional. Awaiting receiver testing.</td></tr>
+<tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising (SCAN_IND). All ESP32 variants. Enabled by default.</td></tr>
+<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires S3/C3/C6. Disabled by default. Awaiting hardware testing with Android/iOS.</td></tr>
+<tr><td>MAVLink (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>v1/v2 parsers + ODID messages (ardupilotmega dialect). AHRS2 heading. Awaiting FC hardware.</td></tr>
+<tr><td>MSP (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>MSP v1 (RAW_GPS, ATTITUDE). Awaiting Betaflight/iNAV hardware testing.</td></tr>
+<tr><td>NMEA 0183 (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>GGA + RMC + VTG parsers. Works with tap method. Awaiting GPS module testing.</td></tr>
 </table>
 </div>
 </div>
