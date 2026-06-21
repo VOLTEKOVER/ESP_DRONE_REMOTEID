@@ -6,7 +6,7 @@
 #include "esp_http_server.h"
 #include "esp_wifi.h"
 #include "esp_ota_ops.h"
-#include "mbedtls/sha256.h"
+#include "psa/crypto.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -400,14 +400,22 @@ static esp_err_t handle_ota(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    mbedtls_sha256_context sha_ctx;
-    mbedtls_sha256_init(&sha_ctx);
-    mbedtls_sha256_starts(&sha_ctx, 0);
+    psa_hash_operation_t sha_ctx = psa_hash_operation_init();
+    if (psa_hash_setup(&sha_ctx, PSA_ALG_SHA_256) != PSA_SUCCESS) {
+        esp_ota_abort(ota_handle);
+        httpd_resp_sendstr(req, "OTA failed: SHA-256 setup error");
+        return ESP_FAIL;
+    }
 
     while ((ret = httpd_req_recv(req, buf, sizeof(buf))) > 0) {
-        mbedtls_sha256_update(&sha_ctx, (const unsigned char *)buf, ret);
+        if (psa_hash_update(&sha_ctx, (const unsigned char *)buf, ret) != PSA_SUCCESS) {
+            psa_hash_abort(&sha_ctx);
+            esp_ota_abort(ota_handle);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
         if (esp_ota_write(ota_handle, buf, ret) != ESP_OK) {
-            mbedtls_sha256_free(&sha_ctx);
+            psa_hash_abort(&sha_ctx);
             esp_ota_abort(ota_handle);
             httpd_resp_send_500(req);
             return ESP_FAIL;
@@ -415,8 +423,12 @@ static esp_err_t handle_ota(httpd_req_t *req)
     }
 
     uint8_t hash[32];
-    mbedtls_sha256_finish(&sha_ctx, hash);
-    mbedtls_sha256_free(&sha_ctx);
+    size_t hash_len;
+    if (psa_hash_finish(&sha_ctx, hash, sizeof(hash), &hash_len) != PSA_SUCCESS) {
+        esp_ota_abort(ota_handle);
+        httpd_resp_sendstr(req, "OTA failed: SHA-256 finalize error");
+        return ESP_FAIL;
+    }
 
     if (!has_expected) {
         esp_ota_abort(ota_handle);
