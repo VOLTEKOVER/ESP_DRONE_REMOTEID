@@ -16,8 +16,8 @@
 - ✅ Now includes `CONFIG_MBEDTLS_SHA256_ENABLED=y` for OTA SHA-256 validation.
 
 ### `sdkconfig` (3461 lines, generated)
-- ❌ **Generated file tracked in git.** Although `.gitignore` lists `sdkconfig`, the committed copy is stale. Should be removed from tracking (`git rm --cached`).
-- **Gap:** CI regenerates it fresh; this file is purely informational for local builds.
+- ✅ Ignored via `.gitignore`, not tracked in git. CI regenerates it fresh per target.
+- Informational reference for local builds only.
 
 ### `partitions.csv` (7 lines)
 - 4 MB flash layout: nvs 20K + otadata 8K + phy_init 4K + factory 1920K + ota_0 1920K.
