@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS
+        "src/cli.c"
         "src/protocol_detect.c"
         "src/nmea_parser.c"
         "src/msp_parser.c"
@@ -31,6 +32,8 @@ idf_component_register(
         esp_driver_gpio
         mbedtls
         efuse
+        esp_console
+        linenoise
     EMBED_TXTFILES
         "webui/config.html"
 )

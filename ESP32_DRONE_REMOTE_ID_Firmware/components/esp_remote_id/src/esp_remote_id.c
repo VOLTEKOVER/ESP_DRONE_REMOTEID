@@ -18,6 +18,7 @@
 #include "nvs_storage.h"
 #include "led_status.h"
 #include "rid_patrol.h"
+#include "cli.h"
 
 #define TAG "ESP_RID"
 
@@ -133,6 +134,8 @@ void esp_rid_init(void)
 
     led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
     web_config_init();
+
+    cli_init();
 
     ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID initialized");
 }

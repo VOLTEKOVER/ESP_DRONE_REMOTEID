@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Complete Software Status
 
-> Last updated: 2026-06-22 (v2)
+> Last updated: 2026-06-22 (v3)
 > Scope: all 70+ source files in repository (excluding build artifacts, __pycache__)
 
 ---
@@ -52,9 +52,10 @@
 
 ## `components/esp_remote_id/` — Core Component
 
-### `CMakeLists.txt` (44 lines)
+### `CMakeLists.txt` (47 lines)
 - Registers all .c files in `src/`. REQUIRES `nvs_flash`, `efuse`, `esp_wifi`, `esp_bt`, `mdns`, etc.
 - ✅ Added `efuse` to REQUIRES for eFuse lock support.
+- ✅ Added `src/cli.c` to SRCS, `esp_console` + `linenoise` to REQUIRES for serial CLI.
 - **OK.**
 
 ### `idf_component.yml` (12 lines)
@@ -130,6 +131,10 @@
 - Declares: `rid_patrol_tick()`.
 - **OK.**
 
+#### `cli.h` (7 lines)
+- Declares: `cli_init()`.
+- **OK.**
+
 #### `protocol_detect.h` (10 lines)
 - **OK.**
 
@@ -137,7 +142,7 @@
 
 ### `src/` — Source Files
 
-#### `esp_remote_id.c` (350 lines)
+#### `esp_remote_id.c` (447 lines)
 - Main orchestrator: init sequence, RTOS task loop, `update_transmissions()`, rate limiting.
 - ✅ Rate limiting: `rate_allowed()` uses `esp_timer_get_time()`.
 - ✅ WiFi NAN: called in `update_transmissions()`.
@@ -145,6 +150,7 @@
 - ✅ LED: `led_status_update()` called after each tx.
 - ✅ `force_tx` — FIXED: outer condition now only checks `latitude != 0.0` (removed `fix_type >= 2` redundancy).
 - ✅ Identity override: MAVLink ODID identity overwrites config identity when valid.
+- ✅ CLI: calls `cli_init()` at end of init sequence.
 - **OK.**
 
 #### `wifi.c` (614 lines)
@@ -171,6 +177,13 @@
 - ✅ OTA SHA-256: `X-Expected-SHA256` header mandatory. Rejects missing/mismatched hash.
 - ✅ Signature verification: Level ≥ 1 requires `X-Signature` header with ECDSA P-256 signature over SHA-256 hash of JSON body. Uses `mbedtls/pk.h` for key parsing (PEM, DER, or `PUBLIC_KEYV1:` base64) and PSA for hashing.
 - ✅ Command signature verification: `/api/command` now also verifies `X-Signature` for restart/reboot/reset/factory commands when locked. `/api/reset` endpoint also accepts signatures (body signed: `"factory_reset"`). Returns `invalid_signature` instead of `locked`.
+
+#### `cli.c` (280 lines)
+- Serial REPL console with linenoise line editing.
+- Commands: `status`, `config`, `restart`/`reboot`, `reset`/`factory`, `protocol`, `heap`, `log_level`, `patrol`, `transmit`, `mac`, `uptime`.
+- Spawns `cli_task` (4 KB stack) and returns immediately.
+- Reads/writes config via `esp_rid_set_config()`, `esp_rid_get_config()`.
+- **OK.**
 
 #### `protocol_detect.c` (75 lines)
 - UART auto-detect: `$M<` → MSP, `$G/$N` → NMEA, `0xFE/0xFD` → MAVLink.
@@ -550,7 +563,7 @@
 | 6 | `ESP32_DRONE_REMOTE_ID_Firmware/idf_component.yml` | 12 | ✅ |
 | 7 | `ESP32_DRONE_REMOTE_ID_Firmware/main/CMakeLists.txt` | 3 | ✅ |
 | 8 | `ESP32_DRONE_REMOTE_ID_Firmware/main/main.c` | 90 | ✅ |
-| 9 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/CMakeLists.txt` | 44 | ✅ |
+| 9 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/CMakeLists.txt` | 47 | ✅ |
 | 10 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/idf_component.yml` | 12 | ✅ |
 | 11 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/Kconfig.projbuild` | 27 | ✅ |
 | 12 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/esp_remote_id.h` | 80 | ✅ |
@@ -567,53 +580,55 @@
 | 23 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/nvs_storage.h` | 20 | ✅ |
 | 24 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/led_status.h` | 10 | ✅ |
 | 25 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/rid_patrol.h` | 10 | ✅ |
-| 26 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/esp_remote_id.c` | 350 | ✅ |
-| 27 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
-| 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
-| 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
-| 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 735 | ✅ |
-| 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
-| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
-| 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
-| 34 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mavlink_parser.c` | 180 | ✅ |
-| 35 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mav2odid.c` | 636 | ✅ (partial use) |
-| 36 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/opendroneid.c` | 1477 | ✅ |
-| 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
-| 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 76 | ✅ |
-| 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
-| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2340 | ✅ |
-| 41-120 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
-| 121 | `ESP_DRONE_REMOTEID_Analyzer/__init__.py` | 3 | ✅ |
-| 122 | `ESP_DRONE_REMOTEID_Analyzer/__main__.py` | 5 | ✅ |
-| 123 | `ESP_DRONE_REMOTEID_Analyzer/capture.py` | 176 | ✅ |
-| 124 | `ESP_DRONE_REMOTEID_Analyzer/decoder.py` | 510 | ✅ |
-| 125 | `ESP_DRONE_REMOTEID_Analyzer/server.py` | 197 | ✅ |
-| 126 | `ESP_DRONE_REMOTEID_Analyzer/rid_cli.py` | 115 | ✅ |
-| 127 | `ESP_DRONE_REMOTEID_Analyzer/gui.py` | 109 | ✅ |
-| 128 | `ESP_DRONE_REMOTEID_Analyzer/build.spec` | 56 | ✅ |
-| 129 | `ESP_DRONE_REMOTEID_Analyzer/requirements.txt` | 14 | ✅ |
-| 130 | `ESP_DRONE_REMOTEID_Analyzer/web/index.html` | 94 | ✅ |
-| 131 | `ESP_DRONE_REMOTEID_Analyzer/web/app.js` | 438 | ✅ |
-| 132 | `ESP_DRONE_REMOTEID_Analyzer/web/style.css` | 176 | ✅ |
-| 133 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
-| 134 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
-| 135 | `docs/config(demo).html` | ~2546 | ✅ |
-| 136 | `docs/manifest.json` | 57 | ✅ (all 6 targets present) |
-| 137 | `docs/images/logo.svg` | — | ✅ |
-| 138 | `docs/images/logo con scritta.svg` | — | ✅ |
-| 139 | `docs/images/ardupilot_logo.webp` | — | ✅ |
-| 140 | `docs/images/betaflight_logo.svg` | — | ✅ |
-| 141 | `docs/images/inav_logo.png` | — | ✅ |
-| 142 | `.github/workflows/build.yml` | 193 | ✅ |
-| 143 | `.github/workflows/release.yml` | 308 | ✅ |
-| 144 | `.github/dependabot.yml` | 13 | ✅ |
-| 145 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
-| 146 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
-| 147 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
-| 148 | `.vscode/settings.json` | 30 | ✅ |
-| 149 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
-| 150 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
-| 151 | `README.md` | ~120 | ✅ |
-| 152 | `.gitignore` | 140 | ✅ |
-| 153 | `.gitattributes` | 40 | ✅ |
-| 154 | `todolist/softwarestatus.md` | — | ✅ (this file) |
+| 26 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/cli.h` | 7 | ✅ |
+| 27 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/cli.c` | 283 | ✅ |
+| 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/esp_remote_id.c` | 447 | ✅ |
+| 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
+| 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
+| 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
+| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 735 | ✅ |
+| 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
+| 34 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
+| 35 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
+| 36 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mavlink_parser.c` | 180 | ✅ |
+| 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mav2odid.c` | 636 | ✅ (partial use) |
+| 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/opendroneid.c` | 1477 | ✅ |
+| 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
+| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 76 | ✅ |
+| 41 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
+| 42 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2340 | ✅ |
+| 43-122 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
+| 123 | `ESP_DRONE_REMOTEID_Analyzer/__init__.py` | 3 | ✅ |
+| 124 | `ESP_DRONE_REMOTEID_Analyzer/__main__.py` | 5 | ✅ |
+| 125 | `ESP_DRONE_REMOTEID_Analyzer/capture.py` | 176 | ✅ |
+| 126 | `ESP_DRONE_REMOTEID_Analyzer/decoder.py` | 510 | ✅ |
+| 127 | `ESP_DRONE_REMOTEID_Analyzer/server.py` | 197 | ✅ |
+| 128 | `ESP_DRONE_REMOTEID_Analyzer/rid_cli.py` | 115 | ✅ |
+| 129 | `ESP_DRONE_REMOTEID_Analyzer/gui.py` | 109 | ✅ |
+| 130 | `ESP_DRONE_REMOTEID_Analyzer/build.spec` | 56 | ✅ |
+| 131 | `ESP_DRONE_REMOTEID_Analyzer/requirements.txt` | 14 | ✅ |
+| 132 | `ESP_DRONE_REMOTEID_Analyzer/web/index.html` | 94 | ✅ |
+| 133 | `ESP_DRONE_REMOTEID_Analyzer/web/app.js` | 438 | ✅ |
+| 134 | `ESP_DRONE_REMOTEID_Analyzer/web/style.css` | 176 | ✅ |
+| 135 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
+| 136 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
+| 137 | `docs/config(demo).html` | ~2546 | ✅ |
+| 138 | `docs/manifest.json` | 57 | ✅ (all 6 targets present) |
+| 139 | `docs/images/logo.svg` | — | ✅ |
+| 140 | `docs/images/logo con scritta.svg` | — | ✅ |
+| 141 | `docs/images/ardupilot_logo.webp` | — | ✅ |
+| 142 | `docs/images/betaflight_logo.svg` | — | ✅ |
+| 143 | `docs/images/inav_logo.png` | — | ✅ |
+| 144 | `.github/workflows/build.yml` | 193 | ✅ |
+| 145 | `.github/workflows/release.yml` | 308 | ✅ |
+| 146 | `.github/dependabot.yml` | 13 | ✅ |
+| 147 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
+| 148 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
+| 149 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
+| 150 | `.vscode/settings.json` | 30 | ✅ |
+| 151 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
+| 152 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
+| 153 | `README.md` | ~120 | ✅ |
+| 154 | `.gitignore` | 140 | ✅ |
+| 155 | `.gitattributes` | 40 | ✅ |
+| 156 | `todolist/softwarestatus.md` | — | ✅ (this file) |
