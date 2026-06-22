@@ -514,7 +514,7 @@ fieldset{padding:6px 8px}
 </div>
 
 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;flex-shrink:0">
-<button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Restart command sent')).catch(e=>showMsg('Failed: '+e.message,1))" style="flex:1;justify-content:center">&#x1f504; Restart</button>
+<button class="hdr-btn" onclick="sendSigCmd('restart')" style="flex:1;justify-content:center">&#x1f504; Restart</button>
 <button class="hdr-btn danger" onclick="showModal('reset')" style="flex:1;justify-content:center">&#x21bb; Factory Reset</button>
 </div>
 
@@ -820,7 +820,7 @@ fieldset{padding:6px 8px}
 <button class="btn" type="submit">Save System</button>
 </form>
 <button class="btn-danger" onclick="showModal('reset')">&#x21bb; Factory Reset <span class="tag tag-warning">Warning</span></button>
-<button class="hdr-btn" onclick="fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:'restart'}).then(r=>showMsg('Restart command sent')).catch(e=>showMsg('Failed: '+e.message,1))" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
+<button class="hdr-btn" onclick="sendSigCmd('restart')" style="margin-top:6px;width:100%;justify-content:center">&#x1f504; Restart Device</button>
 </div>
 </div>
 
@@ -869,6 +869,7 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 </div>
 <div class="term-input-row">
 <input type="text" id="term-input" placeholder="Type command (restart, status, reset)..." onkeydown="if(event.key==='Enter')sendCmd()">
+<input type="text" id="term-sig" placeholder="X-Signature (base64, if locked)" style="width:120px;flex-shrink:0;display:none;font-size:.75em;padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;background:var(--input-bg);color:var(--txt);margin-left:4px" title="Base64-encoded ECDSA P-256 signature for locked commands">
 <button class="btn-sm" onclick="sendCmd()" style="margin:0;flex-shrink:0">Send</button>
 </div>
 </div>
@@ -1229,7 +1230,7 @@ var list=$('modal-report-list');list.style.display='none';
 if(type==='reset'){
 icon.textContent='\u26a0';title.textContent='Factory Reset';
 text.textContent='All settings will be erased and return to defaults. The device will reboot immediately. This action cannot be undone.';
-setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Reset',className:'btn-danger',action:function(){fetch('/api/reset',{method:'POST'}).then(function(r){showMsg('Factory reset OK, rebooting...')})}}])
+setModalButtons([{label:'Cancel',className:'btn-cancel'},{label:'Reset',className:'btn-danger',action:function(){var hdrs={'Content-Type':'application/json'};var se=document.getElementById('term-sig');if(se&&se.value.trim())hdrs['X-Signature']=se.value.trim();fetch('/api/reset',{method:'POST',headers:hdrs}).then(function(r){showMsg('Factory reset OK, rebooting...')})}}])
 }else if(type==='ota'){
 icon.textContent='\u26a0';title.textContent='Firmware Update';
 text.textContent='Upload a new firmware binary. The device will reboot after the update. Do NOT disconnect power during the process. Ensure the .bin file is for your ESP32 model.';
@@ -1715,17 +1716,31 @@ function sendCmdTo(inpId, outId){
   var d=document.createElement('div');d.className='line lv-V'
   d.innerHTML='<span class="ts">[cmd]</span> $ '+escHtml(cmd)
   out.appendChild(d)
-  fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:cmd})
+  var headers={'Content-Type':'text/plain'}
+  var sigEl=document.getElementById('term-sig')
+  if(sigEl&&sigEl.value.trim())headers['X-Signature']=sigEl.value.trim()
+  fetch('/api/command',{method:'POST',headers:headers,body:cmd})
   .then(function(r){return r.json()}).then(function(j){
     if(j.status&&j.status!=='ok'){
       var d2=document.createElement('div');d2.className='line lv-W'
       d2.innerHTML='<span class="ts">[resp]</span> '+escHtml(j.status)
       out.appendChild(d2)
+      if(j.status==='invalid_signature'&&sigEl){sigEl.style.display='inline-block';sigEl.placeholder='Paste base64 signature...'}
     }
   }).catch(function(){})
 }
 function sendCmd(){sendCmdTo('term-input','term-output')}
 function sendCmd2(){sendCmdTo('term-input2','term-output2')}
+function getCmdSig(){var e=document.getElementById('term-sig');return e&&e.value.trim()?e.value.trim():null}
+function sendSigCmd(cmd){
+  var hdrs={'Content-Type':'text/plain'};var sig=getCmdSig();if(sig)hdrs['X-Signature']=sig
+  fetch('/api/command',{method:'POST',headers:hdrs,body:cmd})
+  .then(function(r){return r.json()}).then(function(j){
+    if(j.status==='invalid_signature'){var se=document.getElementById('term-sig');if(se){se.style.display='inline-block';se.placeholder='Paste base64 signature...';se.focus()};showMsg('Signature required for locked device',1)}
+    else if(j.status&&j.status!=='ok')showMsg('Response: '+j.status)
+    else showMsg('Command sent')
+  }).catch(function(e){showMsg('Failed: '+e.message,1)})
+}
 function clearTermTo(outId){
   var out=document.getElementById(outId)
   if(out)out.innerHTML='<div class="term-placeholder">Console cleared.</div>'
@@ -2283,7 +2298,7 @@ function showLoading(msg){var o=$('loading-overlay');if(!o)return;var t=$('loadi
 function hideLoading(){var o=$('loading-overlay');if(o)o.style.display='none'}
 /* ---------- CLI Interactive dialog ---------- */
 function showCliDialog(){var d=$('dialog-interactive');var out=$('dialog-int-output');if(out)out.textContent=$('term-output')?$('term-output').textContent:'Console ready.';if(typeof d.showModal==='function')d.showModal();var inp=$('dialog-int-input');if(inp){inp.value='';setTimeout(function(){inp.focus()},100)}}
-function sendDialogCmd(){var inp=$('dialog-int-input'),out=$('dialog-int-output');if(!inp||!out)return;var cmd=inp.value.trim();if(!cmd)return;inp.value='';out.textContent+='\n$ '+cmd;fetch('/api/command',{method:'POST',headers:{'Content-Type':'text/plain'},body:cmd}).then(function(r){return r.json()}).then(function(j){if(j.status)out.textContent+='\n'+j.status}).catch(function(){});out.scrollTop=out.scrollHeight}
+function sendDialogCmd(){var inp=$('dialog-int-input'),out=$('dialog-int-output');if(!inp||!out)return;var cmd=inp.value.trim();if(!cmd)return;inp.value='';out.textContent+='\n$ '+cmd;var hdrs={'Content-Type':'text/plain'};var sig=getCmdSig();if(sig)hdrs['X-Signature']=sig;fetch('/api/command',{method:'POST',headers:hdrs,body:cmd}).then(function(r){return r.json()}).then(function(j){if(j.status)out.textContent+='\n'+j.status}).catch(function(){});out.scrollTop=out.scrollHeight}
 function showWait(title,msg){
   var d=$('dialog-wait');
   $('dialog-wait-title').textContent=title||'Please wait...';

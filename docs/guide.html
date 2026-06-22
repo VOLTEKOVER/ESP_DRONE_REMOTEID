@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ESP DRONE REMOTEID [BETA] — Technical guide: protocols, installation, OTA, security, antenna, analyzer tool. ASTM F3411-22a Open DroneID.">
+<meta property="og:title" content="ESP DRONE REMOTEID [BETA] — Technical Guide">
+<meta property="og:description" content="Technical guide for ESP DRONE REMOTEID — protocols, installation, OTA, security, eFuse lock, analyzer.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ESP DRONE REMOTEID [BETA]">
+<meta name="twitter:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon &amp; BLE.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'><rect width='56' height='56' rx='12' fill='%23222'/><ellipse cx='28' cy='29' rx='2.2' ry='13' fill='%23fff'/></svg>">
+<title>ESP DRONE REMOTEID [BETA] — Technical Guide</title>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{primaryColor:'#e8f0fe',primaryBorderColor:'#1a56db',lineColor:'#666',secondaryColor:'#e6f7e6',tertiaryColor:'#fef3e2',fontSize:'13px'}})</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;--surface:#fff;--surface-alt:#f7f8fa;--surface-hover:#eef0f4;--text:#1a1a2e;--text-secondary:#5a5a7a;--text-muted:#999;--border:#e2e4e9;--border-light:#eef0f4;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow-md:0 4px 16px rgba(0,0,0,.06);--shadow-lg:0 8px 30px rgba(0,0,0,.08);--radius:10px;--radius-sm:6px;--radius-lg:14px;--accent:#1a56db;--accent-green:#1b7a2e;--accent-red:#c62828;--accent-amber:#e65100;--accent-purple:#6a1b9a;--transition:.2s ease}
+@media print{header,.build-col,#btn-top,.copy-btn,.guide-search,.fw-info,.hero .version-bar,.hero .gh-btns{display:none!important}.main-grid{grid-template-columns:1fr!important}.guide-section{border:1px solid #ccc!important;break-inside:avoid}.guide-section .gs-body{display:block!important}.gs-body a{text-decoration:underline!important}.wrap{max-width:100%!important;padding:0!important}body{font-size:11pt;color:#000}footer{position:fixed;bottom:0;width:100%}}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--surface);color:var(--text);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased;transition:background .3s ease,color .3s ease}
+.wrap{max-width:100%;padding:0 32px}
+.logo-img{height:56px;flex-shrink:0}
+header{background:var(--surface-alt);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+header .wrap{display:flex;align-items:center;justify-content:space-between}
+header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+header nav{display:flex;gap:6px;flex-wrap:wrap}
+header nav a{color:var(--text-muted);text-decoration:none;font-size:.82em;padding:6px 14px;border-radius:var(--radius-sm);transition:all var(--transition);display:inline-flex;align-items:center;font-weight:500}
+header nav a:hover{background:var(--surface-hover);color:var(--text)}
+.hero{text-align:center;padding:50px 0 30px}
+.logo-hero{width:72px;height:72px;margin:0 auto 16px}
+.hero h1{font-size:2.4em;font-weight:700;color:var(--text);letter-spacing:-1px;line-height:1.15}
+.hero p{color:var(--text-muted);font-size:1.05em;max-width:640px;margin:10px auto 0}
+.hero .version-bar{font-size:.8em;color:var(--text-secondary);margin-top:14px;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 16px;display:inline-block}
+.hero .version-bar a{color:var(--text-muted)}
+.hero .gh-btns{margin-top:18px;display:flex;gap:10px;justify-content:center}
+.hero .compat-bar{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
+.hero .compat-label{font-size:.72em;color:var(--text-muted);margin-right:4px}
+.compat-item{display:inline-flex;align-items:center;gap:5px;padding:4px 12px 4px 8px;border-radius:20px;font-size:.78em;font-weight:600;text-decoration:none;transition:all .15s;border:1px solid transparent}
+.compat-item.ap{background:#fdecea;color:#c62828;border-color:#f5c6c6}
+.compat-item.bf{background:#e8f5e9;color:#1b7a2e;border-color:#c8e0c9}
+.compat-item.inav{background:#e3f2fd;color:#0d47a1;border-color:#bed9f0}
+.compat-item:hover{opacity:.85;transform:translateY(-1px)}
+.compat-item img{vertical-align:middle}
+[data-theme="dark"] .compat-item.ap{background:#2a1515;border-color:#4a2525}
+[data-theme="dark"] .compat-item.bf{background:#152d15;border-color:#254025}
+[data-theme="dark"] .compat-item.inav{background:#152240;border-color:#253b5a}
+.main-grid{display:grid;grid-template-columns:380px 1fr;gap:40px;padding:10px 0 60px;align-items:start}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;gap:28px}}
+.build-col{position:sticky;top:90px}
+@media(max-width:900px){.build-col{position:static}}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:600px){
+  .wrap{padding:0 14px}
+  header nav a{padding:5px 8px;font-size:.78em}
+  .hero{padding:30px 0 20px}
+  .logo-hero{width:52px;height:52px;margin-bottom:10px}
+  .hero h1{font-size:1.6em}
+  .hero p{font-size:.92em}
+  .hero .version-bar{font-size:.72em}
+  .hero .gh-btns{flex-direction:column;align-items:center;gap:6px}
+  .build-col h2,.guide-col h2{font-size:1em}
+  .install-box{padding:18px 14px}
+  .install-box h3{font-size:.95em}
+  .guide-section .gs-header{padding:10px 12px}
+  .guide-section .gs-header h3{font-size:.78em}
+  .guide-section .gs-body{padding:0 12px 12px;font-size:.8em}
+  .gs-body table{display:block;overflow-x:auto;width:100%;font-size:.78em}
+  .gs-body th,.gs-body td{padding:5px 6px;white-space:nowrap}
+  .gs-body pre{font-size:.72em;padding:8px 10px}
+  .gs-body ul,.gs-body ol{margin-left:14px}
+  footer{padding:18px 14px;font-size:.7em}
+  footer .fw-links{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+  footer .sep{display:none}
+  .guide-diagram{padding:8px}
+  .guide-diagram svg{max-width:100%}
+}
+@media(max-width:480px){
+  .hero h1{font-size:1.3em}
+  .hero p{font-size:.82em}
+  header{padding:10px 0}
+  header nav a{padding:4px 6px;font-size:.7em}
+  .logo-hero{width:42px;height:42px}
+}
+@media(min-width:601px) and (max-width:900px){
+  .hero h1{font-size:1.9em}
+  header nav a{font-size:.78em;padding:5px 10px}
+}
+
+.build-col h2{font-size:1.2em;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.3px}
+.build-col > p{color:var(--text-muted);font-size:.85em;margin-bottom:20px}
+.install-box{background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;box-shadow:var(--shadow-md)}
+.logo-mini{width:40px;height:40px;margin:0 auto}
+.install-box h3{font-size:1.1em;color:var(--text);margin:8px 0 2px}
+.install-box .sub{color:var(--text-muted);font-size:.82em;margin-bottom:16px}
+esp-web-install-button{display:block;margin:0 auto;max-width:340px}
+esp-web-install-button::part(button){background:var(--text);color:var(--surface);border:none;padding:13px 26px;border-radius:var(--radius-sm);font-size:.95em;cursor:pointer;width:100%;font-weight:600;transition:all var(--transition)}
+esp-web-install-button::part(button):hover{background:var(--accent);transform:translateY(-1px)}
+esp-web-install-button::part(unsupported){background:var(--surface-alt);color:var(--text-muted);padding:13px 18px;border-radius:var(--radius-sm);font-size:.82em}
+.steps-box{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-top:16px}
+.steps-box h4{font-size:.82em;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.steps-box ol{counter-reset:s;list-style:none;padding:0}
+.steps-box li{counter-increment:s;padding:7px 0 7px 32px;position:relative;font-size:.82em;color:var(--text-secondary);border-bottom:1px solid var(--border-light)}
+.steps-box li:last-child{border-bottom:none}
+.steps-box li::before{content:counter(s);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:var(--text);color:var(--surface);display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:600}
+.chip-selector{display:flex;gap:4px;margin:0 auto 14px;justify-content:center;max-width:450px;flex-wrap:wrap}
+.chip-option{flex:1}
+.chip-option input{position:absolute;opacity:0;pointer-events:none}
+.chip-option span{display:block;padding:8px 2px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:.78em;font-weight:600;text-align:center;cursor:pointer;color:var(--text-muted);transition:all var(--transition);background:var(--surface);line-height:1.2}
+.chip-option input:checked+span,.chip-option.active span{border-color:var(--text);color:var(--text);background:var(--surface-alt)}
+.chip-option span:hover{border-color:var(--text-secondary);color:var(--text)}
+[data-theme="dark"] .chip-option span{background:var(--surface);border-color:var(--border);color:var(--text-muted)}
+[data-theme="dark"] .chip-option input:checked+span,[data-theme="dark"] .chip-option.active span{background:var(--surface-alt);border-color:var(--text);color:var(--text)}
+[data-theme="dark"] .chip-option span:hover{border-color:var(--text-secondary);color:var(--text)}
+.fw-info{font-size:.78em;color:var(--text-muted);text-align:center;margin-top:12px}
+.fw-info a{color:var(--text-secondary)}
+/* ------------------ GUIDE (right column) ------------------ */
+.guide-col h2{font-size:1.2em;font-weight:700;color:#000;margin-bottom:14px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.guide-section{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);transition:box-shadow var(--transition)}
+.guide-section:hover{box-shadow:var(--shadow-md)}
+.guide-section .gs-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:var(--surface-alt);transition:background var(--transition);user-select:none}
+.guide-section .gs-header:hover{background:var(--surface-hover)}
+.guide-section .gs-header h3{font-size:.88em;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;line-height:1.35;letter-spacing:-.2px}
+.guide-section .gs-header .arrow{color:var(--text-muted);font-size:.7em;transition:transform .3s ease;flex-shrink:0}
+.guide-section.open .gs-header .arrow{transform:rotate(180deg)}
+.guide-section .gs-body{padding:0 20px 18px;display:none;color:var(--text-secondary);font-size:.85em;line-height:1.7}
+.guide-section.open .gs-body{display:block}
+.gs-body h4{font-size:1.05em;font-weight:700;color:var(--text);margin:22px 0 8px;letter-spacing:-.3px}
+.gs-body h5{font-size:.95em;font-weight:600;color:var(--text);margin:16px 0 6px}
+.gs-body p{margin:10px 0}
+.gs-body ul,.gs-body ol{margin:8px 0 8px 20px}
+.gs-body li{margin:4px 0}
+.gs-body code{background:var(--surface-alt);padding:2px 7px;border-radius:var(--radius-sm);font-size:.88em;color:var(--text);border:1px solid var(--border-light)}
+.gs-body pre{background:#1a1a2e;color:#e4e4ef;padding:14px 16px;border-radius:var(--radius-sm);font-size:.8em;overflow-x:auto;margin:12px 0;border:none;font-family:'Cascadia Code','JetBrains Mono','Consolas',monospace;line-height:1.65;tab-size:2}
+.gs-body table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0;font-size:.92em;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.gs-body th,.gs-body td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.gs-body th{background:var(--surface-alt);font-weight:600;color:var(--text);font-size:.9em;position:sticky;top:0}
+.gs-body td{color:var(--text-secondary)}
+.gs-body tr:last-child td{border-bottom:none}
+.gs-body tr:hover td{background:var(--surface-alt)}
+.gs-body .callout{background:var(--surface-alt);border-left:3px solid var(--text);padding:12px 16px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:14px 0;font-size:.92em;position:relative}
+.gs-body .callout strong{color:var(--text)}
+.gs-body a{color:var(--accent);text-decoration:none;font-weight:500}
+.gs-body a:hover{color:#0d3b9e;text-decoration:underline}
+.gs-body mark{background:#fcefbd;padding:0 3px;border-radius:2px;color:var(--text)}
+.gs-body hr{border:none;border-top:1px solid var(--border);margin:20px 0}
+.gs-body .tag{display:inline-block;background:var(--surface-hover);color:var(--text-secondary);padding:2px 10px;border-radius:20px;font-size:.75em;font-weight:500;letter-spacing:.2px}
+.gs-body .tag-blue{background:#e8f0fe;color:var(--accent)}
+.gs-body .tag-green{background:#e6f7e6;color:var(--accent-green)}
+.gs-body .tag-red{background:#fde8e8;color:var(--accent-red)}
+footer{text-align:center;padding:28px 24px;border-top:1px solid var(--border);color:var(--text-muted);font-size:.76em}
+footer a{color:var(--text-secondary);text-decoration:none}
+footer a:hover{color:var(--text);text-decoration:underline}
+footer .sep{color:var(--border);margin:0 8px}
+footer .fw-links{margin-bottom:6px}
+footer .fw-copy{font-size:.92em;color:var(--text-muted)}
+#btn-top{position:fixed;bottom:28px;right:28px;width:42px;height:42px;border-radius:50%;background:var(--text);color:var(--surface);border:none;cursor:pointer;font-size:1.1em;opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;z-index:99;box-shadow:var(--shadow-lg)}
+#btn-top.show{opacity:1;pointer-events:auto}
+#btn-top:hover{transform:scale(1.08)}
+#reading-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--text));z-index:999;width:0%}
+.guide-diagram{max-width:100%;margin:16px 0;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;align-items:center;box-shadow:var(--shadow-sm)}
+.guide-diagram pre.mermaid{background:none!important;border:none!important;padding:0!important;margin:0;width:100%;display:flex;justify-content:center}
+.guide-diagram svg{width:100%;height:auto;max-width:620px}
+.guide-diagram .diag-cap{text-align:center;font-size:.74em;color:var(--text-muted);margin-top:8px}
+
+/* ---------- DIAGRAM ANIMATIONS ---------- */
+.guide-diagram{animation:diagramFadeIn .5s ease-out}
+@keyframes diagramFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.guide-diagram:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(26,86,219,.12);transition:border-color .3s ease,box-shadow .3s ease}
+.guide-diagram pre.mermaid svg .edgePath .path{stroke-dasharray:6 4;animation:dashFlow 25s linear infinite}
+@keyframes dashFlow{to{stroke-dashoffset:-200}}
+.guide-diagram:hover pre.mermaid svg .edgePath .path{animation-duration:8s}
+.guide-diagram pre.mermaid svg .node rect,.guide-diagram pre.mermaid svg .node polygon{transition:fill .3s ease,stroke .3s ease}
+.guide-diagram:hover pre.mermaid svg .node rect,.guide-diagram:hover pre.mermaid svg .node polygon{fill-opacity:.85}
+@media(prefers-reduced-motion:reduce){.guide-diagram,.guide-diagram pre.mermaid svg .edgePath .path{animation:none}}
+[data-theme="dark"] .guide-diagram:hover{border-color:var(--text-secondary);box-shadow:0 4px 20px rgba(255,255,255,.06)}
+
+.guide-search{margin-bottom:14px;position:relative}
+.guide-search input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85em;outline:0;background:var(--surface-alt);transition:border var(--transition),background var(--transition)}
+.guide-search input:focus{border-color:var(--text);background:var(--surface)}
+.guide-search .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85em}
+.guide-section.hidden{display:none}
+.copy-btn{float:right;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 12px;font-size:.72em;cursor:pointer;color:var(--text-secondary);transition:all var(--transition);font-weight:500}
+.copy-btn:hover{background:var(--surface-hover);color:var(--text)}
+
+/* ---------- DARK MODE ---------- */
+#dark-toggle{background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px 10px;border-radius:var(--radius-sm);font-size:1.1em;line-height:1;display:inline-flex;align-items:center;transition:background var(--transition),color var(--transition)}
+#dark-toggle:hover{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"]{--surface:#0d0d0d;--surface-alt:#141414;--surface-hover:#1e1e1e;--text:#e0e0e0;--text-secondary:#a0a0a0;--text-muted:#6a6a6a;--border:#2a2a2a;--border-light:#222;--shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 16px rgba(0,0,0,.35);--shadow-lg:0 8px 30px rgba(0,0,0,.4)}
+[data-theme="dark"] body{background:var(--surface);color:var(--text)}
+[data-theme="dark"] .logo-img,[data-theme="dark"] .logo-hero,[data-theme="dark"] .logo-mini{filter:invert(1)}
+[data-theme="dark"] header{background:var(--surface-alt);border-color:var(--border);backdrop-filter:none}
+[data-theme="dark"] header .brand{color:var(--text)}
+[data-theme="dark"] header nav a{color:var(--text-muted)}
+[data-theme="dark"] header nav a:hover{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"] #dark-toggle:hover{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"] .hero h1{color:var(--text)}
+[data-theme="dark"] .hero p{color:var(--text-muted)}
+[data-theme="dark"] .hero .version-bar{background:var(--surface-alt);border-color:var(--border);color:var(--text-secondary)}
+[data-theme="dark"] .compat-label{color:var(--text-muted)}
+[data-theme="dark"] .compat-item.ap{background:#2a1515;color:#e57373}
+[data-theme="dark"] .compat-item.bf{background:#152d15;color:#66bb6a}
+[data-theme="dark"] .compat-item.inav{background:#152240;color:#64b5f6}
+[data-theme="dark"] .compat-item img{filter:brightness(.85)}
+[data-theme="dark"] .build-col h2{color:var(--text)}
+[data-theme="dark"] .install-box{background:var(--surface-alt);border-color:var(--border)}
+[data-theme="dark"] .install-box h3{color:var(--text)}
+[data-theme="dark"] .steps-box{background:var(--surface-alt);border-color:var(--border)}
+[data-theme="dark"] .steps-box h4{color:var(--text-secondary)}
+[data-theme="dark"] .steps-box li{color:var(--text-secondary);border-color:var(--border-light)}
+[data-theme="dark"] .steps-box li::before{background:var(--text-muted)}
+[data-theme="dark"] .guide-col h2{color:var(--text)}
+[data-theme="dark"] .guide-section{background:var(--surface);border-color:var(--border);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+[data-theme="dark"] .guide-section .gs-header{background:var(--surface-alt)}
+[data-theme="dark"] .guide-section .gs-header:hover{background:var(--surface-hover)}
+[data-theme="dark"] .guide-section .gs-header h3{color:var(--text)}
+[data-theme="dark"] .guide-section .gs-body{color:var(--text-secondary)}
+[data-theme="dark"] .gs-body h4{color:var(--text)}
+[data-theme="dark"] .gs-body h5{color:var(--text)}
+[data-theme="dark"] .gs-body code{background:var(--surface-hover);color:var(--text);border-color:var(--border)}
+[data-theme="dark"] .gs-body pre{background:#0d0d0d;color:#d0d0d0;border:none}
+[data-theme="dark"] .gs-body th{background:var(--surface-alt);color:var(--text)}
+[data-theme="dark"] .gs-body td{color:var(--text-secondary);border-color:var(--border)}
+[data-theme="dark"] .gs-body tr:hover td{background:var(--surface-alt)}
+[data-theme="dark"] .gs-body .callout{background:var(--surface-alt);border-left-color:var(--text-muted)}
+[data-theme="dark"] .gs-body a{color:#7a9fdb}
+[data-theme="dark"] .gs-body a:hover{color:#aac3ef}
+[data-theme="dark"] .gs-body mark{background:#554400;color:#ffe066}
+[data-theme="dark"] .gs-body hr{border-color:var(--border)}
+[data-theme="dark"] .gs-body .tag{background:var(--surface-hover);color:var(--text-secondary)}
+[data-theme="dark"] .gs-body .tag-blue{background:#152240;color:#6a8fc9}
+[data-theme="dark"] .gs-body .tag-green{background:#152d15;color:#5a9e5a}
+[data-theme="dark"] .gs-body .tag-red{background:#2d1515;color:#c66}
+[data-theme="dark"] .guide-search input{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
+[data-theme="dark"] .guide-search input:focus{border-color:var(--text-muted);background:var(--surface)}
+[data-theme="dark"] .guide-diagram{background:var(--surface-alt);border-color:var(--border)}
+[data-theme="dark"] .guide-diagram svg{filter:brightness(.85) contrast(1.1)}
+[data-theme="dark"] footer{background:var(--surface-alt);border-color:var(--border);color:var(--text-muted)}
+[data-theme="dark"] footer a{color:var(--text-secondary)}
+[data-theme="dark"] footer a:hover{color:var(--text)}
+[data-theme="dark"] #btn-top{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"] #reading-progress{background:linear-gradient(90deg,#555,#888)}
+[data-theme="dark"] .copy-btn{background:var(--surface-hover);border-color:var(--border);color:var(--text-secondary)}
+[data-theme="dark"] .copy-btn:hover{background:var(--surface-alt)}
+
+/* ---------- RELEASE BAR ---------- */
+.release-bar{padding:0 0 20px}
+.rl-wrap{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 28px 18px;position:relative}
+[data-theme="dark"] .rl-wrap{background:var(--surface-alt);border-color:var(--border)}
+.rl-timeline{position:relative;height:72px;margin:0 8px}
+.rl-track{position:absolute;top:18px;left:8px;right:8px;height:4px;background:var(--border);border-radius:2px;z-index:0}
+[data-theme="dark"] .rl-track{background:var(--border)}
+.rl-progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--text));border-radius:2px;transition:width .5s ease}
+[data-theme="dark"] .rl-progress{background:linear-gradient(90deg,var(--accent),var(--text))}
+.rl-milestone{position:absolute;top:11px;transform:translateX(-50%);z-index:1;text-align:center}
+.rl-dot{width:14px;height:14px;border-radius:50%;background:var(--border);border:2px solid var(--text-muted);margin:0 auto 4px;position:relative;z-index:2;box-sizing:border-box}
+.rl-milestone.active .rl-dot{background:var(--text);border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,.12)}
+[data-theme="dark"] .rl-milestone.active .rl-dot{background:var(--text);border-color:var(--text);box-shadow:0 0 0 3px rgba(255,255,255,.1)}
+.rl-milestone.future .rl-dot{background:var(--surface);border-color:var(--border);border-style:dashed}
+.rl-ver{font-size:.72em;font-weight:600;color:var(--text);white-space:nowrap}
+.rl-label{font-size:.62em;color:var(--text-muted);margin-top:1px}
+.rl-date{font-size:.55em;color:var(--text-muted);margin-top:1px}
+.rl-milestone.active .rl-ver{color:var(--text)}
+[data-theme="dark"] .rl-ver{color:var(--text)}
+[data-theme="dark"] .rl-milestone.active .rl-ver{color:var(--text)}
+[data-theme="dark"] .rl-date{color:var(--text-muted)}
+.rl-changelog{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);align-items:center}
+[data-theme="dark"] .rl-changelog{border-color:var(--border)}
+.rl-cl-entry{font-size:.74em;color:var(--text-secondary);display:flex;align-items:center;gap:5px;padding:2px 0;width:100%}
+@media(min-width:700px){.rl-cl-entry{width:48%}}
+.rl-cl-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.68em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;flex-shrink:0}
+.rl-cl-tag.rl-feat{background:#e8f0fe;color:var(--accent)}
+.rl-cl-tag.rl-fix{background:#e6f7e6;color:var(--accent-green)}
+.rl-cl-tag.rl-chore{background:var(--surface-hover);color:var(--text-muted)}
+[data-theme="dark"] .rl-cl-tag.rl-feat{background:#152240;color:#6a8fc9}
+[data-theme="dark"] .rl-cl-tag.rl-fix{background:#152d15;color:#5a9e5a}
+[data-theme="dark"] .rl-cl-tag.rl-chore{background:var(--surface-hover);color:var(--text-muted)}
+[data-theme="dark"] .rl-cl-entry{color:var(--text-secondary)}
+.rl-cl-more{font-size:.72em;padding-top:4px;width:100%}
+.rl-cl-more a{color:var(--text-secondary);text-decoration:none}
+.rl-cl-more a:hover{color:var(--text);text-decoration:underline}
+[data-theme="dark"] .rl-cl-more a{color:var(--text-secondary)}
+[data-theme="dark"] .rl-cl-more a:hover{color:var(--text)}
+@media(max-width:600px){.rl-timeline{height:62px;margin:0 4px}.rl-wrap{padding:16px 14px 14px}.rl-ver{font-size:.64em}.rl-label{font-size:.55em}.rl-date{font-size:.5em}.rl-dot{width:10px;height:10px}.rl-milestone .rl-dot{margin-bottom:2px}}
+
+/* ---------- COLORED SECTION HEADERS ---------- */
+.guide-section .gs-header{position:relative}
+.guide-section .gs-header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 2px 2px 0}
+.guide-section:nth-of-type(1) .gs-header::before{background:linear-gradient(180deg,#e65100,#ff8a50)}
+.guide-section:nth-of-type(2) .gs-header::before{background:linear-gradient(180deg,#6a1b9a,#9c6fb5)}
+.guide-section:nth-of-type(3) .gs-header::before{background:linear-gradient(180deg,#2e7d32,#5a9e5a)}
+.guide-section:nth-of-type(4) .gs-header::before{background:linear-gradient(180deg,#c62828,#e57373)}
+.guide-section:nth-of-type(5) .gs-header::before{background:linear-gradient(180deg,#1565c0,#5a8fc9)}
+.guide-section:nth-of-type(6) .gs-header::before{background:linear-gradient(180deg,#f57f17,#ffb74d)}
+.guide-section:nth-of-type(7) .gs-header::before{background:linear-gradient(180deg,#4a148c,#9c6fb5)}
+.guide-section:nth-of-type(8) .gs-header::before{background:linear-gradient(180deg,#00695c,#4db6ac)}
+.guide-section:nth-of-type(9) .gs-header::before{background:linear-gradient(180deg,#bf360c,#ff8a65)}
+.guide-section:nth-of-type(10) .gs-header::before{background:linear-gradient(180deg,#37474f,#78909c)}
+.guide-section:nth-of-type(11) .gs-header::before{background:linear-gradient(180deg,#e65100,#ff8a50)}
+.guide-section:nth-of-type(12) .gs-header::before{background:linear-gradient(180deg,#1a237e,#5a8fc9)}
+.guide-section:nth-of-type(13) .gs-header::before{background:linear-gradient(180deg,#33691e,#7cb342)}
+.guide-section:nth-of-type(14) .gs-header::before{background:linear-gradient(180deg,#880e4f,#e57373)}
+.guide-section:nth-of-type(n+15) .gs-header::before{background:linear-gradient(180deg,#666,#999)}
+[data-theme="dark"] .guide-section:nth-of-type(1) .gs-header::before{background:linear-gradient(180deg,#ff8a50,#e65100)}
+[data-theme="dark"] .guide-section:nth-of-type(2) .gs-header::before{background:linear-gradient(180deg,#9c6fb5,#6a1b9a)}
+[data-theme="dark"] .guide-section:nth-of-type(3) .gs-header::before{background:linear-gradient(180deg,#5a9e5a,#2e7d32)}
+[data-theme="dark"] .guide-section:nth-of-type(4) .gs-header::before{background:linear-gradient(180deg,#e57373,#c62828)}
+[data-theme="dark"] .guide-section:nth-of-type(5) .gs-header::before{background:linear-gradient(180deg,#5a8fc9,#1565c0)}
+[data-theme="dark"] .guide-section:nth-of-type(6) .gs-header::before{background:linear-gradient(180deg,#ffb74d,#f57f17)}
+[data-theme="dark"] .guide-section:nth-of-type(7) .gs-header::before{background:linear-gradient(180deg,#9c6fb5,#4a148c)}
+[data-theme="dark"] .guide-section:nth-of-type(8) .gs-header::before{background:linear-gradient(180deg,#4db6ac,#00695c)}
+[data-theme="dark"] .guide-section:nth-of-type(9) .gs-header::before{background:linear-gradient(180deg,#ff8a65,#bf360c)}
+[data-theme="dark"] .guide-section:nth-of-type(10) .gs-header::before{background:linear-gradient(180deg,#78909c,#37474f)}
+[data-theme="dark"] .guide-section:nth-of-type(11) .gs-header::before{background:linear-gradient(180deg,#ff8a50,#e65100)}
+[data-theme="dark"] .guide-section:nth-of-type(12) .gs-header::before{background:linear-gradient(180deg,#5a8fc9,#1a237e)}
+[data-theme="dark"] .guide-section:nth-of-type(13) .gs-header::before{background:linear-gradient(180deg,#7cb342,#33691e)}
+[data-theme="dark"] .guide-section:nth-of-type(14) .gs-header::before{background:linear-gradient(180deg,#e57373,#880e4f)}
+
+/* ---------- WIRING CARDS ---------- */
+.wiring-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+@media(max-width:700px){.wiring-grid{grid-template-columns:1fr}}
+.wiring-card{border-radius:var(--radius);padding:18px 20px;border:1px solid;position:relative;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition),transform var(--transition)}
+.wiring-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.wiring-card h5{margin:0 0 6px;font-size:.92em;font-weight:600}
+.wiring-card p{margin:0;font-size:.82em;line-height:1.5}
+.wiring-card pre{font-size:.72em;padding:8px 10px;margin:8px 0 0;background:rgba(255,255,255,.6);border-radius:var(--radius-sm);overflow-x:auto;border:1px solid rgba(0,0,0,.06)}
+[data-theme="dark"] .wiring-card pre{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.06)}
+.wiring-card.ap{background:#fdecea;border-color:#e8c9c9;color:#5c1a1a}
+.wiring-card.bf{background:#e8f5e9;border-color:#c8e0c9;color:#1a3d1a}
+.wiring-card.nmea{background:#e3f2fd;border-color:#c0d8e8;color:#0a2a4a}
+.wiring-card.diagram{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
+[data-theme="dark"] .wiring-card.ap{background:#2a1515;border-color:#4a2525;color:#e57373}
+[data-theme="dark"] .wiring-card.bf{background:#152d15;border-color:#254025;color:#66bb6a}
+[data-theme="dark"] .wiring-card.nmea{background:#152240;border-color:#253b5a;color:#64b5f6}
+[data-theme="dark"] .wiring-card.diagram{background:var(--surface-alt);border-color:var(--border);color:var(--text)}
+.wiring-card .wc-icon{font-size:1.5em;margin-bottom:4px}
+.wiring-card .wc-label{position:absolute;top:8px;right:12px;font-size:.65em;text-transform:uppercase;font-weight:600;opacity:.4;letter-spacing:.8px;background:rgba(0,0,0,.04);padding:2px 8px;border-radius:10px}
+[data-theme="dark"] .wiring-card .wc-label{background:rgba(255,255,255,.06)}
+
+/* ---------- SUPPORT TABLE ---------- */
+.support-table{font-size:.82em;width:100%;border-collapse:separate;border-spacing:0;margin:14px 0;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.support-table th,.support-table td{padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.support-table th:last-child,.support-table td:last-child{border-right:none}
+.support-table th{background:var(--surface-alt);font-weight:600;color:var(--text);font-size:.85em;position:sticky;top:0}
+.support-table td{color:var(--text-secondary)}
+.support-table td:first-child{text-align:left;font-weight:500;white-space:nowrap}
+.support-table tr:last-child td{border-bottom:none}
+.support-table .y{background:#e6f7e6;color:#1a7d2e;font-weight:600}
+.support-table .n{background:#fde8e8;color:#c62828}
+.support-table .p{background:#fff8e1;color:#e65100}
+.support-table .na{color:var(--text-muted);font-size:.8em}
+[data-theme="dark"] .support-table th{background:var(--surface-alt);color:var(--text)}
+[data-theme="dark"] .support-table td{border-color:var(--border);color:var(--text-secondary)}
+[data-theme="dark"] .support-table .y{background:#1a3a1a;color:#66bb6a}
+[data-theme="dark"] .support-table .n{background:#3a1a1a;color:#e57373}
+[data-theme="dark"] .support-table .p{background:#3a3a1a;color:#ffd54f}
+
+/* ---------- ANCHOR LINKS ---------- */
+.gs-body .anchor-link{opacity:0;text-decoration:none;color:var(--text-muted);font-size:.85em;margin-left:4px;transition:opacity .15s}
+.gs-body h4:hover .anchor-link,.gs-body h5:hover .anchor-link{opacity:1}
+.gs-body .anchor-link:hover{color:var(--text-secondary)}
+
+/* ---------- TOC ---------- */
+#btn-toc{position:fixed;right:0;top:50%;transform:translateY(-50%);background:var(--text);color:var(--surface);border:none;border-radius:8px 0 0 8px;padding:10px 8px;cursor:pointer;z-index:98;font-size:.75em;writing-mode:vertical-rl;letter-spacing:1px;transition:opacity var(--transition),background var(--transition);opacity:.5}
+#btn-toc:hover{opacity:1;background:var(--accent)}
+[data-theme="dark"] #btn-toc{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"] #btn-toc:hover{background:var(--accent);color:var(--surface)}
+#toc-panel{position:fixed;right:0;top:0;bottom:0;width:200px;background:var(--surface);border-left:1px solid var(--border);z-index:97;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:20px 14px;box-shadow:-4px 0 20px rgba(0,0,0,.08)}
+#toc-panel.open{transform:translateX(0)}
+[data-theme="dark"] #toc-panel{background:var(--surface);border-color:var(--border)}
+#toc-panel h4{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+#toc-panel a{display:block;padding:6px 10px;color:var(--text-secondary);text-decoration:none;font-size:.78em;border-radius:var(--radius-sm);margin:2px 0;transition:all .1s}
+#toc-panel a:hover{background:var(--surface-alt);color:var(--text)}
+#toc-panel a.active{background:var(--surface-hover);color:var(--text);font-weight:600}
+[data-theme="dark"] #toc-panel a{color:var(--text-secondary)}
+[data-theme="dark"] #toc-panel a:hover{background:var(--surface-hover);color:var(--text)}
+[data-theme="dark"] #toc-panel a.active{background:var(--surface-hover);color:var(--text)}
+@media(max-width:900px){#toc-panel{width:180px;font-size:.9em}#btn-toc{padding:8px 6px;font-size:.7em}}
+@media(max-width:600px){#toc-panel{width:160px;right:auto;left:0;transform:translateX(-100%)}#toc-panel.open{transform:translateX(0)}#btn-toc{right:auto;left:0;border-radius:0 8px 8px 0}}
+
+/* ---------- LIGHTBOX ---------- */
+#lb-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;display:none;justify-content:center;align-items:center;cursor:pointer;padding:30px}
+#lb-overlay.open{display:flex}
+#lb-overlay svg{max-width:95vw;max-height:90vh;background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:0 8px 60px rgba(0,0,0,.5)}
+#lb-overlay .lb-close{position:absolute;top:16px;right:22px;color:#fff;font-size:2em;cursor:pointer;opacity:.7;background:none;border:none;font-family:inherit}
+#lb-overlay .lb-close:hover{opacity:1}
+[data-theme="dark"] #lb-overlay svg{background:var(--surface)}
+
+/* ---------- BREADCRUMBS ---------- */
+.breadcrumbs{font-size:.75em;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.breadcrumbs a{color:var(--text-secondary);text-decoration:none}
+.breadcrumbs a:hover{color:var(--text);text-decoration:underline}
+.breadcrumbs .cur{color:var(--text)}
+.breadcrumbs .sep{color:var(--text-muted);margin:0 2px}
+[data-theme="dark"] .breadcrumbs{color:var(--text-muted)}
+[data-theme="dark"] .breadcrumbs a{color:var(--text-secondary)}
+[data-theme="dark"] .breadcrumbs a:hover{color:var(--text)}
+[data-theme="dark"] .breadcrumbs .cur{color:var(--text)}</style>
+</head>
+<body>
+<div id="reading-progress"></div>
+
+<header>
+<div class="wrap">
+<a href="#" class="brand" aria-label="ESP DRONE REMOTEID home">
+<img class="logo-img" src="images/logo%20con%20scritta.svg" alt="ESP DRONE REMOTEID">
+</a>
+<nav aria-label="Main navigation">
+<a href="index.html">Quick Start</a>
+<a href="#guide">Guide</a>
+<a href="#guide-analyzer">Analyzer</a>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" aria-label="GitHub repository">
+<svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
+</a>
+<a href="config(demo).html">Configurator Live Demo</a>
+<button id="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode">&#x263e;</button>
+</nav>
+</div>
+</header>
+
+<div class="wrap">
+<div class="hero">
+<img class="logo-hero" src="images/logo.svg" alt="ESP DRONE REMOTEID">
+<h1>ESP DRONE REMOTEID <span style="font-size:.5em;color:#c62828;font-weight:700">[BETA]</span></h1>
+<p>Universal ASTM F3411-22a Open DroneID transmitter &mdash; WiFi Beacon &middot; BLE 4.0/5.0 &middot; MAVLink &middot; MSP &middot; NMEA</p>
+<div class="version-bar" style="border-color:#f57c00;background:#fff3e0;color:#e65100">&#x26a0; BETA &mdash; v1.0.0-beta &middot; Core functionality complete, demo mode verified, FC hardware testing in progress</div>
+<div class="gh-btns">
+  <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID" data-show-count="true" data-size="large" aria-label="Star VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Star</a>
+  <a class="github-button" href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/fork" data-show-count="true" data-size="large" aria-label="Fork VOLTEKOVER/ESP_DRONE_REMOTEID on GitHub">Fork</a>
+</div>
+<div class="compat-bar">
+  <span class="compat-label">Target protocols</span>
+  <span class="compat-item ap">
+    <img src="images/ardupilot_logo.webp" alt="ArduPilot" height="28">
+    MAVLink
+  </span>
+  <span class="compat-item bf">
+    <img src="images/betaflight_logo.svg" alt="Betaflight" height="28">
+    MSP
+  </span>
+  <span class="compat-item inav">
+    <img src="images/inav_logo.png" alt="INAV" height="28">
+    NMEA
+  </span>
+</div>
+</div>
+
+<!-- RELEASE BAR -->
+<div class="release-bar">
+<div class="rl-wrap">
+<div style="padding:12px 0;text-align:center">
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 6 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+</div>
+</div>
+</div>
+
+<div class="main-grid">
+<div class="build-col" id="build">
+<h2>&#x1f4d6; Technical Guide</h2>
+<p>Detailed protocol and configuration reference.</p>
+<div style="background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;box-shadow:var(--shadow-md)">
+<div style="font-size:3em;margin-bottom:8px">&#x26a1;</div>
+<h3 style="font-size:1.1em;color:var(--text);margin:0 0 6px;font-weight:700">Quick Start</h3>
+<p style="color:var(--text-muted);font-size:.82em;margin-bottom:14px">Flash firmware via browser &mdash; no tools needed</p>
+<a href="index.html" style="display:inline-block;background:var(--text);color:var(--surface);padding:13px 26px;border-radius:var(--radius-sm);font-size:.95em;font-weight:600;text-decoration:none;transition:all var(--transition)">Go to Quick Start &#8594;</a>
+<p class="fw-info" style="margin-top:12px">Browser-based WebSerial installer with chip selector</p>
+</div>
+</div>
+
+<div class="guide-col" id="guide">
+<h2>&#x1f4d6; Technical Guide</h2>
+<div class="breadcrumbs"><a href="index.html">Quick Start</a><span class="sep">›</span><span class="cur">Guide</span></div>
+<div class="guide-search">
+<span class="search-icon">&#x1f50d;</span>
+<input type="text" id="guide-search" placeholder="Search guide sections..." oninput="filterGuide(this.value)" aria-label="Search guide sections">
+</div>
+
+
+
+<!-- 3. PROTOCOLS -->
+<div class="guide-section" id="guide-protocols">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>3. Protocol Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Protocol Auto-Detection</h4>
+<p>On boot, the ESP DRONE REMOTEID listens to the UART for 50 ms and identifies the protocol by looking for specific headers. The detection logic runs in this priority order:</p>
+
+<div class="guide-diagram">
+<pre class="mermaid">
+flowchart TD
+  Start["Boot / Reset"]
+  Listen["Listen UART 50 ms"]
+
+  MAVLink{"0xFE or 0xFD?<br/>MAVLink v1/v2"}
+  MSP{"$M&lt; or $M&gt;?<br/>MSP v1 header"}
+  NMEA{"$G prefix?<br/>NMEA 0183"}
+
+  MAV_OK["✅ MAVLink<br/>Store: protocol=1"]
+  MSP_OK["✅ MSP<br/>Store: protocol=2"]
+  NMEA_OK["✅ NMEA<br/>Store: protocol=3"]
+
+  Main["Run main loop"]
+
+  Start --> Listen
+  Listen --> MAVLink
+  MAVLink -->|Yes| MAV_OK
+  MAVLink -->|No| MSP
+  MSP -->|Yes| MSP_OK
+  MSP -->|No| NMEA
+  NMEA -->|Yes| NMEA_OK
+  NMEA -->|No| Main
+  MAV_OK --> Main
+  MSP_OK --> Main
+  NMEA_OK --> Main
+</pre>
+<div class="diag-cap">Protocol auto-detection priority order. The first matching protocol is selected and stored until reboot.</div>
+</div>
+
+<p>Once detected, the protocol is stored and used until the next reboot. You can force re-detection by resetting the ESP32.</p>
+
+<h4>MAVLink (ArduPilot)</h4>
+<p>The firmware parses the following MAVLink v1/v2 messages (dialect: <code>ardupilotmega</code>):</p>
+<table>
+<tr><th>Message</th><th>ID</th><th>Data Used</th><th>Frequency</th></tr>
+<tr><td><code>GLOBAL_POSITION_INT</code></td><td>33</td><td>Latitude, longitude, altitude (MSL + relative), heading, relative alt</td><td>~5 Hz</td></tr>
+<tr><td><code>GPS_RAW_INT</code></td><td>24</td><td>Latitude, longitude, altitude (MSL), ground speed, satellites, fix type</td><td>~5 Hz</td></tr>
+<tr><td><code>VFR_HUD</code></td><td>74</td><td>Ground speed, heading, altitude (baro), climb rate</td><td>~5 Hz</td></tr>
+<tr><td><code>ATTITUDE</code></td><td>30</td><td>Roll, pitch, yaw (heading)</td><td>~10 Hz</td></tr>
+<tr><td><code>AHRS2</code></td><td>234</td><td>Secondary heading (ArduPilot), used as fallback</td><td>~5 Hz</td></tr>
+<tr><td><code>HEARTBEAT</code></td><td>0</td><td>System ID, vehicle type (for auto-detection)</td><td>1 Hz</td></tr>
+<tr><td><code>SYS_STATUS</code></td><td>1</td><td>Battery voltage, error flags</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_LOCATION</code></td><td>12915</td><td>Pre-encoded ODID location (lat/lon/alt/alt_baro/vel/heading)</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_BASIC_ID</code></td><td>12900</td><td>UAS ID, ID type, UA type (overrides config identity)</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_OPERATOR_ID</code></td><td>12905</td><td>Operator ID from ground station</td><td>~1 Hz</td></tr>
+<tr><td><code>OPEN_DRONE_ID_SYSTEM</code></td><td>12904</td><td>Operator location (GPS fallback when FC has no fix)</td><td>~1 Hz</td></tr>
+</table>
+<p>The MAVLink parser handles both v1 (0xFE start byte) and v2 (0xFD start byte) protocols. The system ID from the first HEARTBEAT message is used if <code>mavlink_sysid = 0</code> (auto-detect). ODID messages override the config identity for compatibility with ArduPilot's native Remote ID support.</p>
+
+<h5>MAVLink Configuration Tips</h5>
+<ul>
+<li>Set the baud rate to match your ArduPilot serial port (57600 is common).</li>
+<li>If using MAVLink v2, ensure the port is configured for MAVLink1 or MAVLink2.</li>
+<li>The firmware only <b>listens</b> &mdash; it does not send any MAVLink messages, so it will not interfere with your existing telemetry link.</li>
+</ul>
+
+<h4>MSP (Betaflight / INAV)</h4>
+<p>The firmware parses the following MSP v1 messages:</p>
+<table>
+<tr><th>Message</th><th>ID</th><th>Data Used</th><th>Notes</th></tr>
+<tr><td><code>MSP_RAW_GPS</code></td><td>106</td><td>Latitude, longitude, altitude, speed, ground course, satellites, fix type</td><td>Primary GPS data source</td></tr>
+<tr><td><code>MSP_ATTITUDE</code></td><td>108</td><td>Roll, pitch, yaw (heading in degrees)</td><td>Heading for ODID message</td></tr>
+</table>
+<p>The MSP parser expects the standard MSP v1 framing: <code>$M&lt;</code> header, size byte, command byte, data payload, checksum. It does not require sending any request to the FC &mdash; it passively listens to the FC's MSP response stream (typically from the FC's telemetry output).</p>
+
+<h5>MSP Configuration Tips</h5>
+<ul>
+<li>Enable MSP on the desired UART in the Betaflight Configurator Ports tab.</li>
+<li>Set baud rate to match (57600 is common for MSP).</li>
+<li>INAV sends MSP_RAW_GPS automatically at ~5 Hz when armed.</li>
+<li>Betaflight may require setting <code>serialrx_provider = MSP</code> for continuous GPS output.</li>
+</ul>
+
+<h4>NMEA 0183</h4>
+<p>The firmware parses the following NMEA 0183 sentences:</p>
+<table>
+<tr><th>Sentence</th><th>Type</th><th>Data Used</th></tr>
+<tr><td><code>$GPGGA</code></td><td>Global Positioning System Fix Data</td><td>Latitude, longitude, altitude (MSL), fix quality (0/1/2), satellites, HDOP</td></tr>
+<tr><td><code>$GPRMC</code></td><td>Recommended Minimum Specific GNSS Data</td><td>Speed over ground (knots &rarr; m/s), ground course, date, status (A=valid)</td></tr>
+<tr><td><code>$GPVTG</code></td><td>Course Over Ground and Ground Speed</td><td>Ground speed (km/h &rarr; m/s), course over ground (true)</td></tr>
+</table>
+<p>The NMEA parser handles both <code>$GP</code> (GPS) and <code>$GN</code> (GNSS) prefixes. It uses the AIVDM checksum validation and silently discards malformed sentences.</p>
+
+<h5>NMEA Configuration Tips</h5>
+<ul>
+<li>GPS modules typically output NMEA at 9600 or 115200 baud. Set the baud rate accordingly.</li>
+<li>The NMEA mode requires the <b>1 k&Omega; series resistor</b> on the TX tap line (see Hardware section).</li>
+<li>NMEA mode works with any GPS module: BN-880, BN-220, M8N, M10, NEO-6M, NEO-8M, and many others.</li>
+<li>The ESP32 can share the GPS TX line with the FC &mdash; the resistor prevents the ESP32's input capacitance from degrading the signal to the FC.</li>
+</ul>
+</div>
+</div>
+
+<!-- 4. INSTALLATION -->
+<div class="guide-section" id="guide-installation">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')">
+<h3>4. Installation Methods</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Method 1: WebSerial (Browser) &mdash; Recommended</h4>
+<p>The easiest method. Requires Chrome or Edge on Windows, macOS, or Linux. No Python or toolchain needed.</p>
+<ol>
+<li>Connect the ESP32 to your computer via USB.</li>
+<li>Install the CP2102 or CH340 driver if prompted (Windows usually auto-installs).</li>
+<li>Click the <b>install</b> button in the left column of this page.</li>
+<li>A browser dialog will appear showing available serial ports. Select your ESP32 (usually labeled <code>CP2102 USB to UART Bridge</code> or <code>CH340</code>).</li>
+<li>Click <b>Connect</b>. The firmware will download and flash automatically.</li>
+<li>Wait for the progress bar to complete and the "Done" message.</li>
+<li>Disconnect USB and power the ESP32 from your flight controller's BEC or a USB power bank.</li>
+</ol>
+<div class="callout"><strong>&#x26a0; Note:</strong> WebSerial requires HTTPS (this page is served via GitHub Pages which is HTTPS). If running locally, use <code>localhost</code> or enable HTTPS.</div>
+
+<h4>Method 2: ESP-IDF (Manual Build)</h4>
+<p>For developers or users who want to customize the firmware.</p>
+<h5>Prerequisites</h5>
+<ul>
+<li>ESP-IDF v6.0.1 installed at <code>C:\esp\v6.0.1\esp-idf</code> (Windows) or <code>$HOME/esp/v6.0.1/esp-idf</code> (Linux/Mac)</li>
+<li>Python 3.10+</li>
+<li>Git</li>
+</ul>
+<h5>Build Steps</h5>
+<pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
+cd ESP_DRONE_REMOTEID/ESP32_DRONE_REMOTE_ID_Firmware
+
+# Set up ESP-IDF environment (Windows PowerShell)
+C:\esp\v6.0.1\esp-idf\export.ps1
+
+# Set target
+idf.py set-target esp32        # esp32, esp32s2, esp32s3
+                               # esp32c2, esp32c3, esp32c6
+
+# Build
+idf.py build
+
+# Flash
+idf.py -p COM3 flash
+
+# Monitor
+idf.py -p COM3 monitor</pre>
+<p>CI builds all 6 targets automatically on push (see <code>.github/workflows/build.yml</code>).</p>
+
+<h4>Method 3: esptool.py</h4>
+<p>For users who prefer a command-line tool without the full ESP-IDF:</p>
+<pre>pip install esptool
+
+# For ESP32
+esptool.py --chip esp32 --port COM3 --baud 921200 \
+  --before default_reset --after hard_reset write_flash \
+  0x1000 bootloader.bin \
+  0x8000 partition-table.bin \
+  0x20000 esp-remote-id.bin
+
+# For ESP32-S3
+esptool.py --chip esp32s3 --port COM3 --baud 921200 \
+  --before default_reset --after hard_reset write_flash \
+  0x0 bootloader.bin \
+  0x8000 partition-table.bin \
+  0x20000 esp-remote-id.bin</pre>
+<p>The <code>.bin</code> files are generated by <code>idf.py build</code> and can be found in the <code>build/</code> directory. Pre-built binaries are also available in this project's releases.</p>
+
+<h4>Method 4: Docker</h4>
+<pre>docker run --rm -v $(pwd):/project -w /project \
+  espressif/idf:v6.0.1 idf.py build
+
+# Binaries are inside the container; extract with:
+docker run --rm -v $(pwd):/out -v $(pwd):/project -w /project \
+  espressif/idf:v6.0.1 cp build/*.bin /out/</pre>
+
+<h4>First Boot &amp; Verification</h4>
+<p>After flashing successfully, the firmware boots in one of two modes:</p>
+<ul>
+<li><b>Demo mode (default for first boot):</b> Simulates a drone flying a circular patrol over Rome (Colosseum, 200m radius). No flight controller needed. You can configure, view live telemetry, and test OTA immediately.</li>
+<li><b>FC mode:</b> Connect to a flight controller via UART for real GPS data.</li>
+</ul>
+
+<p>To toggle demo mode, use the config UI or set <code>options</code> bit 0.</p>
+
+<ol>
+<li><b>Power the ESP32</b> via USB or connect to your flight controller's BEC.</li>
+<li><b>Wait 10-15 seconds</b> for the ESP32 to boot. The RGB LED (if configured) shows status: red = no fix, green = fix OK, blink on TX.</li>
+<li><b>Scan for WiFi</b> on your phone or laptop. You should see a network named <b>ESP-RID</b> (or your custom SSID).</li>
+<li><b>Connect to ESP-RID</b> (no password by default).</li>
+<li><b>Open a browser</b> and navigate to <code>http://192.168.4.1</code>. The configuration page should load.</li>
+<li><b>Check the Status section</b> — in demo mode, you'll see simulated GPS patrol data. With an FC connected, it shows the detected protocol and live GPS data.</li>
+<li><b>Verify Remote ID broadcast</b> — use a smartphone app like <i>Drone Scanner</i> (iOS/Android) or <i>OpenDroneID Viewer</i> (Android) to confirm that Remote ID messages are being received.</li>
+</ol>
+
+<h5>LED Behavior</h5>
+<table>
+<tr><th>LED State</th><th>Intended Meaning</th></tr>
+<tr><td>Solid on (briefly at boot)</td><td>ESP32 initializing</td></tr>
+<tr><td>Slow blink (~1 Hz)</td><td>GPS fix acquired, broadcasting Remote ID</td></tr>
+<tr><td>Fast blink (~5 Hz)</td><td>No GPS fix, waiting for data</td></tr>
+<tr><td>Off</td><td>LED not connected or GPIO2 not configured</td></tr>
+</table>
+
+<h5>First-Time Configuration Checklist</h5>
+<ol>
+<li>Set your <b>UAS ID</b> (serial number or CAA registration) in the Identity section.</li>
+<li>Set your <b>Operator ID</b> if required by your local regulations.</li>
+<li>Verify the <b>baud rate</b> matches your flight controller's serial port speed.</li>
+<li>Enable the transmission modes you need (WiFi Beacon, BLE 4.0, BLE 5.0).</li>
+<li>Click <b>Save All</b> to persist settings.</li>
+<li>Reboot the ESP32 to ensure settings are applied correctly.</li>
+</ol>
+
+<h4>Troubleshooting Flash Issues</h4>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Serial port not found</td><td>Install CP2102/CH340 driver, check device manager</td></tr>
+<tr><td>Brownout error during flash</td><td>Use a high-quality USB cable, connect to USB 2.0 port, reduce flash baud rate</td></tr>
+<tr><td>Timeout waiting for header</td><td>Hold GPIO0 while connecting, or press reset button with GPIO0 grounded</td></tr>
+<tr><td>A fatal error occurred: Failed to connect</td><td>Check USB connection, install drivers, try different USB port</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 5. CONFIGURATION -->
+<div class="guide-section" id="guide-config">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>5. Configuration Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Accessing the Web UI</h4>
+<ol>
+<li>Connect to the WiFi network <code>ESP-RID</code> (password: none by default).</li>
+<li>Open a browser and navigate to <code>http://192.168.4.1</code>.</li>
+<li>The web configuration page loads automatically.</li>
+</ol>
+<p>All settings can be also accessed via the REST API (see section below).</p>
+
+<h4>Parameter Reference (26 Parameters)</h4>
+<table>
+<tr><th>#</th><th>Parameter</th><th>JSON Key</th><th>Type</th><th>Range</th><th>Default</th><th>Description</th></tr>
+<tr><td>1</td><td>UAS ID</td><td><code>uas_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Serial number or CAA registration. Example: <code>RID-12345678</code></td></tr>
+<tr><td>2</td><td>ID Type</td><td><code>id_type</code></td><td>uint8</td><td>1-4</td><td>1</td><td>1=Serial, 2=CAA, 3=UTM UUID, 4=Session ID</td></tr>
+<tr><td>3</td><td>UA Type</td><td><code>ua_type</code></td><td>uint8</td><td>0-15</td><td>2</td><td>0=None, 1=Aeroplane, 2=Multirotor, 3=Gyroplane, 4=Hybrid, ... 15=Other</td></tr>
+<tr><td>4</td><td>Operator ID</td><td><code>operator_id</code></td><td>string</td><td>1-20 chars</td><td>""</td><td>Operator registration number (e.g., <code>OP-MARIO-12345</code>)</td></tr>
+<tr><td>5</td><td>UAS ID 2</td><td><code>uas_id_2</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>Secondary Basic ID (optional)</td></tr>
+<tr><td>6</td><td>ID Type 2</td><td><code>id_type_2</code></td><td>uint8</td><td>0-4</td><td>0</td><td>0=None, 1=Serial, 2=CAA, 3=UTM, 4=Session</td></tr>
+<tr><td>7</td><td>UA Type 2</td><td><code>ua_type_2</code></td><td>uint8</td><td>0-15</td><td>0</td><td>Secondary aircraft type</td></tr>
+<tr><td>8</td><td>Tx Modes</td><td><code>tx_modes</code></td><td>bitmask</td><td>0-15</td><td>13</td><td>Bitmask: 1=WiFi BCN, 2=WiFi NAN, 4=BLE4, 8=BLE5</td></tr>
+<tr><td>9</td><td>WiFi Channel</td><td><code>wifi_channel</code></td><td>uint8</td><td>1-13</td><td>6</td><td>2.4 GHz channel for WiFi Beacon broadcasts</td></tr>
+<tr><td>10</td><td>WiFi Power</td><td><code>wifi_power_dbm</code></td><td>float</td><td>2-20 dBm</td><td>20</td><td>WiFi transmit power (dBm)</td></tr>
+<tr><td>11</td><td>WiFi Beacon Rate</td><td><code>wifi_bcn_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>WiFi Beacon packets per second. 1 Hz = one packet per second</td></tr>
+<tr><td>12</td><td>WiFi NAN Rate</td><td><code>wifi_nan_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>0</td><td>WiFi NAN packets per second. 0 = disabled</td></tr>
+<tr><td>13</td><td>BLE 4.0 Rate</td><td><code>ble4_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>BLE 4.0 advertising rate</td></tr>
+<tr><td>14</td><td>BLE 4.0 Power</td><td><code>ble4_power_dbm</code></td><td>float</td><td>-27-18 dBm</td><td>18</td><td>BLE 4.0 transmit power</td></tr>
+<tr><td>15</td><td>BLE 5.0 Rate</td><td><code>ble5_rate_hz</code></td><td>float</td><td>0-5 Hz</td><td>1.0</td><td>BLE 5.0 Coded PHY advertising rate</td></tr>
+<tr><td>16</td><td>BLE 5.0 Power</td><td><code>ble5_power_dbm</code></td><td>float</td><td>-27-18 dBm</td><td>18</td><td>BLE 5.0 transmit power</td></tr>
+<tr><td>17</td><td>WiFi SSID</td><td><code>wifi_ssid</code></td><td>string</td><td>1-20 chars</td><td>"ESP-RID"</td><td>Access point SSID for configuration</td></tr>
+<tr><td>18</td><td>WiFi Password</td><td><code>wifi_password</code></td><td>string</td><td>0-20 chars</td><td>""</td><td>AP password. Empty = open network</td></tr>
+<tr><td>19</td><td>Web Server</td><td><code>webserver_en</code></td><td>bool</td><td>0/1</td><td>1</td><td>Enable the web configuration server</td></tr>
+<tr><td>20</td><td>Baud Rate</td><td><code>baud_rate</code></td><td>uint32</td><td>9600-921600</td><td>57600</td><td>UART baud rate (must match FC)</td></tr>
+<tr><td>21</td><td>MAVLink SysID</td><td><code>mavlink_sysid</code></td><td>uint8</td><td>0-254</td><td>0</td><td>MAVLink system ID filter. 0 = auto-detect</td></tr>
+<tr><td>22</td><td>Broadcast without GPS</td><td><code>bcast_powerup</code></td><td>bool</td><td>0/1</td><td>1</td><td>Send ID messages even without GPS fix</td></tr>
+<tr><td>23</td><td>Lock Level</td><td><code>lock_level</code></td><td>int8</td><td>0-2</td><td>0</td><td>0=Normal, 1=Signed cmds, 2=eFuse permanent</td></tr>
+<tr><td>24</td><td>Options</td><td><code>options</code></td><td>bitmask</td><td>0-7</td><td>0</td><td>1=Force ARM, 2=No save BasicID, 4=Print MAVLink RID</td></tr>
+<tr><td>25</td><td>Public Keys</td><td><code>public_key_1-5</code></td><td>string</td><td>0-64 chars</td><td>""</td><td>Up to 5 public keys for command authentication</td></tr>
+</table>
+
+<h4>REST API</h4>
+<p>The web server exposes a JSON REST API at <code>http://192.168.4.1</code>:</p>
+<table>
+<tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+<tr><td><code>/</code></td><td>GET</td><td>Web configuration page (HTML)</td></tr>
+<tr><td><code>/api/config</code></td><td>GET</td><td>Get current configuration as JSON</td></tr>
+<tr><td><code>/api/config</code></td><td>POST</td><td>Set configuration. Send JSON body with parameters to update</td></tr>
+<tr><td><code>/api/status</code></td><td>GET</td><td>Get live telemetry status as JSON (protocol, GPS, counters)</td></tr>
+<tr><td><code>/api/reset</code></td><td>POST</td><td>Factory reset all settings to defaults, then reboot</td></tr>
+<tr><td><code>/ota</code></td><td>POST</td><td>Upload firmware binary for OTA update</td></tr>
+</table>
+
+<h5>Example: Get Config</h5>
+<pre>curl http://192.168.4.1/api/config</pre>
+
+<h5>Example: Set Config</h5>
+<pre>curl -X POST http://192.168.4.1/api/config \
+  -H "Content-Type: application/json" \
+  -d '{"uas_id":"RID-12345678","ua_type":2,"baud_rate":115200}'</pre>
+
+<h4>NVS Persistence</h4>
+<p>All configuration parameters are stored in the ESP32's Non-Volatile Storage (NVS) flash memory under the namespace <code>esp_rid</code>. Settings persist across power cycles, reboots, and OTA updates. A factory reset erases the <code>esp_rid</code> namespace and restores defaults.</p>
+</div>
+</div>
+
+<!-- 6. BUILDING -->
+<div class="guide-section" id="guide-building">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>6. Building from Source</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Prerequisites</h4>
+<ul>
+<li><b>ESP-IDF v6.0.1</b> &mdash; Install from <a href="https://docs.espressif.com/projects/esp-idf/en/v6.0.1/esp32/get-started/">Espressif's documentation</a></li>
+<li><b>Python 3.10+</b> &mdash; Required by ESP-IDF</li>
+<li><b>Git</b> &mdash; For cloning the repository</li>
+</ul>
+
+<h4>Installing ESP-IDF</h4>
+<h5>Windows</h5>
+<pre># Download ESP-IDF v6.0.1
+git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git C:\esp\v6.0.1\esp-idf
+
+# Run the installer (creates Python venv and downloads toolchains)
+C:\esp\v6.0.1\esp-idf\install.ps1
+
+# Set up environment (run before building each time)
+C:\esp\v6.0.1\esp-idf\export.ps1</pre>
+
+<h5>Linux / macOS</h5>
+<pre>git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git $HOME/esp/v6.0.1/esp-idf
+cd $HOME/esp/v6.0.1/esp-idf
+./install.sh
+. ./export.sh</pre>
+
+<h4>Clone and Build</h4>
+<pre>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
+cd ESP_DRONE_REMOTEID
+
+# Set environment (Windows)
+C:\esp\v6.0.1\esp-idf\export.ps1
+
+# Choose target
+idf.py set-target esp32       # ESP32 (original)
+idf.py set-target esp32s3     # ESP32-S3
+idf.py set-target esp32c3     # ESP32-C3
+
+# Build
+idf.py build
+
+# Flash to device
+idf.py -p COM3 flash
+
+# Monitor serial output
+idf.py -p COM3 monitor</pre>
+
+<h4>Project Structure</h4>
+<pre>ESP_DRONE_REMOTEID/
+&#x251c;&#x2500;&#x2500; CMakeLists.txt                  # IDF top-level build file
+&#x251c;&#x2500;&#x2500; main/                          # Application entry point
+&#x2502;   &#x2514;&#x2500;&#x2500; main.c                     # Init, demo mode, splash
+&#x251c;&#x2500;&#x2500; components/esp_remote_id/      # Core component
+&#x2502;   &#x251c;&#x2500;&#x2500; include/                   # 14 header files
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; esp_remote_id.h        # Public API + structs
+&#x2502;   &#x251c;&#x2500;&#x2500; src/
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; esp_remote_id.c       # Orchestrator (rate limiting, task loop)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nvs_storage.c         # Config persistence (17 keys, 26 params)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; web_config.c          # HTTP server + REST API + OTA + eFuse lock
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; protocol_detect.c     # Auto-detect: MAVLink/MSP/NMEA
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mavlink_parser.c      # MAVLink + ODID messages (ardupilotmega dialect)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; msp_parser.c          # MSP v1 (RAW_GPS, ATTITUDE)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; nmea_parser.c         # NMEA 0183 (GGA, RMC, VTG)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; mav2odid.c            # Intel MAVLink-to-ODID conversion
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; rid_patrol.c          # Demo GPS patrol simulation
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; opendroneid.c         # Intel ODID encode/decode (1477 lines)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi.c               # IEEE 802.11 frame builder (Intel lib)
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; wifi_tx.c            # WiFi Beacon + NAN transmitter
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; ble_tx.c             # BLE 4.0 legacy + BLE 5.0 LR Coded PHY
+&#x2502;   &#x2502;   &#x251c;&#x2500;&#x2500; led_status.c          # RGB LED (3 configurable GPIOs)
+&#x2502;   &#x251c;&#x2500;&#x2500; mavlink/                   # MAVLink v2 C dialects (ardupilotmega)
+&#x2502;   &#x2514;&#x2500;&#x2500; webui/config.html          # Embedded web UI (~1520 lines)
+&#x251c;&#x2500;&#x2500; ESP_DRONE_REMOTEID_Analyzer/ # Python WiFi beacon analyzer
+&#x2502;   &#x251c;&#x2500;&#x2500; capture.py               # Scapy-based WiFi capture
+&#x2502;   &#x251c;&#x2500;&#x2500; decoder.py               # Pure Python ODID decoder (510 lines)
+&#x2502;   &#x251c;&#x2500;&#x2500; server.py               # WebSocket broadcast server
+&#x2502;   &#x251c;&#x2500;&#x2500; rid_cli.py               # Headless CLI tool
+&#x2502;   &#x251c;&#x2500;&#x2500; gui.py                  # pywebview desktop window
+&#x2502;   &#x251c;&#x2500;&#x2500; web/                    # Analyzer web UI (HTML/JS/CSS)
+&#x2502;   &#x2514;&#x2500;&#x2500; requirements.txt
+&#x251c;&#x2500;&#x2500; docs/                          # GitHub Pages site
+&#x2502;   &#x251c;&#x2500;&#x2500; index.html                 # Wiki + WebSerial installer
+&#x2502;   &#x251c;&#x2500;&#x2500; config(demo).html           # Standalone config demo
+&#x2502;   &#x251c;&#x2500;&#x2500; manifest.json              # WebSerial manifest (3 targets)
+&#x2502;   &#x2514;&#x2500;&#x2500; images/                    # Logo + FC icons
+&#x251c;&#x2500;&#x2500; .github/workflows/            # CI/CD (build.yml + release.yml)
+&#x251c;&#x2500;&#x2500; .vscode/                      # Editor config
+&#x2514;&#x2500;&#x2500; todolist/softwarestatus.md     # Per-file analysis</pre>
+</div>
+</div>
+
+<!-- 7. WEB UI -->
+<div class="guide-section" id="guide-webui">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>7. Web Interface Guide</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<div class="callout"><strong>&#x1f4a1; Note:</strong> The web UI is fully functional as a <a href="config(demo).html">standalone demo page</a>. The configurator, dashboard, console, and OTA upload interfaces can be explored without hardware. When running on the actual ESP32, the UI talks to the REST API at <code>192.168.4.1</code>.</div>
+
+<h4>Accessing the Web UI</h4>
+<ol>
+<li>Power the ESP DRONE REMOTEID (USB or battery).</li>
+<li>On your phone, tablet, or PC, scan for WiFi networks.</li>
+<li>Connect to <b>ESP-RID</b> (no password by default).</li>
+<li>Open a browser and navigate to <b>http://192.168.4.1</b>.</li>
+</ol>
+<div class="callout"><strong>&#x26a0; Note:</strong> The ESP32 creates its own WiFi network. You will lose internet connectivity while connected to it. This is normal.</div>
+
+<h4>Step-by-Step Setup Walkthrough</h4>
+<p>Follow this sequence to configure your ESP DRONE REMOTEID for the first time. You can start in demo mode (no hardware needed) and switch to FC mode later:</p>
+<table>
+<tr><th>Step</th><th>Action</th><th>Details</th></tr>
+<tr><td>1</td><td>Set UAS ID</td><td>Navigate to <b>Identity</b> tab. Enter your drone's serial number or CAA registration in the UAS ID field (max 20 characters). Example: <code>RID-A1B2C3D4</code>.</td></tr>
+<tr><td>2</td><td>Set ID Type</td><td>Choose <b>Serial Number (1)</b> for ANSI/CTA-2063 serial numbers, or <b>CAA Registration (2)</b> for national authority IDs.</td></tr>
+<tr><td>3</td><td>Set UA Type</td><td>Select your aircraft type. <b>Multirotor (2)</b> is correct for most quadcopters and hexacopters.</td></tr>
+<tr><td>4</td><td>Set Operator ID</td><td>Enter your operator registration number if required. Format varies by country (e.g., <code>OP-MARIO-12345</code>).</td></tr>
+<tr><td>5</td><td>Enable Transmitters</td><td>In the <b>Transmission</b> section, check at least <b>WiFi Beacon</b> and <b>BLE 4.0</b>. These are the most compatible modes. BLE 5.0 LR requires ESP32-S3 or ESP32-C3.</td></tr>
+<tr><td>6</td><td>Set Baud Rate</td><td>In <b>WiFi AP &amp; Serial</b>, set the baud rate to match your flight controller's serial port. Common: 57600 or 115200.</td></tr>
+<tr><td>7</td><td>Set WiFi Password (optional)</td><td>Set a password for the ESP-RID network to prevent unauthorized access. Use WPA2 encryption.</td></tr>
+<tr><td>8</td><td>Verify GPS Status</td><td>Check the <b>Status</b> section. Wait for the protocol to be detected (MAVLink, MSP, or NMEA) and GPS fix to appear.</td></tr>
+<tr><td>9</td><td>Validate with Receiver</td><td>Open a Remote ID receiver app on your phone. You should see your drone's ID, position, and speed broadcast.</td></tr>
+<tr><td>10</td><td>Save Configuration</td><td>Click <b>Save All</b> to persist settings to NVS flash. The device will apply settings immediately.</td></tr>
+</table>
+
+<div class="callout"><strong>&#x1f4a1; Tip:</strong> After saving, power-cycle the ESP32 and reconnect. Verify that your settings are still present — this confirms NVS persistence is working correctly.</div>
+
+<h4>Interface Sections</h4>
+<h5>Identity</h5>
+<p>Configure your drone's UAS ID, operator information, and aircraft type. The Basic ID is mandatory for ASTM compliance. The second Basic ID is optional and can be used for dual-purpose aircraft or additional identifiers.</p>
+<ul>
+<li><b>UAS ID:</b> Your drone's serial number (ANSI/CTA-2063 format) or CAA registration number. Max 20 characters.</li>
+<li><b>ID Type:</b> Select the type of identifier. Serial Number (1) is recommended for most users.</li>
+<li><b>UA Type:</b> Match your aircraft type. Multirotor (2) is the default for most drones.</li>
+<li><b>Operator ID:</b> Your national aviation authority registration number.</li>
+</ul>
+
+<h5>Transmission</h5>
+<p>Control which radio technologies are used for broadcasting and their parameters.</p>
+<ul>
+<li><b>WiFi Beacon:</b> IEEE 802.11 beacon frames containing ODID packets. Most compatible with receivers.</li>
+<li><b>WiFi NAN:</b> Neighborhood Area Networking. Less common, but supported by some Android devices.</li>
+<li><b>BLE 4.0:</b> Legacy Bluetooth Low Energy advertising. Compatible with most phones and ODID receivers.</li>
+<li><b>BLE 5.0 LR:</b> BLE 5.0 Coded PHY long range mode. Requires ESP32-S3 or ESP32-C3. Increased range at lower data rate.</li>
+</ul>
+<p>Rates are in Hz (packets per second). The ASTM standard recommends at least 1 Hz. Higher rates increase compatibility but consume more power.</p>
+
+<h5>WiFi AP &amp; Serial</h5>
+<p>Configure the management WiFi network and UART connection to your flight controller.</p>
+<ul>
+<li><b>SSID:</b> The name of the ESP32's WiFi network. Default: <code>ESP-RID</code>.</li>
+<li><b>Password:</b> Optional password (max 20 chars). Empty = open network.</li>
+<li><b>Baud Rate:</b> Must match your flight controller's serial port speed. Common: 57600, 115200.</li>
+<li><b>MAVLink SysID:</b> Set to 0 for auto-detect, or enter a specific system ID to filter messages.</li>
+</ul>
+
+<h5>System</h5>
+<p>Security settings and advanced options.</p>
+<ul>
+<li><b>Lock Level:</b> 0 = normal operation. 1 = signed commands only. 2 = permanent eFuse (irreversible!).</li>
+<li><b>Public Keys:</b> Up to 5 public keys (base64-encoded) for authenticating signed configuration commands.</li>
+<li><b>Options:</b> Force ARM status, disable NVS saving of BasicID, enable MAVLink RID message printing.</li>
+</ul>
+
+<h5>Status</h5>
+<p>Real-time telemetry dashboard showing:</p>
+<ul>
+<li>Detected protocol (MAVLink, MSP, NMEA, or None)</li>
+<li>GPS fix status (valid/invalid)</li>
+<li>Latitude, longitude, altitude, speed, heading</li>
+<li>Satellite count and fix type</li>
+<li>Transmission counters (total, WiFi, BLE)</li>
+</ul>
+<p>The status page refreshes automatically every 2 seconds.</p>
+
+<h5>Firmware Update (OTA)</h5>
+<p>Upload a new firmware <code>.bin</code> file to update the ESP32 over-the-air. The device reboots automatically after a successful update. Keep the device powered during the update process.</p>
+
+<h4>Factory Reset</h4>
+<p>Click the "Factory Reset" button in the System section to restore all settings to defaults. The device will reboot immediately.</p>
+</div>
+</div>
+
+<!-- 8. OTA -->
+<div class="guide-section" id="guide-ota">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>8. OTA Updates</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<div class="callout"><strong>&#x1f4a1; Status:</strong> OTA is implemented with mandatory SHA-256 checksum validation via <code>X-Expected-SHA256</code> header. The firmware has a dual-OTA partition scheme (factory + ota_0) for safe rollback. Tested in demo mode; hardware OTA verification in progress.</div>
+
+<h4>Over-the-Air Firmware Update</h4>
+<p>The ESP DRONE REMOTEID aims to support updating firmware wirelessly through the web interface. No USB cable would be needed once the initial firmware is flashed.</p>
+
+<h4>Prerequisites</h4>
+<ul>
+<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, or ESP32-C6).</li>
+<li>The ESP32 must be powered and connected to its WiFi network (you connected to ESP-RID).</li>
+<li>Your phone/PC must be connected to the ESP32's WiFi network.</li>
+</ul>
+
+<h4>Step-by-Step</h4>
+<ol>
+<li>Build the firmware (see section 6) or download a pre-built <code>.bin</code> from the project's releases.</li>
+<li>Open the Web UI at <code>http://192.168.4.1</code>.</li>
+<li>Scroll to the <b>Firmware Update</b> section.</li>
+<li>Click <b>Select .bin file</b> and choose your firmware binary.</li>
+<li>Click <b>Upload Firmware</b>.</li>
+<li>Wait for the upload to complete (~30 seconds for a 1 MB firmware). The progress text will update.</li>
+<li>On success, the device reboots automatically into the new firmware.</li>
+</ol>
+
+<h4>How It Works</h4>
+<p>The OTA mechanism uses ESP-IDF's built-in OTA API with a dual-partition scheme:</p>
+
+<div class="guide-diagram">
+<pre class="mermaid">
+flowchart LR
+  Browser["Browser / cURL<br/>HTTP POST /ota<br/>firmware.bin"]
+
+  Server["ESP32 Web Server<br/>Receives binary<br/>SHA-256 validation<br/>Writes to OTA partition<br/>Sets boot partition<br/>esp_restart()"]
+
+  subgraph Flash["Flash Memory — Dual-OTA Scheme"]
+    direction TB
+    Boot["Bootloader"]
+    OTA0["OTA_0 (active)<br/>▶ Running"]
+    OTA1["OTA_1 (new)<br/>⬆ Writing..."]
+    NVS["NVS / Config"]
+  end
+
+  Rollback["Rollback:<br/>boot from OTA_0"]
+
+  Browser -->|Upload| Server
+  Server -->|Write firmware| OTA1
+  OTA1 -.->|On failure| Rollback
+</pre>
+<div class="diag-cap">OTA update flow: binary uploaded from browser → written to inactive OTA partition → device reboots into new firmware. Failed updates automatically roll back.</div>
+</div>
+
+<ol>
+<li>The web server receives the firmware binary in an HTTP POST to <code>/ota</code>.</li>
+<li>It writes the binary to the OTA partition (the inactive slot in a dual-OTA partition scheme).</li>
+<li>On success, it sets the OTA partition as the boot partition and calls <code>esp_restart()</code>.</li>
+<li>The ESP32 boots from the new firmware. If the update fails, it falls back to the previous firmware.</li>
+</ol>
+
+<h4>Safety</h4>
+<ul>
+<li>The ESP32 has two OTA partitions and one factory partition. If an OTA update fails, the device will fall back to the previous firmware.</li>
+<li>Always use a firmware built for your specific ESP32 target. Flashing an ESP32-S3 binary to an ESP32 will fail.</li>
+<li>Keep the device powered during the update. Do not disconnect or reset.</li>
+<li>If the update fails, you can always recover via USB serial flashing.</li>
+</ul>
+
+<h4>Troubleshooting OTA</h4>
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>"OTA begin failed"</td><td>The OTA partition may be corrupted. Reflash via USB and try again.</td></tr>
+<tr><td>Upload stalls</td><td>Move closer to the ESP32 for better WiFi signal, or use USB flashing.</td></tr>
+<tr><td>Device does not reboot</td><td>Power-cycle the device manually.</td></tr>
+<tr><td>Firmware does not work after OTA</td><td>The binary may be for the wrong target. Flash the correct binary via USB.</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 9. SECURITY -->
+<div class="guide-section" id="guide-security">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>9. Security</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<div class="callout"><strong>&#x1f4a1; Status:</strong> All three lock levels are implemented. Level 2 burns "RID!" magic to EFUSE_BLK3 and is one-time irreversible. Level 1 enforces ECDSA P-256 signature verification via the <code>X-Signature</code> header. Use with caution.</div>
+
+<h4>Lock Levels</h4>
+<p>The firmware implements three lock levels to prevent unauthorized configuration changes:</p>
+<table>
+<tr><th>Level</th><th>Name</th><th>Effect</th></tr>
+<tr><td>0</td><td>Normal</td><td>All configuration changes are allowed via web UI and REST API. No authentication required.</td></tr>
+<tr><td>1</td><td>Locked</td><td>Configuration changes require signed commands authenticated with a configured public key. Unsigned POST requests to <code>/api/config</code> are rejected.</td></tr>
+<tr><td>2</td><td>eFuse Permanent</td><td>Same as Level 1, but the lock level is burned into eFuse and cannot be changed. This is an <b>irreversible</b> operation. Only use when the device is in its final deployment configuration.</td></tr>
+</table>
+
+<h4>Public Key Authentication</h4>
+<p>Up to 5 public keys can be configured (in PEM or raw base64 format). These keys are used to verify signed configuration commands when lock level 1 or 2 is active.</p>
+<p>To generate a key pair:</p>
+<pre># Generate private key
+openssl ecparam -name prime256v1 -genkey -out private.pem
+
+# Extract public key
+openssl ec -in private.pem -pubout -out public.pem
+
+# The public key content (base64) goes into the public_key fields
+cat public.pem</pre>
+
+<h4>Signed Commands</h4>
+<p>When lock level &ge; 1, any POST to <code>/api/config</code> must include a signature header:</p>
+<pre>curl -X POST http://192.168.4.1/api/config \
+  -H "Content-Type: application/json" \
+  -H "X-Signature: &lt;base64-signature&gt;" \
+  -d '{"uas_id":"RID-12345678"}'</pre>
+<p>The signature is an ECDSA signature over the SHA-256 hash of the JSON body, using the P-256 (secp256r1) curve.</p>
+
+<h4>WiFi Security</h4>
+<p>The configuration access point can be password-protected. Set a WiFi password in the Web UI to prevent unauthorized access to the configuration interface. The password is stored in NVS and can be up to 20 characters.</p>
+<div class="callout"><strong>&#x26a0; Note:</strong> The AP uses WPA2-PSK encryption when a password is set. Without a password, the network is open and anyone within range can access the configuration page.</div>
+</div>
+</div>
+
+<!-- 10. ANALYZER -->
+<div class="guide-section" id="guide-analyzer">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>10. Analyzer Tool</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<div class="callout"><strong>&#x1f4a1; Status:</strong> The Analyzer is a standalone desktop application for capturing, decoding, and analyzing ASTM F3411-22a Remote ID messages. Version 2.0.0-dev adds session recording, track trails, CSV/KML export, and a full pywebview GUI. Requires a WiFi adapter with monitor mode support.</div>
+
+<h4>Overview</h4>
+<p>The ESP DRONE REMOTEID Analyzer captures WiFi Beacon Remote ID messages broadcast by drones and decodes them in real time. It provides a rich desktop GUI with a live map, device tracking, session recording, and statistical analysis.</p>
+
+<h4>Features</h4>
+<ul>
+<li><b>Real-time capture:</b> Decodes ASTM F3411-22a WiFi Beacon messages (WiFi NaN, WiFi Aware, Beacon frames)</li>
+<li><b>Live map:</b> Devices plotted on an interactive map with trail polylines showing flight paths (500-point history per device)</li>
+<li><b>Session recording:</b> Record sessions to JSON and replay them later</li>
+<li><b>Export:</b> Download CSV or KML of captured devices</li>
+<li><b>Multi-channel hopping:</b> Automatically hop across WiFi channels to detect more devices</li>
+<li><b>PCAP capture:</b> Write raw packets to PCAP files for offline analysis in Wireshark</li>
+<li><b>Filtering:</b> Filter by UA type, RSSI quality (good/warn/bad), or active status</li>
+<li><b>Statistics:</b> Drone count over time chart, UA type distribution, top RSSI leaderboard</li>
+<li><b>Desktop notifications:</b> Alerts for new devices when the window is in the background</li>
+<li><b>Detail panel:</b> Click any device to see full details, RSSI history, and message timeline</li>
+</ul>
+
+<h4>Installation</h4>
+<ol>
+<li>Clone the repository: <code>git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git</code></li>
+<li>Navigate to the analyzer directory: <code>cd ESP_DRONE_REMOTEID/ESP_DRONE_REMOTEID_Analyzer</code></li>
+<li>Create a virtual environment and install dependencies:
+<pre>python -m venv .venv
+source .venv/bin/activate   # Linux/Mac
+.venv\Scripts\activate       # Windows
+pip install -r requirements.txt</pre></li>
+<li>Run the application: <code>python -m analyzerex</code></li>
+</ol>
+
+<h5>Windows Requirements</h5>
+<p>On Windows, WiFi capture requires <a href="https://npcap.com/">NPcap</a> installed with "802.11 Wireless Adapter" (monitor mode) support enabled during installation. The application will detect and use the first compatible wireless interface automatically.</p>
+
+<h5>Linux Requirements</h5>
+<p>On Linux, the WiFi interface must be set to monitor mode before launching the analyzer:</p>
+<pre>sudo ip link set wlan0 down
+sudo iw dev wlan0 set type monitor
+sudo ip link set wlan0 up</pre>
+<p>Replace <code>wlan0</code> with your wireless interface name (<code>iw dev</code> to list). Root privileges may be needed for packet capture.</p>
+
+<h4>Usage Guide</h4>
+<h5>Devices Tab (Default)</h5>
+<p>Shows a table of all detected Remote ID devices. Each row shows the MAC address, UA type (Drone, Remote ID, Controller, etc.), RSSI, last seen time, and message count. Click any row to open the detail panel on the right side.</p>
+
+<h5>Map Tab</h5>
+<p>Plots device locations on an interactive OpenStreetMap. Each device is shown with a colored marker and a trail polyline showing its flight path over the last 500 reported positions. Click a marker to open the detail panel.</p>
+
+<h5>Timeline Tab</h5>
+<p>Shows a real-time scrolling log of all decoded messages. Each entry includes timestamp, MAC, and decoded payload fields. Useful for low-level debugging.</p>
+
+<h5>Statistics Tab</h5>
+<p>Displays aggregate statistics:
+<ul>
+<li><b>UA Type Distribution:</b> Grid of metric cards showing counts per UA type</li>
+<li><b>Drone Count Over Time:</b> Scrolling line chart of active devices</li>
+<li><b>Top RSSI:</b> Sorted list of devices by strongest signal</li>
+</ul>
+</p>
+
+<h5>Recording Controls</h5>
+<p>In the toolbar, click <b>Record</b> to start a session recording. All incoming messages will be saved to a JSON file. Click <b>Stop</b> to end recording. Use the <b>Replay</b> dropdown to load a previous session for offline analysis.</p>
+
+<h5>Filters</h5>
+<p>The toolbar provides three filters:
+<ul>
+<li><b>Search:</b> Filter by UA type name (e.g., "drone", "remote")</li>
+<li><b>RSSI:</b> Show only Good (&gt;-70 dBm), Warn (-70 to -80 dBm), or Bad (&lt;-80 dBm) signals</li>
+<li><b>Active:</b> Show only devices seen in the last 30 seconds</li>
+</ul>
+</p>
+
+<h4>Architecture</h4>
+<p>The Analyzer uses a three-layer architecture:</p>
+<ul>
+<li><b>capture.py</b> &mdash; Packet capture layer using Scapy. Handles WiFi interface management, channel hopping, PCAP writing, and raw packet parsing.</li>
+<li><b>server.py</b> &mdash; Application logic and WebSocket server. Decodes ASTM messages, maintains device state with track history, manages session recording/playback, and handles CSV/KML export.</li>
+<li><b>gui.py</b> &mdash; Desktop GUI via pywebview. Loads a local <code>web/index.html</code> file in a native WebView window. Communicates with server.py over WebSocket. No HTTP server is required &mdash; it loads from <code>file://</code> for security.</li>
+</ul>
+
+<h4>Command-Line Options</h4>
+<table>
+<tr><th>Flag</th><th>Description</th></tr>
+<tr><td><code>--interface</code></td><td>WiFi interface name for capture (auto-detected if omitted)</td></tr>
+<tr><td><code>--channel</code></td><td>Fixed WiFi channel to listen on (default: random hop)</td></tr>
+<tr><td><code>--channels</code></td><td>Comma-separated list of channels to hop (e.g., <code>1,6,11</code>)</td></tr>
+<tr><td><code>--hop-interval</code></td><td>Channel hop interval in seconds (default: 2.0)</td></tr>
+<tr><td><code>--no-gui</code></td><td>Run in headless mode (no GUI, log to console)</td></tr>
+<tr><td><code>--port</code></td><td>WebSocket server port (default: 8765, only in headless mode)</td></tr>
+<tr><td><code>--replay</code></td><td>Replay a recorded session file instead of live capture</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 11. ANTENNA -->
+<div class="guide-section" id="guide-antenna">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>11. Antenna Guide</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Choosing the Right Antenna</h4>
+<p>Antenna selection is critical for Remote ID performance. The ESP32 operates in the 2.4 GHz ISM band and the antenna must be well-matched to achieve reliable broadcast range.</p>
+
+<h5>PCB Antenna (On-Board)</h5>
+<ul>
+<li><b>Pros:</b> Low cost, no additional hardware, compact.</li>
+<li><b>Cons:</b> Vulnerable to shielding by carbon fiber frames, sensitive to placement within the drone.</li>
+<li><b>Range:</b> ~50-100 m in open air with clear line of sight.</li>
+<li><b>Best for:</b> Glass fiber, plastic, or 3D-printed frames. Open-frame builds.</li>
+</ul>
+
+<h5>External Antenna (U.FL / IPEX)</h5>
+<ul>
+<li><b>Pros:</b> Can be placed away from shielding frame, better range, replaceable.</li>
+<li><b>Cons:</b> Requires board with U.FL connector, additional cost, mounting required.</li>
+<li><b>Range:</b> ~200-500 m with a 2 dBi dipole antenna.</li>
+<li><b>Best for:</b> Carbon fiber frames, long-range applications, professional use.</li>
+</ul>
+
+<h4>Carbon Fiber Frames</h4>
+<div class="callout"><strong>&#x26a0; Critical:</strong> Carbon fiber is conductive and acts as a <b>Faraday cage</b> for 2.4 GHz signals. An internal PCB antenna placed inside a carbon fiber frame will have severely degraded range (&lt;10 m). An external antenna is <b>mandatory</b> for carbon fiber frames.</div>
+<p>Mount the external antenna so that it protrudes from the frame, ideally on a landing skid or a dedicated 3D-printed mount. Keep the antenna away from carbon fiber plates by at least 10 mm.</p>
+
+<h4>Antenna Placement Tips</h4>
+<ul>
+<li>Keep the antenna away from metal objects, batteries, and power cables.</li>
+<li>Orient the antenna vertically for omnidirectional coverage (most drone receivers are also vertical).</li>
+<li>Do not route the antenna coax cable parallel to power wires &mdash; cross them at 90&deg; if necessary.</li>
+<li>Do not coil or bundle excess antenna cable &mdash; it acts as a counterpoise and affects tuning.</li>
+<li>Use a cable with a U.FL to SMA pigtail if your antenna uses SMA connectors.</li>
+</ul>
+
+<h4>Range Optimization</h4>
+<table>
+<tr><th>Factor</th><th>Impact</th><th>Recommendation</th></tr>
+<tr><td>Antenna type</td><td>High</td><td>External 2 dBi dipole</td></tr>
+<tr><td>Frame material</td><td>High</td><td>External antenna for carbon fiber</td></tr>
+<tr><td>WiFi TX power</td><td>Medium</td><td>Set to 20 dBm (max)</td></tr>
+<tr><td>WiFi channel</td><td>Low</td><td>Use least congested channel (scan with phone)</td></tr>
+<tr><td>Receiver sensitivity</td><td>Medium</td><td>Use a dedicated ODID receiver for best results</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 12. ESP32 VARIANTS -->
+<div class="guide-section" id="guide-variants">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>12. ESP32 Variants</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Comparison Table</h4>
+<table>
+<tr><th>Feature</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
+<tr><td>CPU</td><td>2x LX6 240M</td><td>1x LX7 240M</td><td>2x LX7 240M</td><td>1x RV 120M</td><td>1x RV 160M</td><td>1x RV 160M</td></tr>
+<tr><td>BLE</td><td>4.0/4.2</td><td>—</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td></tr>
+<tr><td>WiFi</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td></tr>
+<tr><td>Flash</td><td>4-16M</td><td>4-16M</td><td>8-16M</td><td>2-4M</td><td>4-8M</td><td>4-8M</td></tr>
+<tr><td>RAM</td><td>520K</td><td>520K</td><td>512K+2M PSRAM</td><td>272K</td><td>400K</td><td>512K</td></tr>
+<tr><td>BLE 5.0 LR</td><td>&#x274c;</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>USB CDC</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>Flash config</td><td>4 MB</td><td>4 MB</td><td>4 MB</td><td>2 MB</td><td>4 MB</td><td>4 MB</td></tr>
+<tr><td>Power</td><td>~150 mA</td><td>~130 mA</td><td>~130 mA</td><td>~90 mA</td><td>~100 mA</td><td>~110 mA</td></tr>
+<tr><td><b>Rcmd</b></td><td>Good</td><td>Budget</td><td><b>Best</b></td><td>Tiny</td><td>Good</td><td>Modern</td></tr>
+</table>
+<p><b>ESP32-S2</b> has no BLE — only WiFi Beacon mode. <b>ESP32-C2</b> uses a 2 MB partition table. <b>ESP32-C6</b> is the newest RISC-V chip with WiFi 6 support.</p>
+
+<h4>Feature Support Matrix</h4>
+<table class="support-table">
+<tr><th>Feature</th><th>ESP32</th><th>S2</th><th>S3</th><th>C2</th><th>C3</th><th>C6</th></tr>
+<tr><td>WiFi Beacon (802.11)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WiFi NAN</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="p">Partial</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 4.0 (Legacy)</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 5.0 LR Coded PHY</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WebSerial Installer</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Web Config UI</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Demo Mode</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MAVLink Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MSP Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>NMEA 0183 Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Lock Level 1 (Signed)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Lock Level 2 (eFuse)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="p">Partial</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Status LED (GPIO)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Analyzer Support</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+</table>
+<p><span class="tag tag-green">&#x2713; Supported</span> <span class="tag tag-red">&#x2717; Not supported</span> <span class="tag" style="background:#fff8e1;color:#e65100">Partial — limited or experimental</span></p>
+
+<h4>Which One to Choose?</h4>
+<ul>
+<li><b>ESP32-S3 (Recommended):</b> Best balance of features and power. BLE 5.0 Coded PHY (S=8) for longer BLE range. PSRAM for future expansion. Best for production builds.</li>
+<li><b>ESP32-C3 / C6:</b> Good budget/ modern option with BLE 5.0, RISC-V. Lower power. Good for compact builds.</li>
+<li><b>ESP32 (Original):</b> Works well but lacks BLE 5.0 Coded PHY. Good for existing hardware.</li>
+<li><b>ESP32-S2:</b> Budget option without BLE (WiFi Beacon only). Good for minimal builds.</li>
+<li><b>ESP32-C2:</b> Smallest/cheapest. 2 MB flash, BLE 5.0, RISC-V. Good for ultra-low-cost deployments.</li>
+</ul>
+
+<h4>Pin Compatibility</h4>
+<table>
+<tr><th>Function</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
+<tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO18</td><td>GPIO7</td><td>GPIO7</td><td>GPIO7</td></tr>
+<tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>4,5</td><td>0,1</td><td>0,1</td><td>0,1</td></tr>
+<tr><td>RGB LED R/G/B</td><td colspan="6">Configurable via Kconfig (any GPIO, default -1)</td></tr>
+<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td><td>GPIO9</td><td>GPIO9</td></tr>
+</table>
+<p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via menuconfig (<code>RID_LED_R/G/B_GPIO</code>).</p>
+</div>
+</div>
+
+<!-- 13. TROUBLESHOOTING -->
+<div class="guide-section" id="guide-troubleshooting">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>13. Troubleshooting</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>No GPS Fix Shown in Status</h4>
+<table>
+<tr><th>Symptom</th><th>Check</th></tr>
+<tr><td>Protocol shows "Unknown"</td><td>UART wiring incorrect, baud rate mismatch, or FC not sending data. Verify with a logic analyzer or serial terminal.</td></tr>
+<tr><td>Protocol detected but GPS invalid</td><td>The FC does not have a GPS fix. Check FC GPS status LED. Wait for more satellites.</td></tr>
+<tr><td>Intermittent GPS data</td><td>Loose wiring, electrical noise, or baud rate mismatch. Check solder joints and cable shielding.</td></tr>
+<tr><td>NMEA mode: no data</td><td>Check the 1 k&Omega; resistor on the GPS TX tap. Verify GPS module is outputting NMEA (some modules need configuration).</td></tr>
+</table>
+
+<h4>Cannot Find ESP-RID WiFi</h4>
+<ul>
+<li>Wait 10-15 seconds after powering the ESP32 for it to boot and start the AP.</li>
+<li>Check that the ESP32 is powered correctly (LED should be on if connected via status LED).</li>
+<li>If you changed the SSID previously, scan all nearby networks.</li>
+<li>Factory reset: connect via serial and erase NVS, or re-flash the firmware.</li>
+<li>If the AP starts but you can't connect, try forgetting the network and reconnecting.</li>
+</ul>
+
+<h4>No Remote ID Signal Detected</h4>
+<ul>
+<li><b>GPS fix is required</b> (unless "Broadcast without GPS" is enabled). Check the Status page.</li>
+<li>Verify that transmission modes are enabled in the Web UI (WiFi Beacon, BLE).</li>
+<li>If using a phone as a receiver, use a dedicated ODID app (e.g., Drone Scanner, OpenDroneID Viewer).</li>
+<li>WiFi Beacon requires the phone to be in range and scanning. Some phones do not passively scan WiFi beacons.</li>
+<li>BLE 4.0 is more universally detectable than BLE 5.0 LR. Enable BLE 4.0 if BLE 5.0 is not detected.</li>
+<li>Carbon fiber frame with internal antenna will have very short range. Use an external antenna.</li>
+</ul>
+
+<h4>WiFi AP Disconnects</h4>
+<ul>
+<li>The ESP32 can handle ~4-5 simultaneous WiFi clients. Too many clients may cause disconnections.</li>
+<li>Move closer to the ESP32 (within 5 m for reliable connection).</li>
+<li>Avoid interference from other 2.4 GHz devices (WiFi routers, Bluetooth, microwaves).</li>
+<li>Try a different WiFi channel (1 or 11 are usually less congested).</li>
+</ul>
+
+<h4>Build Errors</h4>
+<table>
+<tr><th>Error</th><th>Solution</th></tr>
+<tr><td><code>esp_remote_id.h: No such file or directory</code></td><td>Run <code>idf.py reconfigure</code> to generate build files. Ensure CMakeLists.txt includes the component.</td></tr>
+<tr><td><code>undefined reference to 'odid_wifi_...'</code></td><td>The opendroneid library is not linked. Check components/esp_remote_id/CMakeLists.txt for the REQUIRES directive.</td></tr>
+<tr><td><code>Python venv not found</code></td><td>Run <code>install.ps1</code> (Windows) or <code>install.sh</code> (Linux/Mac) in the ESP-IDF directory.</td></tr>
+<tr><td><code>No such file or directory: '.../python.exe'</code></td><td>Run <code>export.ps1</code> (Windows) or <code>export.sh</code> (Linux/Mac) to set up the Python environment.</td></tr>
+<tr><td><code>Failed to connect to ESP32: ...</code></td><td>Hold GPIO0 while connecting, check USB driver, reduce baud rate to 115200.</td></tr>
+</table>
+
+<h4>Protocol Detection Fails</h4>
+<ul>
+<li><b>MAVLink:</b> Ensure the FC is configured for MAVLink on the serial port. Verify baud rate matches. Try MAVLink v1 if v2 fails.</li>
+<li><b>MSP:</b> Enable MSP on the FC's serial port in the configurator. Betaflight may need <code>serialrx_provider = MSP</code>.</li>
+<li><b>NMEA:</b> GPS modules typically output at 9600 or 115200 baud. Try both. Use a serial terminal to verify the GPS is sending NMEA sentences.</li>
+</ul>
+
+<h4>Boot Loop / Continuous Restart</h4>
+<ul>
+<li>Check power supply (brownout detection can cause reboots). Use a quality USB cable or BEC.</li>
+<li>Re-flash the firmware via USB (serial flashing always works even with bad config).</li>
+<li>Erase NVS before flashing: <code>idf.py -p COM3 erase-flash</code> then re-flash.</li>
+</ul>
+
+<h4>OTA Update Fails</h4>
+<ul>
+<li>Keep the ESP32 powered via USB during OTA (battery power may drop during the erase/write cycle).</li>
+<li>Ensure the firmware <code>.bin</code> is built for the correct ESP32 target.</li>
+<li>The OTA partition must be at least as large as the firmware binary. Default partition table supports ~1.5 MB firmware.</li>
+</ul>
+</div>
+</div>
+
+<!-- 14. TECHNICAL REFERENCE -->
+<div class="guide-section" id="guide-techref">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>14. Technical Reference</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>NVS Key Layout</h4>
+<p>All configuration is stored in NVS namespace <code>esp_rid</code>:</p>
+<table>
+<tr><th>NVS Key</th><th>Type</th><th>Parameter</th></tr>
+<tr><td><code>cfg_ver</code></td><td>uint8</td><td>Configuration version (for migration)</td></tr>
+<tr><td><code>uas_id</code></td><td>string</td><td>UAS ID (max 20 chars)</td></tr>
+<tr><td><code>id_type</code></td><td>uint8</td><td>ID type</td></tr>
+<tr><td><code>ua_type</code></td><td>uint8</td><td>UA type</td></tr>
+<tr><td><code>op_id</code></td><td>string</td><td>Operator ID</td></tr>
+<tr><td><code>uas_id2</code></td><td>string</td><td>Secondary UAS ID</td></tr>
+<tr><td><code>id_type2</code></td><td>uint8</td><td>Secondary ID type</td></tr>
+<tr><td><code>ua_type2</code></td><td>uint8</td><td>Secondary UA type</td></tr>
+<tr><td><code>tx_modes</code></td><td>uint8</td><td>Transmission mode bitmask</td></tr>
+<tr><td><code>wifi_ch</code></td><td>uint8</td><td>WiFi channel</td></tr>
+<tr><td><code>wifi_pwr</code></td><td>float</td><td>WiFi TX power (dBm)</td></tr>
+<tr><td><code>rates</code></td><td>struct</td><td>Four rate values (wifi_bcn, wifi_nan, ble4, ble5) + two power values (ble4, ble5)</td></tr>
+<tr><td><code>wifi_ap</code></td><td>struct</td><td>SSID + password</td></tr>
+<tr><td><code>serial</code></td><td>struct</td><td>Baud rate + MAVLink sysid + bcast_powerup + webserver_en</td></tr>
+<tr><td><code>system</code></td><td>struct</td><td>Lock level + options</td></tr>
+<tr><td><code>key_1</code>...<code>key_5</code></td><td>string</td><td>Public keys</td></tr>
+</table>
+
+<h4>Status JSON Schema</h4>
+<pre>{
+  "protocol":     int,    // 0=Unknown, 1=MAVLink, 2=MSP, 3=NMEA, 4=None
+  "gps_valid":    bool,   // true if GPS has valid fix
+  "lat":          float,  // decimal degrees
+  "lon":          float,  // decimal degrees
+  "alt":          float,  // meters MSL
+  "speed":        float,  // m/s
+  "heading":      int,    // degrees (0-360)
+  "satellites":   int,    // number of satellites
+  "fix_type":     int,    // 0=None, 2=2D, 3=3D
+  "tx_total":     int,    // total transmissions since boot
+  "tx_wifi_bcn":  int,    // WiFi beacon packets sent
+  "tx_wifi_nan":  int,    // WiFi NAN packets sent
+  "tx_ble4":      int,    // BLE 4.0 packets sent
+  "tx_ble5":      int,    // BLE 5.0 packets sent
+  "uptime_ms":    int     // milliseconds since boot
+}</pre>
+
+<h4>Config JSON Schema</h4>
+<pre>{
+  "uas_id":           string,
+  "id_type":          int,     // 1-4
+  "ua_type":          int,     // 0-15
+  "operator_id":      string,
+  "uas_id_2":         string,
+  "id_type_2":        int,     // 0-4
+  "ua_type_2":        int,     // 0-15
+  "tx_modes":         int,     // bitmask
+  "wifi_channel":     int,     // 1-13
+  "wifi_power_dbm":   float,   // 2-20
+  "wifi_bcn_rate_hz": float,   // 0-5
+  "wifi_nan_rate_hz": float,   // 0-5
+  "ble4_rate_hz":     float,   // 0-5
+  "ble4_power_dbm":   float,   // -27-18
+  "ble5_rate_hz":     float,   // 0-5
+  "ble5_power_dbm":   float,   // -27-18
+  "wifi_ssid":        string,
+  "wifi_password":    string,
+  "webserver_en":     int,     // 0/1
+  "baud_rate":        int,     // 9600-921600
+  "mavlink_sysid":    int,     // 0-254
+  "bcast_powerup":    int,     // 0/1
+  "lock_level":       int,     // 0-2
+  "options":          int,     // bitmask
+  "public_key_1":     string,
+  "public_key_2":     string,
+  "public_key_3":     string,
+  "public_key_4":     string,
+  "public_key_5":     string
+}</pre>
+
+<h4>ODID Message Structure</h4>
+<p>Each transmission (WiFi Beacon or BLE advertisement) contains an ASTM F3411-22a message pack with up to 3 ODID messages. The messages are packed into a single payload payload:</p>
+
+<div class="guide-diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph Pack["ASTM F3411-22a Message Pack (single transmission)"]
+    direction LR
+    Basic["Basic ID (Type 0)<br/>UAS ID (serial/CAA)<br/>ID type, UA type<br/>20 bytes"]
+    Loc["Location/Vector (Type 1)<br/>Lat, Lon, Alt, Speed<br/>Heading, Timestamp<br/>15 bytes"]
+    Sys["System (Type 2)<br/>Operator ID<br/>Area count / radius<br/>10 bytes"]
+  end
+
+  Pack --> Transport["Transport Layer"]
+
+  subgraph TransportLayer["Transport"]
+    direction LR
+    WiFi["WiFi Beacon<br/>802.11 beacon frame<br/>IE 221 (OUI FA 0B BC)<br/>Most compatible"]
+    BLE["Bluetooth Low Energy<br/>BLE 4.0: Legacy advertising<br/>BLE 5.0: Coded PHY (S=8)<br/>Long range &gt;300 m"]
+  end
+</pre>
+<div class="diag-cap">ODID message pack structure: up to 3 ASTM messages per transmission, broadcast over WiFi Beacon or BLE.</div>
+</div>
+
+<p>The messages are packed into a single payload according to the ASTM F3411-22a specification and transmitted as:</p>
+<ul>
+<li><b>WiFi Beacon:</b> 802.11 beacon frame with OUI-based IE (Element ID 221, OUI: 0xFA 0x0B 0xBC)</li>
+<li><b>BLE 4.0:</b> Advertising packet with standard ODID AD structure</li>
+<li><b>BLE 5.0:</b> Extended advertising with ODID AD structure, Coded PHY (S=8) for long range</li>
+</ul>
+</div>
+</div>
+
+<!-- 15. REGULATORY -->
+<div class="guide-section" id="guide-regulatory">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>15. Regulatory Information</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>Standards Compliance (targeted)</h4>
+<p>ESP DRONE REMOTEID targets the following standards (message encoding complete, compliance testing with certified receivers pending):</p>
+<ul>
+<li><b>ASTM F3411-22a</b> &mdash; Standard Specification for Remote ID and Tracking. This is the US FAA-accepted standard that also forms the basis for many international regulations.</li>
+<li><b>ASD-STAN prEN 4709-002</b> &mdash; European standard for direct Remote ID, adopted by EASA and EU member states.</li>
+</ul>
+
+<h4>FAA (United States)</h4>
+<p>FAA Part 89 requires all drones weighing more than 0.55 lb (250 g) and flown outdoors to broadcast Remote ID. The regulation came into effect on September 16, 2023. ESP DRONE REMOTEID helps drone operators comply with this requirement by:</p>
+<ul>
+<li>Broadcasting ASTM F3411-22a Standard Remote ID messages via WiFi Beacon and BLE</li>
+<li>Transmitting at 1 Hz (meeting the minimum requirement)</li>
+<li>Including all required data: drone ID, location, altitude, speed, operator ID</li>
+</ul>
+<p><b>Note:</b> Regulatory compliance with certified receivers has <b>not been verified</b>. Do not use in actual flight operations until testing confirms compliance.</p>
+
+<h4>EASA (European Union)</h4>
+<p>EU Implementing Regulation 2021/664 (U-Space) and 2019/947 require Remote ID for most drone operations in the Open and Specific categories. ESP DRONE REMOTEID supports compliance by broadcasting Direct Remote ID (prEN 4709-002) over WiFi and BLE.</p>
+
+<h4>Country-by-Country Overview</h4>
+<table>
+<tr><th>Country / Region</th><th>Regulation</th><th>Effective Date</th><th>Notes</th></tr>
+<tr><td>&#x1f1fa;&#x1f1f8; United States</td><td>FAA Part 89</td><td>Sep 16, 2023</td><td>Mandatory for all drones &gt;250 g. ASTM F3411-22a required.</td></tr>
+<tr><td>&#x1f1ea;&#x1f1fa; European Union</td><td>EU 2019/947 &amp; 2021/664</td><td>Jan 1, 2024</td><td>Direct RID per prEN 4709-002. Required for Open &amp; Specific categories.</td></tr>
+<tr><td>&#x1f1ec;&#x1f1e7; United Kingdom</td><td>CAP 722 (CAA)</td><td>Nov 2023</td><td>Aligns with EU RID framework post-Brexit. Operator registration required.</td></tr>
+<tr><td>&#x1f1ef;&#x1f1f5; Japan</td><td>MLIT / Civil Aeronautics Act</td><td>Jun 2022</td><td>Remote ID required for drones &gt;100 g in specified areas.</td></tr>
+<tr><td>&#x1f1e8;&#x1f1e6; Canada</td><td>CAR Part IX (Transport Canada)</td><td>Expected 2025</td><td>Based on ASTM F3411. Proposed for all drones &gt;250 g.</td></tr>
+<tr><td>&#x1f1e6;&#x1f1fa; Australia</td><td>CASR Part 101 (CASA)</td><td>Expected 2025</td><td>Standard RID based on ASTM. Under consultation.</td></tr>
+<tr><td>&#x1f1f8;&#x1f1ee; South Korea</td><td>MOLIT / KASA</td><td>2024 (phased)</td><td>Remote ID required for all drones &gt;250 g.</td></tr>
+<tr><td>&#x1f1e7;&#x1f1f7; Brazil</td><td>RBAC-E 94 (ANAC)</td><td>Expected 2025</td><td>Based on ASTM F3411. Under development.</td></tr>
+<tr><td>&#x1f1f0;&#x1f1f7; South Korea</td><td>KASA RID</td><td>2024</td><td>Mandatory for all commercial drone operations.</td></tr>
+</table>
+
+<h4>FCC / CE Compliance</h4>
+<p>ESP DRONE REMOTEID operates in the 2.4 GHz ISM band. The ESP32's WiFi and BLE transmitters are certified under FCC Part 15 and CE RED when used with Espressif's reference modules. Using external antennas may affect compliance. Ensure your antenna setup complies with local radio regulations.</p>
+
+<h4>Operator Registration</h4>
+<p>Most countries require drone operators to register with the national aviation authority and display their operator ID on the drone. ESP DRONE REMOTEID allows you to set your operator ID in the configuration, which is included in the System Message (Type 2) of the ODID transmission. Check your local authority's requirements:</p>
+<ul>
+<li><b>USA:</b> <a href="https://faadronezone.faa.gov">FAA DroneZone</a></li>
+<li><b>EU:</b> Register in your country's UAS system</li>
+<li><b>UK:</b> <a href="https://register-drones.caa.co.uk">CAA Drone Registration</a></li>
+<li><b>Japan:</b> <a href="https://www.mlit.go.jp/koku">MLIT Drone Registration</a></li>
+<li><b>Canada:</b> <a href="https://tc.canada.ca/en/aviation">Transport Canada Drone Portal</a></li>
+<li><b>Australia:</b> <a href="https://www.casa.gov.au">CASA Drone Registration</a></li>
+</ul>
+
+<div class="callout"><strong>&#x26a0; Disclaimer:</strong> This firmware is a tool to assist with Remote ID compliance. It is your responsibility to verify that your specific configuration meets local regulations. The authors are not liable for any regulatory violations or penalties.</div>
+
+<h4>Recommended Practices</h4>
+<ul>
+<li>Set your correct UAS ID (serial number or CAA registration).</li>
+<li>Set your correct Operator ID.</li>
+<li>Keep the firmware updated for regulatory changes.</li>
+<li>Test that your Remote ID signal is receivable by standard ODID receiver apps before operational use.</li>
+<li>Register your drone with your national aviation authority if required.</li>
+<li>Use a dedicated Remote ID receiver app to verify your broadcast before each flight session.</li>
+<li>Keep records of your UAS ID and operator registration for inspection if requested.</li>
+</ul>
+
+<h4>Tested Configurations</h4>
+<p>Demo mode (GPS patrol simulation) verified: config UI, telemetry dashboard, OTA upload flow, lock level UI all functional. Flight controller hardware testing with MAVLink/MSP/NMEA is in progress.</p>
+<p>If you have tested this firmware with your hardware, please <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">open an issue</a> or submit a PR to share your results.</p>
+
+<h4>Protocol Maturity</h4>
+<table>
+<tr><th>Protocol</th><th>Status</th><th>Notes</th></tr>
+<tr><td>WiFi Beacon</td><td><span class="tag tag-green">Stable</span></td><td>IEEE 802.11 beacon frames with OUI-based IE (FA:0B:BC). Enabled by default. Verified in demo mode.</td></tr>
+<tr><td>WiFi NAN</td><td><span class="tag tag-blue">Implemented</span></td><td>Neighborhood Area Networking frames. UI checkbox + counters functional. Awaiting receiver testing.</td></tr>
+<tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising (SCAN_IND). All ESP32 variants. Enabled by default.</td></tr>
+<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires S3/C3/C6. Disabled by default. Awaiting hardware testing with Android/iOS.</td></tr>
+<tr><td>MAVLink (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>v1/v2 parsers + ODID messages (ardupilotmega dialect). AHRS2 heading. Awaiting FC hardware.</td></tr>
+<tr><td>MSP (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>MSP v1 (RAW_GPS, ATTITUDE). Awaiting Betaflight/iNAV hardware testing.</td></tr>
+<tr><td>NMEA 0183 (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>GGA + RMC + VTG parsers. Works with tap method. Awaiting GPS module testing.</td></tr>
+</table>
+</div>
+</div>
+
+<!-- 16. CONTRIBUTING -->
+<div class="guide-section" id="guide-contributing">
+<div class="gs-header" onclick="this.parentElement.classList.toggle('open')" onkeydown="if(event.key==='Enter'||event.key===' ')this.click()" role="button" tabindex="0" aria-expanded="false">
+<h3>16. Contributing</h3>
+<span class="arrow">&#x25bc;</span>
+</div>
+<div class="gs-body">
+<h4>How to Contribute</h4>
+<p>Contributions are welcome! Here are ways you can help:</p>
+<ul>
+<li><b>Report bugs:</b> Open an issue on <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">GitHub Issues</a></li>
+<li><b>Feature requests:</b> Open an issue or discussion with your proposal.</li>
+<li><b>Code contributions:</b> Fork the repository, create a branch, and submit a Pull Request.</li>
+<li><b>Documentation:</b> Improve the wiki, this guide, or add translations.</li>
+<li><b>Testing:</b> Test the firmware on different flight controllers and report results.</li>
+</ul>
+
+<h4>Code Style</h4>
+<ul>
+<li>C code: ESP-IDF coding style, 4-space indentation, descriptive variable names.</li>
+<li>HTML/CSS: Clean, minimal, responsive. The web UI is embedded and must be compact.</li>
+<li>No comments in code unless the logic is non-obvious.</li>
+</ul>
+
+<h4>Development Workflow</h4>
+<pre>git clone https://github.com/YOUR_USERNAME/ESP_DRONE_REMOTEID.git
+cd ESP_DRONE_REMOTEID
+git checkout -b my-feature-branch
+# Make changes
+idf.py build
+idf.py -p COM3 flash monitor
+# Commit and push
+git push -u origin my-feature-branch</pre>
+
+<h4>Adding a New Protocol</h4>
+<p>To add support for a new protocol:</p>
+<ol>
+<li>Create a new parser file in <code>components/esp_remote_id/src/</code></li>
+<li>Implement the parser function matching the signature <code>bool parse_xxx(uint8_t byte, rid_gps_t *gps)</code></li>
+<li>Register the parser in <code>protocol_parser.c</code> auto-detection sequence</li>
+<li>Add a new enum value to <code>rid_protocol_t</code> in <code>esp_remote_id.h</code></li>
+<li>Update the status string array in <code>web_config.c</code></li>
+<li>Test with your hardware and submit a PR</li>
+</ol>
+
+<h4>Disclaimer &amp; Acknowledgments</h4>
+<p>This is a <b>personal open-source project</b> made public for educational and research purposes. It is <b>not affiliated with, endorsed by, or derived from ArduPilot</b>. The project takes <b>inspiration</b> from the functionality of ArduPilot's ArduRemoteID system and implements a compatible Remote ID transmitter using independent code written from scratch for the ESP32 platform using ESP-IDF.</p>
+<p>The author respects all intellectual property rights. No ArduPilot source code has been copied or incorporated. The implementation follows the open ASTM F3411-22a standard and uses the independently developed <b>opendroneid-core-c</b> library (BSD-3-Clause) for ODID message packing.</p>
+<p>Technologies and protocols referenced:</p>
+<ul>
+<li><b>ArduRemoteID</b> &mdash; functional inspiration from ArduPilot's Remote ID implementation</li>
+<li><b>Open Drone ID Core C</b> &mdash; Intel's open-source ODID library (BSD-3-Clause)</li>
+<li><b>MAVLink</b> &mdash; lightweight communication protocol (MIT)</li>
+<li><b>MSP</b> &mdash; MultiWii Serial Protocol</li>
+<li><b>ESP-IDF</b> &mdash; Espressif's IoT Development Framework (Apache 2.0)</li>
+</ul>
+
+<h4>License</h4>
+<p>This project is released under the <b>Apache License 2.0</b>. See the <code>LICENSE</code> file in the repository for details.</p>
+</div>
+</div>
+
+</div> <!-- end guide-col -->
+</div> <!-- end main-grid -->
+</div> <!-- end wrap -->
+
+<button id="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" aria-label="Scroll to top">&#x2191;</button>
+
+<button id="btn-toc" onclick="toggleToc()" title="Table of Contents" aria-label="Toggle table of contents">Contents</button>
+<div id="toc-panel"><h4>Sections</h4></div>
+
+<div id="lb-overlay" onclick="if(event.target===this)closeLb()"></div>
+
+<footer>
+<div class="fw-links">
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
+GitHub
+</a>
+<span class="sep">|</span>
+<a href="index.html">Quick Start</a>
+<span class="sep">|</span>
+<a href="#guide-analyzer">Analyzer</a>
+<span class="sep">|</span>
+<a href="config(demo).html">Configurator Live Demo</a>
+<span class="sep">|</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/releases">Releases</a>
+<span class="sep">|</span>
+<a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/issues">Issues</a>
+</div>
+<div class="fw-copy">ESP DRONE REMOTEID v1.0.0-beta &mdash; ASTM F3411-22a Open DroneID (beta) &mdash; <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/LICENSE">Apache-2.0 License</a></div>
+</footer>
+
+<script>
+// --- DARK MODE ---
+var theme=localStorage.getItem('theme');
+if(theme==='dark'){document.documentElement.setAttribute('data-theme','dark')}
+function toggleDark(){
+  var d=document.documentElement;
+  if(d.getAttribute('data-theme')==='dark'){d.removeAttribute('data-theme');localStorage.setItem('theme','light')}
+  else{d.setAttribute('data-theme','dark');localStorage.setItem('theme','dark')}
+}
+
+// --- ACCORDION ---
+document.querySelectorAll('.guide-section').forEach(function(s){
+  var h=s.querySelector('.gs-header');
+  if(h){h.setAttribute('aria-expanded',s.classList.contains('open'))}
+  var orig=s.querySelector('.gs-header').getAttribute('onclick')||'';
+  if(!orig.includes('aria-expanded')){
+    s.querySelector('.gs-header').onclick=function(e){
+      this.parentElement.classList.toggle('open');
+      this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'));
+    }
+  }
+});
+
+// --- SCROLL: progress bar + back to top + TOC highlight + breadcrumbs ---
+var progressBar = document.getElementById('reading-progress');
+var btn = document.getElementById('btn-top');
+var sections = document.querySelectorAll('.guide-section');
+var tocLinks = document.querySelectorAll('#toc-panel a');
+var breadcrumb = document.querySelector('.breadcrumbs .cur');
+
+function updateScroll(){
+  var docH = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+  btn.classList.toggle('show', window.scrollY > 400);
+  // TOC active highlight + breadcrumb
+  var cur = '';
+  sections.forEach(function(s){
+    var top = s.offsetTop - 120;
+    if(window.scrollY >= top){cur = s.id}
+  });
+  tocLinks.forEach(function(a){a.classList.toggle('active', a.getAttribute('href')==='#'+cur)});
+  if(breadcrumb && cur){
+    var label = cur.replace('guide-','').replace(/-/g,' ');
+    breadcrumb.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+  }
+}
+window.onscroll = updateScroll;
+
+// --- ANCHOR LINKS on h4/h5 ---
+document.querySelectorAll('.gs-body h4,.gs-body h5').forEach(function(h){
+  if(!h.id){h.id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}
+  var a = document.createElement('a');
+  a.href = '#'+h.id; a.className = 'anchor-link'; a.textContent = '#';
+  a.setAttribute('aria-label','Link to this heading');
+  h.appendChild(a);
+});
+
+// --- SEARCH with auto-open ---
+function filterGuide(val){
+  var q = val.toLowerCase().trim();
+  document.querySelectorAll('.guide-section').forEach(function(s){
+    var text = s.textContent.toLowerCase();
+    var match = q && text.indexOf(q) !== -1;
+    s.classList.toggle('hidden', q && !match);
+    if(match && q){s.classList.add('open')}
+    var h3=s.querySelector('.gs-header h3');
+    if(h3){
+      var orig=h3.getAttribute('data-orig');
+      if(!orig){orig=h3.innerHTML;h3.setAttribute('data-orig',orig)}
+      if(match&&q){
+        var idx=orig.toLowerCase().indexOf(q);
+        if(idx>-1){h3.innerHTML=orig.slice(0,idx)+'<mark>'+orig.slice(idx,idx+q.length)+'</mark>'+orig.slice(idx+q.length)}
+        else{h3.innerHTML=orig}
+      }else{h3.innerHTML=orig}
+    }
+    if(!match||!q){
+      s.querySelectorAll('.gs-body [data-orig]').forEach(function(n){
+        n.innerHTML=n.getAttribute('data-orig');n.removeAttribute('data-orig')
+      });
+    }
+  });
+}
+
+// --- SCROLL TO TOP PER SECTION ---
+document.querySelectorAll('.guide-section').forEach(function(s){
+  if(s.id==='guide-intro')return;
+  var h=s.querySelector('.gs-header');
+  if(!h)return;
+  var a=document.createElement('a');
+  a.href='#btn-top';a.textContent='\u2191';
+  a.title='Back to top';
+  a.style.cssText='color:#bbb;text-decoration:none;font-size:.85em;padding:0 6px 0 8px';
+  a.onclick=function(e){e.stopPropagation();e.preventDefault();window.scrollTo({top:0,behavior:'smooth'})};
+  h.insertBefore(a, h.querySelector('.arrow'));
+});
+
+// --- COPY CODE BLOCKS ---
+document.querySelectorAll('.gs-body pre').forEach(function(pre){
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy';
+  btn.onclick = function(){
+    navigator.clipboard.writeText(pre.textContent).then(function(){
+      btn.textContent = 'Copied!';
+      setTimeout(function(){btn.textContent = 'Copy'}, 2000);
+    });
+  };
+  pre.parentNode.insertBefore(btn, pre);
+});
+
+// --- TABLE OF CONTENTS ---
+var tocPanel = document.getElementById('toc-panel');
+sections.forEach(function(s){
+  var id = s.id;
+  var h3 = s.querySelector('.gs-header h3');
+  if(!id || !h3)return;
+  var label = h3.textContent.replace(/^\d+\.\s*/,'');
+  var a = document.createElement('a');
+  a.href = '#'+id;
+  a.textContent = label;
+  a.onclick = function(e){e.preventDefault();document.getElementById(id).scrollIntoView({behavior:'smooth'});tocPanel.classList.remove('open')};
+  tocPanel.appendChild(a);
+});
+function toggleToc(){tocPanel.classList.toggle('open')}
+
+// --- KEYBOARD SHORTCUTS ---
+var searchInput = document.getElementById('guide-search');
+document.addEventListener('keydown',function(e){
+  if(e.key==='/' && !e.ctrlKey && !e.metaKey && document.activeElement!==searchInput){
+    e.preventDefault();searchInput.focus()
+  }
+  if(e.key==='Escape'){
+    document.querySelectorAll('.guide-section.open').forEach(function(s){s.classList.remove('open')});
+    if(tocPanel.classList.contains('open')){tocPanel.classList.remove('open')}
+    if(searchInput.value){searchInput.value='';filterGuide('')}
+    searchInput.blur();
+  }
+  if(e.key==='j' && !e.ctrlKey && !e.metaKey && document.activeElement!==searchInput){
+    e.preventDefault();
+    var vis = [].filter.call(sections,function(s){return !s.classList.contains('hidden')});
+    var idx = vis.findIndex(function(s){return s.classList.contains('open')});
+    var next = idx < vis.length-1 ? idx+1 : 0;
+    if(idx>=0){vis[idx].classList.remove('open')}
+    vis[next].classList.add('open');vis[next].scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  if(e.key==='k' && !e.ctrlKey && !e.metaKey && document.activeElement!==searchInput){
+    e.preventDefault();
+    var vis = [].filter.call(sections,function(s){return !s.classList.contains('hidden')});
+    var idx = vis.findIndex(function(s){return s.classList.contains('open')});
+    var prev = idx > 0 ? idx-1 : vis.length-1;
+    if(idx>=0){vis[idx].classList.remove('open')}
+    vis[prev].classList.add('open');vis[prev].scrollIntoView({behavior:'smooth',block:'center'});
+  }
+});
+
+// --- LIGHTBOX for diagrams ---
+document.querySelectorAll('.guide-diagram').forEach(function(d){
+  d.style.cursor = 'zoom-in';
+  d.onclick = function(){
+    var lb = document.getElementById('lb-overlay');
+    var clone = d.querySelector('svg').cloneNode(true);
+    lb.innerHTML = '<button class="lb-close" onclick="closeLb()">&times;</button>';
+    lb.appendChild(clone);
+    lb.classList.add('open');
+  }
+});
+function closeLb(){document.getElementById('lb-overlay').classList.remove('open')}
+
+
+// Initial breadcrumb / TOC highlight
+updateScroll();
+</script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Complete Software Status
 
-> Last updated: 2026-06-21
+> Last updated: 2026-06-22 (v2)
 > Scope: all 70+ source files in repository (excluding build artifacts, __pycache__)
 
 ---
@@ -164,12 +164,13 @@
 - ✅ `ble_tx_transmit_legacy()` uses `ADV_TYPE_SCAN_IND` for better compatibility.
 - **Gap:** BLE 5.0 LR Coded PHY requires ESP32-S3/C3 hardware — marked Beta.
 
-#### `web_config.c` (463 lines)
+#### `web_config.c` (735 lines)
 - HTTP server: serves `config.html`, REST API (`/api/config`, `/api/status`, `/api/command`, `/api/logs`), OTA endpoint.
 - ✅ Lock level: basic check blocks destructive commands at level ≥ 1, OTA at level ≥ 2.
 - ✅ eFuse burn: writes `"RID!"` magic to `EFUSE_BLK3` on transition to level 2; `get_lock_level()` reads eFuse.
 - ✅ OTA SHA-256: `X-Expected-SHA256` header mandatory. Rejects missing/mismatched hash.
 - ✅ Signature verification: Level ≥ 1 requires `X-Signature` header with ECDSA P-256 signature over SHA-256 hash of JSON body. Uses `mbedtls/pk.h` for key parsing (PEM, DER, or `PUBLIC_KEYV1:` base64) and PSA for hashing.
+- ✅ Command signature verification: `/api/command` now also verifies `X-Signature` for restart/reboot/reset/factory commands when locked. `/api/reset` endpoint also accepts signatures (body signed: `"factory_reset"`). Returns `invalid_signature` instead of `locked`.
 
 #### `protocol_detect.c` (75 lines)
 - UART auto-detect: `$M<` → MSP, `$G/$N` → NMEA, `0xFE/0xFD` → MAVLink.
@@ -232,6 +233,7 @@
 - ✅ Guide descriptions on all tabs.
 - ✅ Bug fixes: `setAllTx()` single call, Restart with `.catch()`, log pane grid.
 - ✅ Lock level + eFuse + signature verification implemented.
+- ✅ Command signature support: restart/reset/reboot buttons use `sendSigCmd()`, terminal input includes hidden `X-Signature` field, dialog command supports headers.
 - **Gap:** Inline only (~1520 lines) — optional refactor to separate files.
 
 ---
@@ -271,20 +273,21 @@
 ### Package Structure
 
 #### `__init__.py` (3 lines)
-- Package marker. Exports `__version__ = "1.0.0-dev"`.
+- Package marker. Exports `__version__ = "2.0.0-dev"`.
 - **OK.**
 
 #### `__main__.py` (5 lines)
-- Entry point: `python -m ESP_DRONE_REMOTEID_Analyzer` → launches GUI.
+- Entry point: `python -m analyzerex` → launches GUI.
 - Calls `gui.main()`.
 - **OK.**
 
-#### `capture.py` (176 lines)
+#### `capture.py` (~200 lines)
 - WiFi beacon capture via Scapy (`sniff` on Dot11Beacon frames).
 - `RIDCapture` class: interface listing, monitor-mode helpers (Linux/macOS/Windows).
+- **v2:** PCAP batch write via `wrpcap()` for offline analysis in Wireshark.
+- **v2:** Multi-channel hopping support (`set_channels()`, `set_channel_hopping()` with configurable interval).
 - Callback-based: `on_packet(data)` receives parsed RSSI, source MAC, summary.
 - **Gap:** Requires monitor-mode WiFi adapter + root/admin privileges. Not available on all hardware.
-- **Gap:** Scapy is a heavy dependency (~30 MB installed).
 
 #### `decoder.py` (510 lines)
 - Pure Python ASTM F3411-22a packet decoder.
@@ -293,26 +296,28 @@
 - `format_summary()` — one-line human-readable summary of a decoded packet.
 - **OK.** Comprehensive.
 
-#### `server.py` (197 lines)
+#### `server.py` (~550 lines)
 - WebSocket broadcast server (`simple-websocket-server`).
-- `BroadcastServer` — receives decoded packets from capture, broadcasts JSON to all WebSocket clients.
-- `RIDDevice` dataclass: per-device state (MAC, RSSI samples, basic ID, operator ID, location, system).
+- `RIDDevice` dataclass: per-device state (MAC, RSSI samples, trail history, basic ID, operator ID, location, system).
+- **v2:** GPS track trail history — 500-point position ring buffer per device.
+- **v2:** Session recording — `session_start()`, `session_stop()`, JSON persist/load/replay.
+- **v2:** CSV/KML export — `cmd_get_csv()`, `cmd_get_kml()` generate downloadable content.
+- **v2:** `to_detail_dict()` — full device snapshot with RSSI samples + trail + message timeline.
+- **v2:** Snapshot on WS connect — new clients receive current device state immediately.
+- **v2:** Command dispatch — `get_csv`, `get_kml`, `get_session`, `get_device_detail`, `session_start`, `session_stop`.
 - Device deduplication + 60s stale timeout.
 - **OK.**
 
 #### `rid_cli.py` (115 lines)
 - Headless CLI: `rid-capture`, `rid-scan`, `rid-monitor`, `rid-listen`, `rid-list-ifaces`.
 - argparse-based subcommands.
-- `cmd_capture()` — live packet capture to stdout.
-- `cmd_scan()` — tabular device listing.
-- `cmd_monitor()` — continuous real-time display.
 - **OK.**
 
-#### `gui.py` (109 lines)
-- Native desktop window via `pywebview`.
-- `run_backend()` — starts WebSocket server + capture thread + HTTP file server for web UI.
-- `main()` — opens webview window pointing to local HTTP server.
-- **Gap:** `pywebview` optional — fallback to browser.
+#### `gui.py` (~80 lines)
+- **v2: Standalone pywebview desktop app** — no HTTP server, loads `index.html` from `file://`.
+- `main()` — starts WebSocket server thread + capture thread, opens native window.
+- **Security:** No browser accessibility — only the local pywebview window can connect.
+- **OK.**
 
 #### `build.spec` (56 lines)
 - PyInstaller spec for Windows executable.
@@ -322,7 +327,7 @@
 #### `requirements.txt` (14 lines)
 - `scapy>=2.5.0` — WiFi capture
 - `simple-websocket-server>=0.4.0` — WebSocket bridge
-- `pywebview>=4.4.1` — optional native window
+- `pywebview>=4.4.1` — native window
 - **OK.**
 
 #### `ESP_DRONE_REMOTEID_Analyzer.py` / `main_analyzer.pyw`
@@ -330,18 +335,35 @@
 
 ### Analyzer Web UI (`web/`)
 
-#### `index.html` (94 lines)
-- Analyzer web UI: tabs (Devices, Map, Timeline, About).
+#### `index.html` (~140 lines)
+- **v2:** 5 tabs: Devices (default), Map, Timeline, Statistics, About.
+- **v2:** Toolbar with search/filter/export/replay controls.
+- **v2:** Recording controls — Record/Stop buttons with pulsing REC badge.
+- **v2:** Detail panel overlay — slides in from right on device click.
+- **v2:** Replay file selector — dropdown to load previous sessions.
+- **v2:** UA type distribution grid — metric cards in Statistics tab.
 - Leaflet map, device table, packet log.
 - **OK.**
 
-#### `app.js` (438 lines)
-- WebSocket client, device table rendering, RSSI chart, packet rate chart, Leaflet map markers.
+#### `app.js` (~850 lines)
+- WebSocket client, device table rendering, Leaflet map markers.
+- **v2:** Drone trail polylines on map — 500-point path per device.
+- **v2:** Detail panel — click device shows full detail, RSSI history, message timeline.
+- **v2:** Session recording — Record/Stop/Replay UI logic.
+- **v2:** CSV/KML download — fetch blob from server, trigger save.
+- **v2:** UA-type search filter, RSSI quality filter (good/warn/bad), active-only toggle.
+- **v2:** Desktop notifications — alerts for new devices when tab hidden.
+- **v2:** Drone count over time — scrolling line chart.
+- **v2:** Statistics tab — UA type distribution + top RSSI leaderboard.
 - Dark mode toggle, stats (devices, IDs, packets/min).
 - **OK.**
 
-#### `style.css` (176 lines)
-- Dark/light theme, responsive layout, badge/tab/table styles.
+#### `style.css` (~320 lines)
+- **v2:** Detail panel — fixed right-side slide-in panel with scroll.
+- **v2:** Toolbar layout — horizontal button bar with search/filter controls.
+- **v2:** Stat grid + metric cards — responsive grid for Statistics tab.
+- **v2:** Responsive breakpoints — adapts to small windows.
+- Dark/light theme, badge/tab/table styles.
 - **OK.**
 
 ---
@@ -396,12 +418,29 @@
 
 ## `docs/` — GitHub Pages Site
 
-### `index.html` (1979 lines)
-- Landing page: WebSerial ESP Web Tools installer, built-in wiki, wiring guide, flashing guide, FAQ, release bar.
-- Dark/light mode, responsive (3 breakpoints), reading progress bar, TOC panel, lightbox for diagrams.
-- ✅ BETA status (was DEV), meta tags, version bar, release bar, footer.
+### `index.html` (~901 lines)
+- Quick Start landing page + WebSerial ESP Web Tools installer + built-in wiki sections 1–2.
+- CSS custom properties design system (`--surface`, `--text`, `--accent`, `--shadow-*`, `--radius-*`).
+- Inter font from Google Fonts, full-width layout, dark/light mode.
+- Guide sections with gradient `::before` border-left pseudo-element, box-shadow hover.
+- Tables: `border-radius` + `overflow:hidden`, `border-collapse:separate`, sticky headers.
+- Callouts (info/warning/tip) with colored left border, `var()` backgrounds.
+- Code blocks: dark `#1a1a2e` background with light `#e4e4ef` text even in light mode.
+- Wiring cards: `box-shadow` + hover `translateY(-1px)`.
+- Mermaid diagrams with animations (fade-in, dashed edge flow, hover glow).
+- Release bar (version timeline), reading progress bar, TOC panel, lightbox for diagrams.
+- Responsive (3 breakpoints), breadcrumbs, footer.
+- Dark mode uses neutral black/gray (`#0d0d0d`, `#141414`, `#e0e0e0` etc.).
 - **Gap:** Inline CSS/JS — optional refactor.
-- **Gap:** Static `manifest.json` in docs/ (see below).
+
+### `guide.html` (~1864 lines)
+- Technical wiki: sections 3–16 (protocol detection, MAVLink/MSP/NMEA details, BLE, WiFi NAN, Web UI, OTA, API reference, lock security, troubleshooting).
+- Same CSS design system as index.html with 16-color gradient palette for section headers.
+- Protocol auto-detection Mermaid diagram with correct NMEA "No" path.
+- Wiring diagrams, support matrices, table of contents, search.
+- Dark mode uses same neutral black/gray as index.html.
+- Mermaid animations, anchor links, copy buttons.
+- **Gap:** Inline CSS/JS — optional refactor.
 
 ### `config(demo).html` (~2546 lines)
 - Standalone offline demo of config UI. Full telemetry simulation:
@@ -412,10 +451,10 @@
 - ✅ Splash, responsive, icons, descriptions ported from config.html.
 - **Gap:** Must be manually synced with `config.html` changes.
 
-### `manifest.json` (33 lines)
-- ESP Web Tools firmware manifest: 3 chip families (ESP32, S3, C3).
-- **Gap:** Missing esp32s2, esp32c2, esp32c6.
-- **Gap:** Hardcoded version `0.1.0-dev` (should be auto-generated from CI).
+### `manifest.json` (57 lines)
+- ESP Web Tools firmware manifest: all 6 chip families (ESP32, S2, S3, C2, C3, C6).
+- Version `1.0.0-beta`, config URL `http://192.168.4.1`.
+- **Gap:** Hardcoded version (should be auto-generated from CI).
 
 ### `images/` (5 files)
 - `logo.svg`, `logo con scritta.svg` — project logos.
@@ -469,14 +508,15 @@
 | 🔴 HIGH | `sdkconfig` tracked in git | root | ✅ Already in `.gitignore`, not tracked |
 | 🔴 HIGH | `LICENSE` missing | root | ✅ Apache 2.0 added |
 | 🔴 HIGH | `docs/manifest.json` missing targets | `docs/manifest.json` | ✅ All 6 targets present |
-| 🟡 MEDIUM | Lock level signature verification | `web_config.c` + `config.html` | ✅ ECDSA P-256 via mbedTLS PK |
+| 🟡 MEDIUM | Lock level command signature | `web_config.c` + `config.html` | ✅ ECDSA P-256 via mbedTLS PK |
 | 🟡 MEDIUM | BLE 5.0 LR Coded PHY = Beta | `ble_tx.c` | 🟡 Needs testing on S3/C3 |
 | 🟡 MEDIUM | Analyzer requires monitor mode + root | `capture.py` | 🟡 Hardware limitation |
 | 🟢 LOW | `c_cpp_properties.json` hardcoded path | `.vscode/c_cpp_properties.json` | ✅ Gitignored, local only — fixed locally |
 | 🟢 LOW | `launch.json` no debug profiles | `.vscode/launch.json` | ✅ Gitignored, local only |
 | 🟢 LOW | `config(demo).html` manual sync needed | `docs/config(demo).html` | 🟡 Maintenance burden |
-| 🟢 LOW | `config.html` inline (1520 lines) | `webui/config.html` | Optional refactor |
-| 🟢 LOW | `docs/index.html` inline (1979 lines) | `docs/index.html` | Optional refactor |
+| 🟢 LOW | `config.html` inline (~2340 lines) | `webui/config.html` | Optional refactor |
+| 🟢 LOW | `docs/index.html` inline (~901 lines) | `docs/index.html` | Optional refactor |
+| 🟢 LOW | `docs/guide.html` inline (~1864 lines) | `docs/guide.html` | Optional refactor |
 | ✅ DONE | `altitude_baro` populated by all parsers | All parsers | ✅ |
 | ✅ DONE | `force_tx` redundant logic fixed | `esp_remote_id.c` | ✅ |
 | ✅ DONE | MAVLink ODID identity override | `mavlink_parser.c` + `esp_remote_id.c` | ✅ |
@@ -491,6 +531,10 @@
 | ✅ DONE | `docs/index.html` BETA status | `docs/index.html` | ✅ |
 | ✅ DONE | `README.md` outdated notes removed | `README.md` | ✅ |
 | ✅ DONE | `docs/config(demo).html` simulation engine | `docs/config(demo).html` | ✅ |
+| ✅ DONE | Wiki split (index.html + guide.html) | `docs/` | ✅ |
+| ✅ DONE | Dark mode color fix (blue→neutral black) | `docs/index.html` + `docs/guide.html` | ✅ |
+| ✅ DONE | Diagram animations + Mermaid bug fixes | `docs/index.html` + `docs/guide.html` | ✅ |
+| ✅ DONE | Command signature for restart/reset | `web_config.c` + `config.html` | ✅ |
 
 ---
 
@@ -527,7 +571,7 @@
 | 27 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
 | 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
 | 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
-| 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 463 | ✅ |
+| 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 735 | ✅ |
 | 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
 | 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
 | 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
@@ -537,7 +581,7 @@
 | 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
 | 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 76 | ✅ |
 | 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
-| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~1520 | ✅ |
+| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2340 | ✅ |
 | 41-120 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
 | 121 | `ESP_DRONE_REMOTEID_Analyzer/__init__.py` | 3 | ✅ |
 | 122 | `ESP_DRONE_REMOTEID_Analyzer/__main__.py` | 5 | ✅ |
@@ -551,24 +595,25 @@
 | 130 | `ESP_DRONE_REMOTEID_Analyzer/web/index.html` | 94 | ✅ |
 | 131 | `ESP_DRONE_REMOTEID_Analyzer/web/app.js` | 438 | ✅ |
 | 132 | `ESP_DRONE_REMOTEID_Analyzer/web/style.css` | 176 | ✅ |
-| 133 | `docs/index.html` | 1979 | ✅ (inline) |
-| 134 | `docs/config(demo).html` | ~2546 | ✅ |
-| 135 | `docs/manifest.json` | 33 | ❌ missing targets |
-| 136 | `docs/images/logo.svg` | — | ✅ |
-| 137 | `docs/images/logo con scritta.svg` | — | ✅ |
-| 138 | `docs/images/ardupilot_logo.webp` | — | ✅ |
-| 139 | `docs/images/betaflight_logo.svg` | — | ✅ |
-| 140 | `docs/images/inav_logo.png` | — | ✅ |
-| 141 | `.github/workflows/build.yml` | 193 | ✅ |
-| 142 | `.github/workflows/release.yml` | 308 | ✅ |
-| 143 | `.github/dependabot.yml` | 13 | ✅ |
-| 144 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
-| 145 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
-| 146 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
-| 147 | `.vscode/settings.json` | 30 | ✅ |
-| 148 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
-| 149 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
-| 150 | `README.md` | ~120 | ✅ |
-| 151 | `.gitignore` | 140 | ✅ |
-| 152 | `.gitattributes` | 40 | ✅ |
-| 153 | `todolist/softwarestatus.md` | — | ✅ (this file) |
+| 133 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
+| 134 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
+| 135 | `docs/config(demo).html` | ~2546 | ✅ |
+| 136 | `docs/manifest.json` | 57 | ✅ (all 6 targets present) |
+| 137 | `docs/images/logo.svg` | — | ✅ |
+| 138 | `docs/images/logo con scritta.svg` | — | ✅ |
+| 139 | `docs/images/ardupilot_logo.webp` | — | ✅ |
+| 140 | `docs/images/betaflight_logo.svg` | — | ✅ |
+| 141 | `docs/images/inav_logo.png` | — | ✅ |
+| 142 | `.github/workflows/build.yml` | 193 | ✅ |
+| 143 | `.github/workflows/release.yml` | 308 | ✅ |
+| 144 | `.github/dependabot.yml` | 13 | ✅ |
+| 145 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
+| 146 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
+| 147 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
+| 148 | `.vscode/settings.json` | 30 | ✅ |
+| 149 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
+| 150 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
+| 151 | `README.md` | ~120 | ✅ |
+| 152 | `.gitignore` | 140 | ✅ |
+| 153 | `.gitattributes` | 40 | ✅ |
+| 154 | `todolist/softwarestatus.md` | — | ✅ (this file) |

@@ -443,9 +443,18 @@ static esp_err_t handle_index(httpd_req_t *req)
 static esp_err_t handle_factory_reset(httpd_req_t *req)
 {
     if (get_lock_level() >= 1) {
-        httpd_resp_set_type(req, "application/json");
-        httpd_resp_send(req, "{\"status\":\"locked\"}", 20);
-        return ESP_OK;
+        char sig_hdr[512] = {0};
+        size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Signature");
+        if (hdr_len > 0 && hdr_len < sizeof(sig_hdr)) {
+            httpd_req_get_hdr_value_str(req, "X-Signature", sig_hdr, sizeof(sig_hdr));
+        }
+        rid_config_t cfg;
+        esp_rid_get_config(&cfg);
+        if (!verify_signed_body("factory_reset", sig_hdr, &cfg)) {
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_send(req, "{\"status\":\"invalid_signature\"}", 33);
+            return ESP_OK;
+        }
     }
     esp_rid_factory_reset();
     httpd_resp_set_type(req, "application/json");
@@ -636,18 +645,35 @@ static esp_err_t handle_post_command(httpd_req_t *req)
     while (*cmd == ' ' || *cmd == '\t') cmd++;
     if (cmd[0] == '"') { cmd++; char *e = strchr(cmd, '"'); if (e) *e = '\0'; }
 
+    /* Check if command needs auth when locked */
+    bool needs_auth = (strcmp(cmd, "restart") == 0 || strcmp(cmd, "reboot") == 0 ||
+                       strcmp(cmd, "reset") == 0 || strcmp(cmd, "factory") == 0);
+
+    if (locked >= 1 && needs_auth) {
+        char sig_hdr[512] = {0};
+        size_t hdr_len = httpd_req_get_hdr_value_len(req, "X-Signature");
+        if (hdr_len > 0 && hdr_len < sizeof(sig_hdr)) {
+            httpd_req_get_hdr_value_str(req, "X-Signature", sig_hdr, sizeof(sig_hdr));
+        }
+        rid_config_t cfg;
+        esp_rid_get_config(&cfg);
+        if (!verify_signed_body(cmd, sig_hdr, &cfg)) {
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_send(req, "{\"status\":\"invalid_signature\"}", 33);
+            return ESP_OK;
+        }
+    }
+
     esp_err_t res = ESP_OK;
     const char *reply = "ok";
 
     if (strcmp(cmd, "restart") == 0 || strcmp(cmd, "reboot") == 0) {
-        if (locked >= 1) { reply = "locked"; goto out; }
         reply = "restarting";
         httpd_resp_set_type(req, "application/json");
         httpd_resp_send(req, "{\"status\":\"restarting\"}", 22);
         esp_restart();
         return ESP_OK;
     } else if (strcmp(cmd, "reset") == 0 || strcmp(cmd, "factory") == 0) {
-        if (locked >= 1) { reply = "locked"; goto out; }
         esp_rid_factory_reset();
         reply = "factory reset, restarting";
         httpd_resp_set_type(req, "application/json");
