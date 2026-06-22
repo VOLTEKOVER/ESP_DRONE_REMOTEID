@@ -1,10 +1,13 @@
-"""WiFi Remote ID beacon capture via Scapy (with monitor mode helper)."""
+"""WiFi Remote ID beacon capture via Scapy with PCAP logging, channel hopping, and multi-channel scan."""
 
 from __future__ import annotations
+import os
 import time
+import struct
 import threading
 import logging
 from typing import Optional, Callable
+from pathlib import Path
 
 from ESP_DRONE_REMOTEID_Analyzer.decoder import extract_odid_from_beacon, format_summary
 
@@ -39,6 +42,9 @@ MONITOR_MODE_HELP = {
 }
 
 
+CHANNELS_2GHZ = list(range(1, 14))
+
+
 class RIDCapture:
     def __init__(self, iface: Optional[str] = None, channel: int = 6):
         self.iface = iface
@@ -47,8 +53,14 @@ class RIDCapture:
         self._thread: Optional[threading.Thread] = None
         self._callback: Optional[Callable] = None
         self._sniffer = None
-        self._pcap_writer = None
-        self._pcap_file: Optional[str] = None
+        self._pcap_path: Optional[str] = None
+        self._pcap_packets: list = []
+        self._pcap_lock = threading.Lock()
+        self._channel_hop = False
+        self._channels = [channel]
+        self._channel_index = 0
+        self._hop_interval = 2.0
+        self._last_hop = 0.0
 
     @property
     def is_supported(self) -> bool:
@@ -58,7 +70,16 @@ class RIDCapture:
         self._callback = cb
 
     def set_pcap_output(self, path: str):
-        self._pcap_file = path
+        self._pcap_path = path
+
+    def set_channels(self, channels: list[int]):
+        self._channels = channels if channels else [6]
+        self._channel_index = 0
+
+    def set_channel_hopping(self, enabled: bool, interval: float = 2.0):
+        self._channel_hop = enabled
+        self._hop_interval = interval
+        self._last_hop = time.time()
 
     def start(self):
         if not SCAPY_AVAILABLE:
@@ -75,9 +96,23 @@ class RIDCapture:
         self._running = False
         if self._thread:
             self._thread.join(timeout=3)
-        if self._pcap_writer:
-            self._pcap_writer.close()
+        self._flush_pcap()
         logger.info("Capture stopped")
+
+    def _flush_pcap(self):
+        if not self._pcap_path:
+            return
+        if not self._pcap_packets:
+            return
+        try:
+            from scapy.utils import wrpcap
+            with self._pcap_lock:
+                wrpcap(self._pcap_path, self._pcap_packets, append=os.path.exists(self._pcap_path))
+                count = len(self._pcap_packets)
+                self._pcap_packets.clear()
+            logger.info(f"Flushed {count} packets to {self._pcap_path}")
+        except Exception as e:
+            logger.error(f"PCAP write error: {e}")
 
     def _process_packet(self, pkt):
         if not self._running:
@@ -96,7 +131,6 @@ class RIDCapture:
                     pass
 
             src_mac = pkt.addr2 if pkt.addr2 else "?"
-
             beacon = pkt[Dot11Beacon]
             frame_body = bytes(beacon)
 
@@ -106,6 +140,13 @@ class RIDCapture:
 
             ts = time.time()
             summary = format_summary(odid_msgs)
+
+            # Save raw packet for PCAP
+            if self._pcap_path:
+                with self._pcap_lock:
+                    self._pcap_packets.append(pkt)
+                    if len(self._pcap_packets) >= 100:
+                        self._flush_pcap()
 
             data = {
                 "timestamp": ts,
@@ -121,6 +162,14 @@ class RIDCapture:
                     self._callback(data)
                 except Exception as e:
                     logger.error(f"Callback error: {e}")
+
+            if self._channel_hop and len(self._channels) > 1:
+                now = time.time()
+                if now - self._last_hop >= self._hop_interval:
+                    self._last_hop = now
+                    self._channel_index = (self._channel_index + 1) % len(self._channels)
+                    new_ch = self._channels[self._channel_index]
+                    self.channel = new_ch
 
         except Exception:
             pass

@@ -17,8 +17,13 @@
       <span id="ws-status" class="badge badge-off">Disconnected</span>
       <span id="stats-devices" class="badge">0 devices</span>
       <span id="stats-ids" class="badge">0 IDs</span>
-      <span id="stats-packets" class="badge">0 pkt/min</span>
+      <span id="stats-packets" class="badge">0 pkt</span>
+      <span id="stats-recording" class="badge badge-rec" style="display:none">● REC</span>
+      <button id="btn-record" class="btn">⏺ Record</button>
+      <button id="btn-replay" class="btn">▶ Replay</button>
+      <input type="file" id="replay-file" accept=".json" style="display:none">
       <button class="btn" onclick="resetStats()">Reset</button>
+      <button id="notif-toggle" class="btn" title="Toggle desktop notifications">🔕 Off</button>
       <button id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#x263e;</button>
     </div>
   </header>
@@ -27,34 +32,69 @@
     <button class="tab active" data-tab="devices">Devices</button>
     <button class="tab" data-tab="map">Map</button>
     <button class="tab" data-tab="timeline">Timeline</button>
+    <button class="tab" data-tab="stats">Statistics</button>
     <button class="tab" data-tab="about">About</button>
   </div>
 
+  <!-- DEVICES TAB -->
   <div class="tab-content active" id="tab-devices">
-    <table id="device-table">
-      <thead>
-        <tr>
-          <th>MAC</th>
-          <th>Basic ID</th>
-          <th>UA Type</th>
-          <th>Operator</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>RSSI</th>
-          <th>Packets</th>
-          <th>Last Seen</th>
-        </tr>
-      </thead>
-      <tbody id="device-tbody">
-        <tr><td colspan="9" class="empty">Waiting for RID packets...</td></tr>
-      </tbody>
-    </table>
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <label>Search</label>
+        <input type="text" id="filter-input" placeholder="MAC, ID, type..." class="toolbar-input">
+      </div>
+      <div class="toolbar-group">
+        <label>RSSI</label>
+        <select id="filter-rssi" class="toolbar-select">
+          <option value="">All</option>
+          <option value="good">Good (&ge;-60)</option>
+          <option value="warn">Weak (&ge;-75)</option>
+          <option value="bad">Bad (&lt;-75)</option>
+        </select>
+      </div>
+      <div class="toolbar-group">
+        <label>
+          <input type="checkbox" id="filter-active"> Active only
+        </label>
+      </div>
+      <div class="toolbar-group toolbar-right">
+        <label>Export:</label>
+        <button id="export-csv" class="btn btn-sm">CSV</button>
+        <button id="export-kml" class="btn btn-sm">KML</button>
+        <button id="export-session" class="btn btn-sm">Session</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="device-table">
+        <thead>
+          <tr>
+            <th>MAC</th>
+            <th>Basic ID</th>
+            <th>UA Type</th>
+            <th>Operator</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>RSSI</th>
+            <th>Packets</th>
+            <th>Self ID</th>
+            <th>Last Seen</th>
+          </tr>
+        </thead>
+        <tbody id="device-tbody">
+          <tr><td colspan="10" class="empty">Waiting for RID packets...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
+  <!-- MAP TAB -->
   <div class="tab-content" id="tab-map">
     <div id="map"></div>
+    <p class="map-hint">Click a drone marker for details. Trails show flight path.</p>
   </div>
 
+  <!-- TIMELINE TAB -->
   <div class="tab-content" id="tab-timeline">
     <div class="chart-row">
       <div class="chart-box">
@@ -66,25 +106,93 @@
         <canvas id="chart-rate"></canvas>
       </div>
     </div>
+    <div class="chart-row">
+      <div class="chart-box">
+        <h3>Drone Count (10s buckets, last 10 min)</h3>
+        <canvas id="chart-count"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="stat-grid">
+          <div class="stat-card-lg"><span class="label">Total</span><span id="total-dev-stats" class="value">0</span></div>
+          <div class="stat-card-lg"><span class="label">Active</span><span id="active-dev-stats" class="value">0</span></div>
+          <div class="stat-card-lg"><span class="label">Unique IDs</span><span id="unique-id-stats" class="value">0</span></div>
+          <div class="stat-card-lg"><span class="label">Packet Rate</span><span id="pkt-rate-stats" class="value">0/5s</span></div>
+          <div class="stat-card-lg"><span class="label">Avg RSSI</span><span id="avg-rssi-stats" class="value">- dBm</span></div>
+          <div class="stat-card-lg"><span class="label">Devices Now</span><span id="device-count" class="value">0</span></div>
+        </div>
+      </div>
+    </div>
     <div class="log-box">
-      <h3>Live Packet Log</h3>
+      <h3>Live Packet Log <span class="log-count" id="log-count"></span></h3>
       <pre id="packet-log"><div class="placeholder">No packets yet.</div></pre>
     </div>
   </div>
 
+  <!-- STATISTICS TAB -->
+  <div class="tab-content" id="tab-stats">
+    <div class="stats-dashboard">
+      <h2>Session Overview</h2>
+      <div class="stats-grid">
+        <div class="metric-card">
+          <div class="metric-value" id="stat-total-devices">0</div>
+          <div class="metric-label">Total Devices Seen</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="stat-active-devices">0</div>
+          <div class="metric-label">Currently Active</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="stat-unique-ids">0</div>
+          <div class="metric-label">Unique Basic IDs</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="stat-total-packets">0</div>
+          <div class="metric-label">Total Packets</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="stat-avg-rssi">-</div>
+          <div class="metric-label">Average RSSI</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="stat-duration">0m</div>
+          <div class="metric-label">Session Duration</div>
+        </div>
+      </div>
+
+      <h2>UA Type Distribution</h2>
+      <div class="ua-type-grid" id="ua-type-dist"></div>
+
+      <h2>Top RSSI Devices</h2>
+      <div id="top-rssi-list"></div>
+    </div>
+  </div>
+
+  <!-- ABOUT TAB -->
   <div class="tab-content" id="tab-about">
     <div class="about-box">
       <h2>ESP DRONE REMOTEID — Analyzer</h2>
-      <p>Real-time Open Drone ID (ASTM F3411-22a) WiFi beacon analyzer.</p>
+      <p>Professional-grade real-time Open Drone ID (ASTM F3411-22a) WiFi beacon analyzer.</p>
       <ul>
-        <li><strong>Capture</strong>: Scapy-based WiFi promiscuous/monitor mode</li>
-        <li><strong>UI</strong>: Chart.js + Leaflet + WebSocket</li>
-        <li><strong>Export</strong>: PCAP logging</li>
+        <li><strong>Capture</strong>: Scapy-based, single or multi-channel scan</li>
+        <li><strong>Decode</strong>: Full ASTM F3411-22a decoder (Basic ID, Location, System, Operator, Self ID, Auth, Pack)</li>
+        <li><strong>UI</strong>: Chart.js + Leaflet + WebSocket real-time dashboard</li>
+        <li><strong>Tracker</strong>: Per-drone GPS trail history on map</li>
+        <li><strong>Export</strong>: CSV, KML, session JSON replay</li>
+        <li><strong>Recording</strong>: In-memory session capture with replay</li>
         <li><strong>Compatibility</strong>: Windows, macOS, Linux</li>
       </ul>
       <p>Built with <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">ESP DRONE REMOTEID</a>.</p>
     </div>
   </div>
+</div>
+
+<!-- Detail Panel Overlay -->
+<div id="detail-panel">
+  <div class="detail-header">
+    <h3>Device Detail</h3>
+    <button id="detail-close" class="btn">&times;</button>
+  </div>
+  <div id="detail-body"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
