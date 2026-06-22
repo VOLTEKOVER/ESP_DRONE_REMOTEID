@@ -441,7 +441,8 @@
 - **OK.**
 
 ### `LICENSE`
-- ❌ **Not found** in repository. Should be Apache 2.0 (derived from Intel ODID).
+- ✅ Apache 2.0 license added. Derived from [Intel Open Drone ID](https://github.com/opendroneid).
+- Copyright notice credits both VOLTEKOVER (port) and Intel Corporation (original ODID).
 
 ---
 
@@ -465,9 +466,9 @@
 
 | Priority | Item | Location | Status |
 |----------|------|----------|--------|
-| 🔴 HIGH | `sdkconfig` tracked in git | root | ❌ Remove from tracking |
-| 🔴 HIGH | `LICENSE` missing | root | ❌ Must be added |
-| 🔴 HIGH | `docs/manifest.json` missing targets + wrong version | `docs/manifest.json` | ❌ Needs update (static fallback) |
+| 🔴 HIGH | `sdkconfig` tracked in git | root | ✅ Already in `.gitignore`, not tracked |
+| 🔴 HIGH | `LICENSE` missing | root | ✅ Apache 2.0 added |
+| 🔴 HIGH | `docs/manifest.json` missing targets | `docs/manifest.json` | ✅ All 6 targets present |
 | 🟡 MEDIUM | Lock level signature verification | `web_config.c` + `config.html` | ❌ UI exists, backend missing |
 | 🟡 MEDIUM | BLE 5.0 LR Coded PHY = Beta | `ble_tx.c` | 🟡 Needs testing on S3/C3 |
 | 🟡 MEDIUM | Analyzer requires monitor mode + root | `capture.py` | 🟡 Hardware limitation |
