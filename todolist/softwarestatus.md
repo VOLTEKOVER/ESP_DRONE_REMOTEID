@@ -386,11 +386,11 @@
 
 ### `launch.json` (10 lines)
 - "Eclipse CDT GDB Adapter" attach config only.
-- **Gap:** No OpenOCD or JTAG debug profiles.
+- 🟢 Gitignored, local only. No OpenOCD or JTAG debug profiles.
 
 ### `c_cpp_properties.json` (20 lines)
-- ESP-IDF IntelliSense config. Compiler path, `compileCommands`, include paths.
-- **Gap:** Hardcoded local compiler path (`C:\\Espressif\\tools\\...`).
+- ESP-IDF IntelliSense config. `compileCommands`, include paths.
+- ✅ Gitignored, local only. Hardcoded compiler path removed locally.
 
 ---
 
@@ -472,8 +472,8 @@
 | 🟡 MEDIUM | Lock level signature verification | `web_config.c` + `config.html` | ❌ UI exists, backend missing |
 | 🟡 MEDIUM | BLE 5.0 LR Coded PHY = Beta | `ble_tx.c` | 🟡 Needs testing on S3/C3 |
 | 🟡 MEDIUM | Analyzer requires monitor mode + root | `capture.py` | 🟡 Hardware limitation |
-| 🟢 LOW | `c_cpp_properties.json` hardcoded path | `.vscode/c_cpp_properties.json` | 🟡 Windows-specific |
-| 🟢 LOW | `launch.json` no debug profiles | `.vscode/launch.json` | ❌ Only GDB attach |
+| 🟢 LOW | `c_cpp_properties.json` hardcoded path | `.vscode/c_cpp_properties.json` | ✅ Gitignored, local only — fixed locally |
+| 🟢 LOW | `launch.json` no debug profiles | `.vscode/launch.json` | ✅ Gitignored, local only |
 | 🟢 LOW | `config(demo).html` manual sync needed | `docs/config(demo).html` | 🟡 Maintenance burden |
 | 🟢 LOW | `config.html` inline (1520 lines) | `webui/config.html` | Optional refactor |
 | 🟢 LOW | `docs/index.html` inline (1979 lines) | `docs/index.html` | Optional refactor |
@@ -566,8 +566,8 @@
 | 145 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
 | 146 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
 | 147 | `.vscode/settings.json` | 30 | ✅ |
-| 148 | `.vscode/launch.json` | 10 | 🟡 minimal |
-| 149 | `.vscode/c_cpp_properties.json` | 20 | 🟡 hardcoded path |
+| 148 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
+| 149 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
 | 150 | `README.md` | ~120 | ✅ |
 | 151 | `.gitignore` | 140 | ✅ |
 | 152 | `.gitattributes` | 40 | ✅ |
