@@ -16,7 +16,7 @@ logger = logging.getLogger("rid_cli")
 
 def cmd_capture(args):
     """Capture and print ODID packets to stdout."""
-    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture, list_interfaces
+    from ESP_DRONE_REMOTEID_Analyzer.capture import RIDCapture, list_interfaces
 
     if args.list_ifaces:
         for i in list_interfaces():
@@ -47,8 +47,8 @@ def cmd_capture(args):
 
 def cmd_serve(args):
     """Run WebSocket server (headless)."""
-    from ESP_DRONE_REMOTEID_ANALIZER.server import BroadcastServer
-    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture
+    from ESP_DRONE_REMOTEID_Analyzer.server import BroadcastServer
+    from ESP_DRONE_REMOTEID_Analyzer.capture import RIDCapture
 
     server = BroadcastServer(host=args.bind, port=args.port)
     server.start()
@@ -82,7 +82,7 @@ def cmd_serve(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ESP DRONE REMOTEID ANALIZER — CLI Tools")
+    parser = argparse.ArgumentParser(description="ESP DRONE REMOTEID Analyzer — CLI Tools")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     sub = parser.add_subparsers(dest="command", required=True)

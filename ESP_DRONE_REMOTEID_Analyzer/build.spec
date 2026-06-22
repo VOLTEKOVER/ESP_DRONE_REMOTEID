@@ -39,7 +39,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="ESP_DRONE_REMOTEID_ANALIZER",
+    name="ESP_DRONE_REMOTEID_Analyzer",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -6,7 +6,7 @@ import threading
 import logging
 from typing import Optional, Callable
 
-from ESP_DRONE_REMOTEID_ANALIZER.decoder import extract_odid_from_beacon, format_summary
+from ESP_DRONE_REMOTEID_Analyzer.decoder import extract_odid_from_beacon, format_summary
 
 logger = logging.getLogger(__name__)
 

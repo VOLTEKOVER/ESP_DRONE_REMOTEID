@@ -266,7 +266,7 @@
 
 ---
 
-## `ESP_DRONE_REMOTEID_ANALIZER/` — Python Analyzer (standalone package)
+## `ESP_DRONE_REMOTEID_Analyzer/` — Python Analyzer (standalone package)
 
 ### Package Structure
 
@@ -275,7 +275,7 @@
 - **OK.**
 
 #### `__main__.py` (5 lines)
-- Entry point: `python -m ESP_DRONE_REMOTEID_ANALIZER` → launches GUI.
+- Entry point: `python -m ESP_DRONE_REMOTEID_Analyzer` → launches GUI.
 - Calls `gui.main()`.
 - **OK.**
 
@@ -325,7 +325,7 @@
 - `pywebview>=4.4.1` — optional native window
 - **OK.**
 
-#### `ESP_DRONE_REMOTEID_ANALIZER.py` / `main_analyzer.pyw`
+#### `ESP_DRONE_REMOTEID_Analyzer.py` / `main_analyzer.pyw`
 - ❌ **Removed** from current tree (deprecated launchers).
 
 ### Analyzer Web UI (`web/`)
@@ -539,18 +539,18 @@
 | 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
 | 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~1520 | ✅ |
 | 41-120 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
-| 121 | `ESP_DRONE_REMOTEID_ANALIZER/__init__.py` | 3 | ✅ |
-| 122 | `ESP_DRONE_REMOTEID_ANALIZER/__main__.py` | 5 | ✅ |
-| 123 | `ESP_DRONE_REMOTEID_ANALIZER/capture.py` | 176 | ✅ |
-| 124 | `ESP_DRONE_REMOTEID_ANALIZER/decoder.py` | 510 | ✅ |
-| 125 | `ESP_DRONE_REMOTEID_ANALIZER/server.py` | 197 | ✅ |
-| 126 | `ESP_DRONE_REMOTEID_ANALIZER/rid_cli.py` | 115 | ✅ |
-| 127 | `ESP_DRONE_REMOTEID_ANALIZER/gui.py` | 109 | ✅ |
-| 128 | `ESP_DRONE_REMOTEID_ANALIZER/build.spec` | 56 | ✅ |
-| 129 | `ESP_DRONE_REMOTEID_ANALIZER/requirements.txt` | 14 | ✅ |
-| 130 | `ESP_DRONE_REMOTEID_ANALIZER/web/index.html` | 94 | ✅ |
-| 131 | `ESP_DRONE_REMOTEID_ANALIZER/web/app.js` | 438 | ✅ |
-| 132 | `ESP_DRONE_REMOTEID_ANALIZER/web/style.css` | 176 | ✅ |
+| 121 | `ESP_DRONE_REMOTEID_Analyzer/__init__.py` | 3 | ✅ |
+| 122 | `ESP_DRONE_REMOTEID_Analyzer/__main__.py` | 5 | ✅ |
+| 123 | `ESP_DRONE_REMOTEID_Analyzer/capture.py` | 176 | ✅ |
+| 124 | `ESP_DRONE_REMOTEID_Analyzer/decoder.py` | 510 | ✅ |
+| 125 | `ESP_DRONE_REMOTEID_Analyzer/server.py` | 197 | ✅ |
+| 126 | `ESP_DRONE_REMOTEID_Analyzer/rid_cli.py` | 115 | ✅ |
+| 127 | `ESP_DRONE_REMOTEID_Analyzer/gui.py` | 109 | ✅ |
+| 128 | `ESP_DRONE_REMOTEID_Analyzer/build.spec` | 56 | ✅ |
+| 129 | `ESP_DRONE_REMOTEID_Analyzer/requirements.txt` | 14 | ✅ |
+| 130 | `ESP_DRONE_REMOTEID_Analyzer/web/index.html` | 94 | ✅ |
+| 131 | `ESP_DRONE_REMOTEID_Analyzer/web/app.js` | 438 | ✅ |
+| 132 | `ESP_DRONE_REMOTEID_Analyzer/web/style.css` | 176 | ✅ |
 | 133 | `docs/index.html` | 1979 | ✅ (inline) |
 | 134 | `docs/config(demo).html` | ~2546 | ✅ |
 | 135 | `docs/manifest.json` | 33 | ❌ missing targets |

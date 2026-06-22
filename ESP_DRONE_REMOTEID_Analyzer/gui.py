@@ -21,8 +21,8 @@ WEB_DIR = Path(__file__).parent / "web"
 
 
 def run_backend(ws_port: int, capture_iface: str, capture_channel: int):
-    from ESP_DRONE_REMOTEID_ANALIZER.server import BroadcastServer
-    from ESP_DRONE_REMOTEID_ANALIZER.capture import RIDCapture, list_interfaces, check_monitor_mode, print_interface_help
+    from ESP_DRONE_REMOTEID_Analyzer.server import BroadcastServer
+    from ESP_DRONE_REMOTEID_Analyzer.capture import RIDCapture, list_interfaces, check_monitor_mode, print_interface_help
 
     server = BroadcastServer(port=ws_port)
     server.start()
@@ -49,7 +49,7 @@ def start_http_server(web_dir: Path, port: int):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="ESP DRONE REMOTEID ANALIZER")
+    parser = argparse.ArgumentParser(description="ESP DRONE REMOTEID Analyzer")
     parser.add_argument("--port", type=int, default=8765, help="WebSocket port (default: 8765)")
     parser.add_argument("--http-port", type=int, default=8080, help="HTTP server port (default: 8080)")
     parser.add_argument("--iface", default=None, help="WiFi interface for capture")
@@ -60,7 +60,7 @@ def main():
     args = parser.parse_args()
 
     if args.list_ifaces:
-        from ESP_DRONE_REMOTEID_ANALIZER.capture import list_interfaces
+        from ESP_DRONE_REMOTEID_Analyzer.capture import list_interfaces
         ifaces = list_interfaces()
         print("Available interfaces:")
         for i in ifaces:
@@ -91,7 +91,7 @@ def main():
             pass
     else:
         window = webview.create_window(
-            title="ESP DRONE REMOTEID ANALIZER",
+            title="ESP DRONE REMOTEID Analyzer",
             url=f"http://127.0.0.1:{args.http_port}/index.html",
             width=1280,
             height=860,

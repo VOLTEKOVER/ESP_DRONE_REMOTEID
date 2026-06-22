@@ -1,4 +1,4 @@
-# ESP DRONE REMOTEID ANALIZER
+# ESP DRONE REMOTEID Analyzer
 # Install: pip install -r requirements.txt
 
 # Core

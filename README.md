@@ -92,7 +92,7 @@ ESP_DRONE_REMOTEID/
 │   │   ├── webui/config.html        # Embedded web interface
 │   │   └── mavlink/                 # MAVLink v2 dialect headers
 │   └── partitions*.csv              # OTA partition layouts
-├── ESP_DRONE_REMOTEID_ANALIZER/     # Python analyzer (standalone)
+├── ESP_DRONE_REMOTEID_Analyzer/     # Python analyzer (standalone)
 ├── docs/                            # GitHub Pages site
 │   ├── index.html                   # WebSerial flasher + wiki
 │   ├── config(demo).html            # Offline config UI demo
