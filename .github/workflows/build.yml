@@ -27,10 +27,7 @@ jobs:
       matrix:
         target:
           - esp32
-          - esp32s2
           - esp32s3
-          - esp32c2
-          - esp32c3
           - esp32c6
 
     steps:
@@ -55,19 +52,10 @@ jobs:
           cd ESP32_DRONE_REMOTE_ID_Firmware
           idf.py set-target ${{ matrix.target }}
           echo "CONFIG_PARTITION_TABLE_CUSTOM=y" >> sdkconfig
-          if [ "${{ matrix.target }}" = "esp32c2" ]; then
-            echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions_2mb.csv\"" >> sdkconfig
-            echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions_2mb.csv\"" >> sdkconfig
-          else
-            echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
-            echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
-          fi
-          if [ "${{ matrix.target }}" = "esp32c2" ]; then
-            echo "CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y" >> sdkconfig
-          else
-            echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
-          fi
-          if [ "${{ matrix.target }}" != "esp32" ] && [ "${{ matrix.target }}" != "esp32s2" ]; then
+          echo "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions.csv\"" >> sdkconfig
+          echo "CONFIG_PARTITION_TABLE_FILENAME=\"partitions.csv\"" >> sdkconfig
+          echo "CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y" >> sdkconfig
+          if [ "${{ matrix.target }}" != "esp32" ]; then
             echo "CONFIG_BT_NIMBLE_ENABLED=y" >> sdkconfig
           fi
           export CCACHE_BASEDIR="$PWD"
