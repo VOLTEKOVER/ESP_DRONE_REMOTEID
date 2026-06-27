@@ -1,6 +1,6 @@
 # ESP DRONE REMOTEID — Complete Software Status
 
-> Last updated: 2026-06-22 (v3)
+> Last updated: 2026-06-27 (v4)
 > Scope: all 70+ source files in repository (excluding build artifacts, __pycache__)
 
 ---
@@ -52,10 +52,12 @@
 
 ## `components/esp_remote_id/` — Core Component
 
-### `CMakeLists.txt` (38 lines)
-- Registers all .c files in `src/`. REQUIRES `nvs_flash`, `efuse`, `esp_wifi`, `esp_bt`, `mdns`, etc.
+### `CMakeLists.txt` (39 lines)
+- Registers all .c files in `src/`. REQUIRES `nvs_flash`, `efuse`, `esp_wifi`, `esp_bt`, `esp_driver_ledc`, etc.
 - ✅ Added `efuse` to REQUIRES for eFuse lock support.
 - ✅ Added `src/cli.c` to SRCS (no external deps — raw UART REPL).
+- ✅ Added `esp_driver_ledc` to REQUIRES for LEDC PWM LED driver.
+- ✅ `-Wno-error=address-of-packed-member` suppresses MAVLink struct packing warnings.
 - **OK.**
 
 ### `Kconfig.projbuild` (27 lines)
@@ -385,14 +387,15 @@
 
 ## `.github/` — CI/CD & Community
 
-### `workflows/build.yml` (193 lines)
-- CI on push/PR to main. Matrix: 6 targets (esp32, s2, s3, c2, c3, c6).
-- Partition overrides per target (`partitions_2mb.csv` for C2).
+### `workflows/build.yml` (66 lines)
+- CI on push/PR to main. Matrix: 3 targets (esp32, esp32s3, esp32c6).
+- All targets use `partitions.csv` + 4MB flash (esp32c2/esp32s2 conditionals removed).
+- BT_NIMBLE enabled for esp32s3/esp32c6 only (esp32 uses classic BT).
 - ccache, Python manifest generation, GitHub Pages deploy.
 - **OK.**
 
 ### `workflows/release.yml` (308 lines)
-- Trigger: tag `v*`. Same 6-target matrix.
+- Trigger: tag `v*`. Same 3-target matrix (esp32, esp32s3, esp32c6).
 - Generates zip per target + `manifest.json`, GitHub Release with auto-changelog.
 - GitHub Pages deploy.
 - **OK.**
@@ -467,9 +470,20 @@
 - **Gap:** Must be manually synced with `config.html` changes.
 
 ### `manifest.json` (57 lines)
-- ESP Web Tools firmware manifest: all 6 chip families (ESP32, S2, S3, C2, C3, C6).
+- ESP Web Tools firmware manifest: 3 chip families (ESP32, ESP32-S3, ESP32-C6).
 - Version `1.0.0-beta`, config URL `http://192.168.4.1`.
 - **Gap:** Hardcoded version (should be auto-generated from CI).
+
+### `innovation_diy.md` (294 lines)
+- Competitive analysis vs Dronetag Mini 4G, DRI, BS gen.2, Beacon gen.2.
+- Full innovation roadmap: ESP-NOW mesh, Kalman predictor, LoRa, ADSB, Edge ML.
+- Comparison tables: features, power, size, cost, certifications.
+- **OK.**
+
+### `prototype_bom.md` (68 lines)
+- Zero-solder BOM: Seeed XIAO ESP32-C6 + L76K GNSS, total ~15$.
+- Pinout, wiring guide, stackable connector references.
+- **OK.**
 
 ### `images/` (5 files)
 - `logo.svg`, `logo con scritta.svg` — project logos.
@@ -480,9 +494,10 @@
 
 ## Root Files
 
-### `README.md` (~120 lines)
-- Project overview, CI badges, supported platforms, quick start, wiring, build.
-- ✅ Updated: removed "hardware testing pending" notes.
+### `README.md` (~136 lines)
+- Project overview, CI badges, 3 supported platforms (ESP32/S3/C6), quick start, wiring, build.
+- ✅ Updated: protocol table (13 rows, 4 categories), XIAO ESP32-C6 recommended.
+- ✅ Links to `docs/innovation_diy.md` and `docs/prototype_bom.md`.
 - **Gap:** Mentions "no extra GPS needed" — firmware actually requires FC with GPS or demo mode.
 
 ### `.gitignore` (140 lines)
@@ -522,7 +537,7 @@
 |----------|------|----------|--------|
 | 🔴 HIGH | `sdkconfig` tracked in git | root | ✅ Already in `.gitignore`, not tracked |
 | 🔴 HIGH | `LICENSE` missing | root | ✅ Apache 2.0 added |
-| 🔴 HIGH | `docs/manifest.json` missing targets | `docs/manifest.json` | ✅ All 6 targets present |
+| 🔴 HIGH | `docs/manifest.json` missing targets | `docs/manifest.json` | ✅ All 3 targets present |
 | 🟡 MEDIUM | Lock level command signature | `web_config.c` + `config.html` | ✅ ECDSA P-256 via mbedTLS PK |
 | 🟡 MEDIUM | BLE 5.0 LR Coded PHY = Beta | `ble_tx.c` | 🟡 Needs testing on S3/C3 |
 | 🟡 MEDIUM | Analyzer requires monitor mode + root | `capture.py` | 🟡 Hardware limitation |
@@ -550,6 +565,14 @@
 | ✅ DONE | Dark mode color fix (blue→neutral black) | `docs/index.html` + `docs/guide.html` | ✅ |
 | ✅ DONE | Diagram animations + Mermaid bug fixes | `docs/index.html` + `docs/guide.html` | ✅ |
 | ✅ DONE | Command signature for restart/reset | `web_config.c` + `config.html` | ✅ |
+| ✅ DONE | CI target matrix reduced to 3 (esp32/s3/c6) | `.github/workflows/build.yml` | ✅ |
+| ✅ DONE | `esp_driver_ledc` added to REQUIRES in CMakeLists.txt | `CMakeLists.txt` | ✅ |
+| ✅ DONE | Protocol table added to README | `README.md` | ✅ |
+| ✅ DONE | GCC 15.2.0 fix: struct tag name in led_status.c | `led_status.c` | ✅ |
+| ✅ DONE | GCC 15.2.0 fix: heap_free/heap_total rename in cli.c | `cli.c` | ✅ |
+| ✅ DONE | GCC 15.2.0 fix: unused label removed in web_config.c | `web_config.c` | ✅ |
+| ✅ DONE | `docs/innovation_diy.md` — competitive analysis | `docs/innovation_diy.md` | ✅ |
+| ✅ DONE | `docs/prototype_bom.md` — zero-solder BOM | `docs/prototype_bom.md` | ✅ |
 
 ---
 
@@ -565,7 +588,7 @@
 | 6 | `ESP32_DRONE_REMOTE_ID_Firmware/idf_component.yml` | 12 | ✅ |
 | 7 | `ESP32_DRONE_REMOTE_ID_Firmware/main/CMakeLists.txt` | 3 | ✅ |
 | 8 | `ESP32_DRONE_REMOTE_ID_Firmware/main/main.c` | 90 | ✅ |
-| 9 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/CMakeLists.txt` | 38 | ✅ |
+| 9 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/CMakeLists.txt` | 39 | ✅ |
 | 10 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/Kconfig.projbuild` | 27 | ✅ |
 | 12 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/esp_remote_id.h` | 80 | ✅ |
 | 13 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/opendroneid.h` | 762 | ✅ |
@@ -587,7 +610,7 @@
 | 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
 | 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
 | 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
-| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 738 | ✅ |
+| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 736 | ✅ |
 | 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
 | 34 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
 | 35 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
@@ -595,7 +618,7 @@
 | 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mav2odid.c` | 636 | ✅ (partial use) |
 | 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/opendroneid.c` | 1477 | ✅ |
 | 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
-| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 199 | ✅ |
+| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 210 | ✅ |
 | 41 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
 | 42 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2340 | ✅ |
 | 43-122 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
@@ -614,22 +637,24 @@
 | 135 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
 | 136 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
 | 137 | `docs/config(demo).html` | ~2546 | ✅ |
-| 138 | `docs/manifest.json` | 57 | ✅ (all 6 targets present) |
+| 138 | `docs/manifest.json` | 57 | ✅ (3 targets: esp32/s3/c6) |
 | 139 | `docs/images/logo.svg` | — | ✅ |
 | 140 | `docs/images/logo con scritta.svg` | — | ✅ |
 | 141 | `docs/images/ardupilot_logo.webp` | — | ✅ |
 | 142 | `docs/images/betaflight_logo.svg` | — | ✅ |
 | 143 | `docs/images/inav_logo.png` | — | ✅ |
-| 144 | `.github/workflows/build.yml` | 193 | ✅ |
-| 145 | `.github/workflows/release.yml` | 308 | ✅ |
-| 146 | `.github/dependabot.yml` | 13 | ✅ |
-| 147 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
-| 148 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
-| 149 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
-| 150 | `.vscode/settings.json` | 30 | ✅ |
-| 151 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
-| 152 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
-| 153 | `README.md` | ~120 | ✅ |
-| 154 | `.gitignore` | 140 | ✅ |
-| 155 | `.gitattributes` | 40 | ✅ |
-| 156 | `todolist/softwarestatus.md` | — | ✅ (this file) |
+| 144 | `docs/innovation_diy.md` | 294 | ✅ |
+| 145 | `docs/prototype_bom.md` | 68 | ✅ |
+| 146 | `.github/workflows/build.yml` | 66 | ✅ |
+| 147 | `.github/workflows/release.yml` | 308 | ✅ |
+| 148 | `.github/dependabot.yml` | 13 | ✅ |
+| 149 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
+| 150 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
+| 151 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
+| 152 | `.vscode/settings.json` | 30 | ✅ |
+| 153 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
+| 154 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
+| 155 | `README.md` | ~136 | ✅ |
+| 156 | `.gitignore` | 140 | ✅ |
+| 157 | `.gitattributes` | 40 | ✅ |
+| 158 | `todolist/softwarestatus.md` | — | ✅ (this file) |
