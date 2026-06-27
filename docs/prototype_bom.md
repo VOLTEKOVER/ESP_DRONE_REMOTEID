@@ -1,74 +1,74 @@
-# DIY RID Prototype — BOM zero-saldatura
+# DIY RID Prototype — Zero-Solder BOM
 
-## Board principale
+## Main Board
 
-| Opzione | Chip | BLE | WiFi | Extra | Prezzo | Dove |
+| Option | Chip | BLE | WiFi | Extra | Price | Where |
 |---|---|---|---|---|---|---|
-| **ESP32-DevKitC V4** (con IPEX) | ESP32 | 4.2 LR | 4 | Più economico, maturo | ~5€ | AliExpress, Amazon |
-| **ESP32-S3-DevKitC-1** (con IPEX) | ESP32-S3 | 5.0 LR | 4 + 5 GHz | ESP-NN (ML), USB OTG | ~12€ | AliExpress, Amazon |
-| **ESP32-C6-DevKitC-1** (con IPEX) | ESP32-C6 | 5.4 **Channel Sounding** | 6 (OFDMA) | 802.15.4 (Thread/Zigbee) | ~15€ | AliExpress, Amazon |
+| **ESP32-DevKitC V4** (with IPEX) | ESP32 | 4.2 LR | 4 | Cheapest, mature | ~5€ | AliExpress, Amazon |
+| **ESP32-S3-DevKitC-1** (with IPEX) | ESP32-S3 | 5.0 LR | 4 + 5 GHz | ESP-NN (ML), USB OTG | ~12€ | AliExpress, Amazon |
+| **ESP32-C6-DevKitC-1** (with IPEX) | ESP32-C6 | 5.4 **Channel Sounding** | 6 (OFDMA) | 802.15.4 (Thread/Zigbee) | ~15€ | AliExpress, Amazon |
 
-Tutte hanno versioni con **connettore IPEX/U.FL** per antenna esterna. Chi non lo trova, può prendere la versione PCB antenna e usare il board così com'è (funziona benissimo).
+All have versions with **IPEX/U.FL connector** for external antenna. If not available, get the PCB antenna version — it works fine.
 
-## Antenna esterna (opzionale, no saldatura)
+## External Antenna (optional, no soldering)
 
-| Cosa | Connettore | Prezzo |
+| Item | Connector | Price |
 |---|---|---|
 | **Pigtail U.FL → SMA** | Plug & play | ~1€ |
-| **Antenna 2.4GHz SMA** (3-5 dBi) | Si avvita a mano | ~2€ |
+| **2.4GHz SMA antenna** (3-5 dBi) | Screw-on | ~2€ |
 
-Si collega in 5 secondi, zero saldatura.
+Connects in 5 seconds, zero soldering.
 
-## Hardware aggiuntivo (solo Dupont, zero saldatura)
+## Additional Hardware (Dupont only, zero soldering)
 
-| Componente | Collegamento | Prezzo | Opzionale? |
+| Component | Connection | Price | Optional? |
 |---|---|---|---|
-| **WS2812B RGB LED** (Neopixel) | 5V, GND, DATA (3 pin Dupont) | ~1€ | No (status visivo) |
-| **GPS BN-880 / NEO-6M / NEO-8M** | VCC, GND, TX, RX (4 pin Dupont) | ~6€ | Sconsigliato (RID senza GPS non ha senso) |
-| **MPU6050 (IMU 6-axis)** | 3.3V, GND, SCL, SDA (4 pin Dupont) | ~2€ | Sì (anti-spoofing inerziale) |
-| **Push button** | 3.3V, GPIO (2 fili) | ~0.5€ | Sì (start/stop volo manuale) |
+| **WS2812B RGB LED** (Neopixel) | 5V, GND, DATA (3 pin Dupont) | ~1€ | No (visual status) |
+| **GPS BN-880 / NEO-6M / NEO-8M** | VCC, GND, TX, RX (4 pin Dupont) | ~6€ | Not recommended (RID without GPS is pointless) |
+| **MPU6050 (6-axis IMU)** | 3.3V, GND, SCL, SDA (4 pin Dupont) | ~2€ | Yes (inertial anti-spoofing) |
+| **Push button** | 3.3V, GPIO (2 wires) | ~0.5€ | Yes (manual start/stop flight) |
 
-## Alimentazione
+## Power
 
-| Come | Cosa serve |
+| How | What you need |
 |---|---|
-| **USB-C** (test/sviluppo) | Power bank o caricatore smartphone |
-| **Dal drone** (BEC / PDB) | Cavo USB o fili su pin 5V/GND |
+| **USB-C** (test/development) | Power bank or phone charger |
+| **From drone** (BEC / PDB) | USB cable or wires to 5V/GND pins |
 
-## BOM totale
+## Total BOM
 
-| Componente | Prezzo |
+| Component | Price |
 |---|---|
-| ESP32 dev board (con IPEX) | 5-15€ |
+| ESP32 dev board (with IPEX) | 5-15€ |
 | Pigtail U.FL → SMA | 1€ |
-| Antenna SMA 2.4GHz | 2€ |
+| SMA 2.4GHz antenna | 2€ |
 | WS2812B LED | 1€ |
 | GPS BN-880 | 6€ |
-| MPU6050 (opzionale) | 2€ |
+| MPU6050 (optional) | 2€ |
 | Dupont cable kit (40x) | 2€ |
-| **Totale** | **18-29€** |
+| **Total** | **18-29€** |
 
-Tutto si collega con cavetti Dupont. **Niente saldatore.** Chiunque può replicarlo.
+Everything connects with Dupont cables. **No soldering required.** Anyone can replicate this.
 
-## Configurazione pin (via menuconfig o web UI)
+## Pin Configuration (via menuconfig or web UI)
 
 ```
 GPS TX  → GPIO 18
 GPS RX  → GPIO 17
-LED DATA → GPIO 48 (WS2812B) o R/G/B su GPIO separati
-IMU SCL → GPIO 9  (MPU6050, opzionale)
-IMU SDA → GPIO 8  (MPU6050, opzionale)
-BUTTON  → GPIO 0  (opzionale)
+LED DATA → GPIO 48 (WS2812B) or R/G/B on separate GPIOs
+IMU SCL → GPIO 9  (MPU6050, optional)
+IMU SDA → GPIO 8  (MPU6050, optional)
+BUTTON  → GPIO 0  (optional)
 ```
 
-## Innovazione (tutta in software)
+## Innovation (all software)
 
-| Feature | Cosa serve | Fattibilità |
+| Feature | What's needed | Feasibility |
 |---|---|---|
-| ESP-NOW Mesh RID | Solo software | Oggi |
-| Attestazione HW (Digital Signature) | Solo software (ESP32 built-in) | Oggi |
-| BT Channel Sounding (ranging) | ESP32-C6 | Oggi |
-| Predizione traiettoria (Kalman) | Solo software | Oggi |
-| Anti-spoofing (GPS + IMU) | MPU6050 + software | Oggi |
-| WiFi 6 OFDMA | ESP32-C6 | Oggi |
-| WiFi 5 GHz | ESP32-S3 o C6 | Oggi |
+| ESP-NOW Mesh RID | Software only | Today |
+| HW Attestation (Digital Signature) | Software only (ESP32 built-in) | Today |
+| BT Channel Sounding (ranging) | ESP32-C6 | Today |
+| Trajectory Prediction (Kalman) | Software only | Today |
+| Anti-spoofing (GPS + IMU) | MPU6050 + software | Today |
+| WiFi 6 OFDMA | ESP32-C6 | Today |
+| WiFi 5 GHz | ESP32-S3 or C6 | Today |

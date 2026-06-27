@@ -55,23 +55,23 @@
 | **Security** | 3 lock levels (normal / signed / eFuse permanent) |
 | **Demo** | [Offline demo page](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html) |
 
-## Protocolli
+## Communication Protocols
 
-| Categoria | Protocollo | Direzione | Dettaglio |
+| Category | Protocol | Direction | Details |
 |---|---|---|---|
-| **Input** (posizione) | **MAVLink v2** | FC → ESP | ArduPilot/PX4: `GPS_RAW_INT`, `GLOBAL_POSITION_INT`, `HEARTBEAT`, `OPEN_DRONE_ID_*` |
+| **Input** (position) | **MAVLink v2** | FC → ESP | ArduPilot/PX4: `GPS_RAW_INT`, `GLOBAL_POSITION_INT`, `HEARTBEAT`, `OPEN_DRONE_ID_*` |
 | | **MSP** | FC → ESP | Betaflight/iNAV: `MSP_RAW_GPS` (106), `MSP_ATTITUDE` (108), `MSP_STATUS` (101) |
 | | **NMEA 0183** | GPS → ESP | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
-| **Output** (broadcast RID) | **WiFi Beacon** (802.11 mgmt) | ESP → Aria | ASTM F3411-22a su WiFi Beacon |
-| | **WiFi NAN** | ESP → Aria | Service Discovery Frame NAN |
-| | **BLE 4.0 Legacy** | ESP → Aria | Bluetooth 4.0 advertising, non-connectable |
-| | **BLE 5.0 Coded PHY** (LR) | ESP → Aria | Bluetooth 5.0 Long Range, `PHY_CODED` (S3/C6) |
-| **Config/controllo** | **HTTP / Web UI** | Browser ↔ ESP | AP-mode `192.168.4.1`, REST API, telemetria live |
-| | **CLI seriale** (UART0) | Terminale ↔ ESP | 14 comandi: `help`, `status`, `config`, `patrol`, `transmit`, ... |
-| | **NVS storage** | ESP → Flash | Salvataggio persistente configurazione |
-| **Futuro** | **ESP-NOW mesh** | Drone ↔ Drone | Relay RID tra droni (da fare) |
-| | **LoRa SX1262** | ESP → Aria | Backup RID 10+ km (da fare) |
-| | **DroneCAN / CAN bus** | FC → ESP | Lettura bus CAN drone (da fare) |
+| **Output** (broadcast RID) | **WiFi Beacon** (802.11 mgmt) | ESP → Air | ASTM F3411-22a over WiFi Beacon |
+| | **WiFi NAN** | ESP → Air | Service Discovery Frame NAN |
+| | **BLE 4.0 Legacy** | ESP → Air | Bluetooth 4.0 advertising, non-connectable |
+| | **BLE 5.0 Coded PHY** (LR) | ESP → Air | Bluetooth 5.0 Long Range, `PHY_CODED` (S3/C6) |
+| **Config/control** | **HTTP / Web UI** | Browser ↔ ESP | AP-mode `192.168.4.1`, REST API, live telemetry |
+| | **Serial CLI** (UART0) | Terminal ↔ ESP | 14 commands: `help`, `status`, `config`, `patrol`, `transmit`, ... |
+| | **NVS storage** | ESP → Flash | Persistent configuration storage |
+| **Future** | **ESP-NOW mesh** | Drone ↔ Drone | RID relay between drones (TODO) |
+| | **LoRa SX1262** | ESP → Air | Backup RID 10+ km (TODO) |
+| | **DroneCAN / CAN bus** | FC → ESP | Drone CAN bus reading (TODO) |
 
 ## Hardware
 
@@ -85,26 +85,26 @@
 
 ### Recommended board: Seeed XIAO ESP32-C6
 
-Smallest & most innovative option:
+Small & most innovative option:
 - **ESP32-C6**: WiFi 6 (OFDMA), BT 5.3, 802.15.4
 - **21 &times; 17.8 mm**, USB-C, LiPo charger
-- **U.FL** + onboard ceramic antenna (selezionabile via SW)
-- Stackabile con modulo **L76K GNSS** (multi-costellazione)
-- Costo totale: **~15$**, zero saldature
+- **U.FL** + onboard ceramic antenna (selectable via SW)
+- Stackable with **L76K GNSS** module (multi-constellation)
+- Total cost: **~$15**, zero soldering
 
-> Vedi [`docs/prototype_bom.md`](docs/prototype_bom.md) per BOM completo.
+> See [`docs/prototype_bom.md`](docs/prototype_bom.md) for full BOM.
 
 ## Build
 
-Push a `main` &rarr; build automatico per ESP32, ESP32-S3, ESP32-C6 via GitHub Actions.  
-[Ultimi builds](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml)
+Push to `main` &rarr; automatic build for ESP32, ESP32-S3, ESP32-C6 via GitHub Actions.  
+[Latest builds](https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/actions/workflows/build.yml)
 
-### Locale (ESP-IDF v6.0.1)
+### Local (ESP-IDF v6.0.1)
 
 ```bash
 git clone https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID.git
 cd ESP_DRONE_REMOTEID
-idf.py set-target esp32       # o esp32s3 / esp32c6
+idf.py set-target esp32       # or esp32s3 / esp32c6
 idf.py build
 ```
 

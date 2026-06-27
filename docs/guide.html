@@ -1307,14 +1307,14 @@ sudo ip link set wlan0 up</pre>
 <li><b>ESP32 (Original):</b> Compatible baseline. Lacks BLE 5.0 Coded PHY and modern features. Good for testing.</li>
 </ul>
 
-<h4>Kit Consigliati</h4>
+<h4>Recommended Kits</h4>
 <table>
-<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Prezzo</th><th>Ideale per</th></tr>
+<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Price</th><th>Best for</th></tr>
 <tr>
   <td><img src="images/esp32_devkitc.jpg" alt="ESP32 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
   <td>ESP32-DevKitC V4</td>
   <td>ESP32</td><td>b/g/n</td><td>BLE 4.2</td><td>~5€</td>
-  <td>Prototipazione base, test</td>
+  <td>Basic prototyping, testing</td>
 </tr>
 <tr>
   <td><img src="images/esp32s3_devkitm1.png" alt="ESP32-S3 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
@@ -1326,10 +1326,10 @@ sudo ip link set wlan0 up</pre>
   <td><img src="images/xiao_esp32c6.jpg" alt="XIAO ESP32-C6" style="max-width:120px;height:auto;border-radius:8px"></td>
   <td>Seeed XIAO ESP32-C6</td>
   <td>ESP32-C6</td><td>WiFi 6</td><td>BLE 5.3</td><td>~5€ + 10€ GPS</td>
-  <td>Prodotto finale, taglia minima</td>
+  <td>Final product, smallest footprint</td>
 </tr>
 </table>
-<p><b>Raccomandato:</b> XIAO ESP32-C6 + L76K GNSS — zero saldature, 21×18mm, USB-C, LiPo, U.FL. Vedi <a href="prototype_bom.md">BOM completo</a> e <a href="innovation_diy.md">confronto competitivo</a> per dettagli.</p>
+<p><b>Recommended:</b> XIAO ESP32-C6 + L76K GNSS — zero soldering, 21×18mm, USB-C, LiPo, U.FL. See <a href="prototype_bom.md">full BOM</a> and <a href="innovation_diy.md">competitive comparison</a> for details.</p>
 
 <h4>Pin Compatibility</h4>
 <table>
@@ -1610,7 +1610,7 @@ flowchart TB
 <tr><td>WiFi Beacon</td><td><span class="tag tag-green">Stable</span></td><td>IEEE 802.11 beacon frames with OUI-based IE (FA:0B:BC). Enabled by default. Verified in demo mode.</td></tr>
 <tr><td>WiFi NAN</td><td><span class="tag tag-blue">Implemented</span></td><td>Neighborhood Area Networking frames. UI checkbox + counters functional. Awaiting receiver testing.</td></tr>
 <tr><td>BLE 4.0</td><td><span class="tag tag-green">Stable</span></td><td>Legacy BLE advertising (SCAN_IND). All ESP32 variants. Enabled by default.</td></tr>
-<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires S3/C3/C6. Disabled by default. Awaiting hardware testing with Android/iOS.</td></tr>
+<tr><td>BLE 5.0 LR (Coded PHY)</td><td><span class="tag tag-blue">Implemented</span></td><td>Requires S3/C6. Disabled by default. Awaiting hardware testing with Android/iOS.</td></tr>
 <tr><td>MAVLink (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>v1/v2 parsers + ODID messages (ardupilotmega dialect). AHRS2 heading. Awaiting FC hardware.</td></tr>
 <tr><td>MSP (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>MSP v1 (RAW_GPS, ATTITUDE). Awaiting Betaflight/iNAV hardware testing.</td></tr>
 <tr><td>NMEA 0183 (input)</td><td><span class="tag tag-blue">Implemented</span></td><td>GGA + RMC + VTG parsers. Works with tap method. Awaiting GPS module testing.</td></tr>

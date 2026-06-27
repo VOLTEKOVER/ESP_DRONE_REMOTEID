@@ -544,7 +544,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 flowchart LR
   GPS["GNSS/GPS Module<br/>UART / NMEA"]
   FC["Flight Controller<br/>MAVLink / MSP<br/>Parses GPS data<br/>UART TX → ESP32<br/>57600 / 115200 baud"]
-  ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C3<br/>UART2 RX (GPIO16)<br/>Packs ODID messages<br/>Web UI @ 192.168.4.1<br/>OTA updates supported"]
+  ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C6<br/>UART2 RX (GPIO16)<br/>Packs ODID messages<br/>Web UI @ 192.168.4.1<br/>OTA updates supported"]
   WiFi["WiFi Beacon<br/>802.11 b/g/n"]
   BLE["BLE<br/>4.0 / 5.0 LR"]
 
@@ -586,7 +586,7 @@ flowchart LR
     GND1["GND"]
     BEC["5V BEC"]
   end
-  subgraph ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C3"]
+  subgraph ESP["ESP DRONE REMOTEID<br/>ESP32 / S3 / C6"]
     direction TB
     RX2["GPIO16 (RX)"]
     GND2["GND"]
@@ -595,7 +595,7 @@ flowchart LR
   TX1 -->|"TX → RX"| RX2
   GND1 -->|"GND → GND"| GND2
   BEC -->|"5V → VIN"| VIN
-  ALT[/"⚡ Alt RX pins:<br/>S3 → GPIO18<br/>C3 → GPIO7"/]
+  ALT[/"⚡ Alt RX pins:<br/>S3 → GPIO18<br/>C6 → GPIO7"/]
 </pre>
 <div class="diag-cap">Wiring connections between Flight Controller and ESP DRONE REMOTEID. For NMEA tap method, add a 1k&Omega; series resistor on the TX line.</div>
 </div>
@@ -670,14 +670,14 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 
 
 
-<h4>Kit Consigliati</h4>
+<h4>Recommended Kits</h4>
 <table class="support-table">
-<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Prezzo</th><th>Ideale per</th></tr>
+<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Price</th><th>Best for</th></tr>
 <tr>
   <td><img src="images/esp32_devkitc.jpg" alt="ESP32 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
   <td>ESP32-DevKitC V4</td>
   <td>ESP32</td><td>b/g/n</td><td>BLE 4.2</td><td>~5€</td>
-  <td>Prototipazione base</td>
+  <td>Basic prototyping, testing</td>
 </tr>
 <tr>
   <td><img src="images/esp32s3_devkitm1.png" alt="ESP32-S3 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
@@ -689,10 +689,10 @@ GPS TX &rarr; FC RX (unchanged)</pre>
   <td><img src="images/xiao_esp32c6.jpg" alt="XIAO ESP32-C6" style="max-width:120px;height:auto;border-radius:8px"></td>
   <td>Seeed XIAO ESP32-C6</td>
   <td>ESP32-C6</td><td>WiFi 6</td><td>BLE 5.3</td><td>~5€ + 10€ GPS</td>
-  <td>Prodotto finale, taglia minima</td>
+  <td>Final product, smallest footprint</td>
 </tr>
 </table>
-<p class="fw-info"><b>Raccomandato:</b> XIAO ESP32-C6 + L76K GNSS — zero saldature, 21×18mm, USB-C, LiPo, U.FL. Vedi <a href="prototype_bom.md">BOM completo</a> per dettagli.</p>
+<p class="fw-info"><b>Recommended:</b> XIAO ESP32-C6 + L76K GNSS — zero soldering, 21×18mm, USB-C, LiPo, U.FL. See <a href="prototype_bom.md">full BOM</a> for details.</p>
 
 <!-- Full technical guide moved to guide.html -->
 <div style="margin:28px 0;text-align:center;background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;box-shadow:var(--shadow-md)">

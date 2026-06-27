@@ -20,7 +20,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Hardware (please complete):**
- - ESP32 Model: [e.g. ESP32-WROOM-32, ESP32-S3-DevKitC-1, ESP32-C3-DevKitM-1]
+ - ESP32 Model: [e.g. ESP32-WROOM-32, ESP32-S3-DevKitC-1, ESP32-C6-DevKitM-1]
  - Module / Board: [e.g. Olimex ESP32-POE-ISO, generic dev board]
  - Antenna: [e.g. PCB antenna, external U.FL, 2dBi dipole]
  - Flight Controller: [e.g. Pixhawk, Matek F405, iNAV, none]

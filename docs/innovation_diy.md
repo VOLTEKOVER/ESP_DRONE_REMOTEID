@@ -1,237 +1,237 @@
 # Innovation / DIY — ESP32 Remote ID vs Dronetag
 
-## Confronto feature
+## Feature Comparison
 
-### vs Mini 4G (con LTE)
+### vs Mini 4G (with LTE)
 
 | Feature | ESP32 DIY | Dronetag Mini 4G |
 |---|---|---|
 | Broadcast RID (DRI) | WiFi Beacon + WiFi NAN + BLE 4 + BLE 5 | BLE only |
 | Network RID (NRI) | — | LTE Cat 1 bis |
 | Standard | ASTM F3411 / prEN 4709-002 | ASTM F3411 / prEN 4709-002 |
-| Protocolli FC | MAVLink + MSP + NMEA (auto) | Non specificato |
-| Config | Web UI + CLI seriale | Mobile app |
+| FC Protocols | MAVLink + MSP + NMEA (auto) | Not specified |
+| Config | Web UI + Serial CLI | Mobile app |
 | OTA | Web UI + SHA-256 verify | Mobile app |
-| Sicurezza | ECDSA sign + eFuse lock | Non documentato |
-| Led | RGB PWM state machine (7 stati) | LED indicatori |
-| Costo HW | < 5€ (ESP32) | ~350€ |
-| Open source | SI | NO |
-| Abbonamento | NO | SI (LTE data plan) |
+| Security | ECDSA sign + eFuse lock | Not documented |
+| LED | RGB PWM state machine (7 states) | Status LEDs |
+| HW Cost | < 5€ (ESP32) | ~350€ |
+| Open source | YES | NO |
+| Subscription | NO | YES (LTE data plan) |
 
-### vs DRI (modulo OEM per integratori)
+### vs DRI (OEM integrator module)
 
 | Feature | ESP32 DIY | Dronetag DRI |
 |---|---|---|
 | Broadcast RID (DRI) | WiFi Beacon + WiFi NAN + BLE 4 + BLE 5 | BLE 4 + BLE 5 LR only |
-| Potenza BLE | 18 dBm max (config.) | 8 dBm |
-| RF range dichiarato | — | 3 km (BLE) |
-| Dati posizione | MAVLink / MSP / NMEA (auto) | MAVLink 2 only |
-| Alimentazione | 3.3V / 5V via USB o pin | 3.3 – 17V (regolatore buck interno) |
-| Consumo medio | ~80-150 mA (ESP32 + GPS) | **3 mA** |
-| Consumo max | ~500 mA | 10 mA |
-| UART forwarding | No (occupa una UART) | Si (bypass UART integrato) |
-| Dimensioni | Dipende dalla board | 22.5 × 16 × 5 mm |
-| Peso | Dipende dalla board | 0.5 – 1.5 g |
-| Temp. operativa | Tipica 0-85°C | -40°C a +85°C |
-| Serial number | Generato da MAC | ANSI/CTA-2063-A pre-programmato |
-| Certificazioni | — | FCC/CE (modulo radio approvato) |
-| Config | Web UI + CLI (nessuna app) | Mobile app Dronetag |
-| Open source | SI | NO |
-| Costo | < 5€ (ESP32) | ~50-100€ (stima) |
+| BLE Power | 18 dBm max (configurable) | 8 dBm |
+| RF range claimed | — | 3 km (BLE) |
+| Position data | MAVLink / MSP / NMEA (auto) | MAVLink 2 only |
+| Power supply | 3.3V / 5V via USB or pin | 3.3 – 17V (internal buck regulator) |
+| Avg consumption | ~80-150 mA (ESP32 + GPS) | **3 mA** |
+| Max consumption | ~500 mA | 10 mA |
+| UART forwarding | No (occupies one UART) | Yes (integrated bypass) |
+| Dimensions | Depends on board | 22.5 × 16 × 5 mm |
+| Weight | Depends on board | 0.5 – 1.5 g |
+| Operating temp | Typical 0-85°C | -40°C to +85°C |
+| Serial number | Generated from MAC | ANSI/CTA-2063-A pre-programmed |
+| Certifications | — | FCC/CE (approved radio module) |
+| Config | Web UI + CLI (no app) | Dronetag mobile app |
+| Open source | YES | NO |
+| Cost | < 5€ (ESP32) | ~50-100€ (estimated) |
 
-Il **DRI è il competitor più diretto** — stesso use case (FC → RID), ma con vantaggi enormi su consumo (3mA vs 80+), formato e certificazioni. Lo battere solo su multi-link WiFi+BLE, multi-protocollo, OTA, sicurezza e costo.
+The **DRI is the most direct competitor** — same use case (FC → RID), but with huge advantages in consumption (3mA vs 80+), form factor, and certifications. We beat them on multi-link WiFi+BLE, multi-protocol, OTA, security, and cost.
 
-### vs BS gen.2 (standalone economico, nostro competitor diretto)
+### vs BS gen.2 (budget standalone, our direct competitor)
 
 | Feature | ESP32 DIY | Dronetag BS gen.2 |
 |---|---|---|
 | Broadcast RID | WiFi Beacon + WiFi NAN + BLE 4 + BLE 5 | BLE 4 Legacy + BLE 5 LR only |
-| Range dichiarato | — | 3 km (BLE) |
-| Potenza BLE | 18 dBm max (config.) | 8 dBm |
-| GNSS | **Esterna via UART** (1 costellazione) | **Integrata u-blox M10** multi-costellazione |
-| Alimentazione | 3.3V / 5V (USB o pin) | 3.3 – 17V con buck regulator |
-| Consumo medio | ~80-150 mA + GPS esterno | **15 mA** |
-| Consumo max | ~500 mA | **50 mA** |
-| Dimensioni | Dipende da board + GPS | **18 × 14 × 5 mm** |
-| Peso | Dipende | **1.5g** (con heat shrink) / **3g** (con enclosure) |
-| Temp. operativa | Tipica 0-85°C | **-40°C a +85°C** |
-| Config | Web UI + CLI (nessuna app) | Solo mobile app Dronetag |
-| OTA | Web UI con SHA-256 | Mobile app |
-| Antenne | WiFi/BLE stampata + GPS esterna | 2× U.FL (GNSS + BLE, esterne) |
-| GNSS timekeeping | Nessuno | **Supercapacitor** — mantiene fix ~8 min durante power cycle |
-| Spektrum XBUS / SRXL2 | No | **Sì** (telemetria diretta su radio Spektrum) |
-| Betaflight GNSS input | No | **Sì** — BS funge da GPS per Betaflight |
-| Flight data logging | No | In sviluppo (su flash interna) |
-| Telemetry module (Futaba/Spektrum) | No | In sviluppo |
-| SAW filters | No | **Sì** (immunità interferenze GNSS) |
-| Target utente | Tecnico / sviluppatore | Piloti esperti (saldatura richiesta) |
-| Open source | **SI** | NO |
-| Costo | < 5€ (ESP32) + 10€ GPS | ~**99€** |
+| Range claimed | — | 3 km (BLE) |
+| BLE Power | 18 dBm max (configurable) | 8 dBm |
+| GNSS | **External via UART** (single constellation) | **Integrated u-blox M10** multi-constellation |
+| Power supply | 3.3V / 5V (USB or pin) | 3.3 – 17V with buck regulator |
+| Avg consumption | ~80-150 mA + external GPS | **15 mA** |
+| Max consumption | ~500 mA | **50 mA** |
+| Dimensions | Depends on board + GPS | **18 × 14 × 5 mm** |
+| Weight | Depends | **1.5g** (with heat shrink) / **3g** (with enclosure) |
+| Operating temp | Typical 0-85°C | **-40°C to +85°C** |
+| Config | Web UI + CLI (no app) | Dronetag mobile app only |
+| OTA | Web UI with SHA-256 | Mobile app |
+| Antennas | WiFi/BLE printed + external GPS | 2× U.FL (GNSS + BLE, external) |
+| GNSS timekeeping | None | **Supercapacitor** — maintains fix ~8 min during power cycle |
+| Spektrum XBUS / SRXL2 | No | **Yes** (direct telemetry on Spektrum radios) |
+| Betaflight GNSS input | No | **Yes** — BS acts as GPS for Betaflight |
+| Flight data logging | No | In development (internal flash) |
+| Telemetry module (Futaba/Spektrum) | No | In development |
+| SAW filters | No | **Yes** (GNSS interference immunity) |
+| Target user | Technical / developer | Experienced pilots (soldering required) |
+| Open source | **YES** | NO |
+| Cost | < 5€ (ESP32) + 10€ GPS | ~**99€** |
 
-**BS gen.2 è il competitor più insidioso** perché:
-- **Stesso use case**: standalone, senza FC, GNSS + BLE
-- **Formato e peso imbattibili**: 18mm, 1.5-3g
-- **Consumo 15mA** — vola per ore con batteria piccola
-- **Range input 3.3-17V** con regolatore integrato
-- **Supercapacitor** — fix GNSS persiste tra power cycle (noi no)
-- **Doppia funzione GNSS + RID**: BS alimenta Betaflight con dati GPS via XBUS (UART, protocollo UBLOX). Un solo device fa sia da ricevitore GPS per il volo che da trasmettitore RID. Noi abbiamo GPS solo per RID, non lo inoltriamo al FC.
-- **Connettore 4-pin JST SH**: VCC (3.3-17V), RX, TX, GND — stesso connettore per alimentazione, Betaflight e Spektrum XBUS
-- **Supercapacitor GNSS**: mantiene fix ~8 min durante cambio batteria (TTFF ridotto). Noi riacquisiamo da zero.
-- **Spektrum XBUS/SRXL2**: telemetria nativa su radio RC Spektrum (futuro: Futaba e altri)
+**BS gen.2 is the trickiest competitor** because:
+- **Same use case**: standalone, no FC, GNSS + BLE
+- **Unbeatable size and weight**: 18mm, 1.5-3g
+- **15mA consumption** — flies for hours on a small battery
+- **3.3-17V input range** with integrated regulator
+- **Supercapacitor** — GNSS fix persists between power cycles (we don't)
+- **Dual GNSS + RID function**: BS feeds GPS data to Betaflight via XBUS (UBLOX protocol). A single device serves as both GPS receiver for flight and RID transmitter. We only have GPS for RID, we don't forward it to FC.
+- **4-pin JST SH connector**: VCC (3.3-17V), RX, TX, GND — same connector for power, Betaflight, and Spektrum XBUS
+- **GNSS supercapacitor**: maintains fix ~8 min during battery swap (reduced TTFF). We reacquire from scratch.
+- **Spektrum XBUS/SRXL2**: native telemetry on Spektrum RC radios (future: Futaba and others)
 
-Cosa noi abbiamo e BS non ha:
-- **WiFi multi-link** (WiFi Beacon + NAN, in aggiunta a BLE)
+What we have that BS doesn't:
+- **WiFi multi-link** (WiFi Beacon + NAN, in addition to BLE)
 - **Open source**
-- **Web UI + CLI** (nessuna app)
-- **Multi-protocollo FC** (MAVLink, MSP, NMEA)
-- **OTA via web** con verifica SHA-256
-- **Sicurezza firme ECDSA + eFuse lock**
-- **Estensibilità** (possiamo aggiungere mesh, LoRa, SD, CAN — BS è chiuso)
+- **Web UI + CLI** (no app needed)
+- **Multi-FC protocol** (MAVLink, MSP, NMEA)
+- **OTA via web** with SHA-256 verification
+- **ECDSA signature + eFuse lock security**
+- **Extensibility** (we can add mesh, LoRa, SD, CAN — BS is closed)
 
-### vs Beacon gen.2 (solo BLE, con batteria)
+### vs Beacon gen.2 (BLE only, with battery)
 
 | Feature | ESP32 DIY | Dronetag Beacon gen.2 |
 |---|---|---|
 | Broadcast RID (DRI) | WiFi Beacon + WiFi NAN + BLE 4 + BLE 5 | BLE only |
-| GNSS | 1 costellazione (via UART GPS) | GPS L1 + GLONASS + Galileo + BeiDou + SBAS + QZSS |
-| Sensori extra | — | Barometro, accelerometro |
-| Potenza BLE | Config. 18 dBm max | 8 dBm |
-| Consumo medio | ~80-150 mA (ESP32 + GPS) | 15 mA |
-| Consumo max | ~500 mA | 100 mA |
-| Batteria | No (alimentazione esterna) | Li-Po 200 mAh, 10-18h |
-| Dimensioni | Dipende dalla board | 37 x 26 x 16 mm |
-| Peso | Dipende dalla board | 17 g |
-| IP | — | IP43 |
-| Conformità | — | FAA accepted / EASA listed |
-| Costo HW | < 5€ (ESP32) | ~200€ |
-| Open source | SI | NO |
+| GNSS | 1 constellation (via UART GPS) | GPS L1 + GLONASS + Galileo + BeiDou + SBAS + QZSS |
+| Extra sensors | — | Barometer, accelerometer |
+| BLE Power | Configurable 18 dBm max | 8 dBm |
+| Avg consumption | ~80-150 mA (ESP32 + GPS) | 15 mA |
+| Max consumption | ~500 mA | 100 mA |
+| Battery | No (external power) | Li-Po 200 mAh, 10-18h |
+| Dimensions | Depends on board | 37 x 26 x 16 mm |
+| Weight | Depends on board | 17 g |
+| IP rating | — | IP43 |
+| Compliance | — | FAA accepted / EASA listed |
+| HW Cost | < 5€ (ESP32) | ~200€ |
+| Open source | YES | NO |
 
-## Vantaggi su carta (contro tutti)
+## Paper Advantages (against all)
 
-- **Multi-link simultaneo**: WiFi beacon + NAN + BLE legacy + BLE LR — Dronetag trasmette solo BLE
-- **Nessun abbonamento**: WiFi/BLE gratis, nessuna SIM
-- **Trasparente**: codice aperto, modificabile, espandibile
-- **Web UI**: configuri da browser, nessuna app
-- **Multi-FC**: parla con ArduPilot, PX4, Betaflight, iNAV, GPS nativi
-- **Sicurezza HW**: firma ECDSA + eFuse burn permanente
-- **Configurabilità totale**: potenza, canale, rate, gpio, tutto modificabile
-- **Potenza BLE** superiore (18 vs 8 dBm)
-- **Nessuna dipendenza da pressione barometrica** — DRI richiede SCALED_PRESSURE dal FC per comporre i messaggi, noi funzioniamo con GPS + MAVLink e basta
-- **Protocolli extra** — DRI supporta solo MAVLink 2; noi anche MSP e NMEA (GPS diretto)
-- **OTA aggiornabile via web** — DRI non ha OTA, si aggiorna solo via app mobile
+- **Simultaneous multi-link**: WiFi beacon + NAN + BLE legacy + BLE LR — Dronetag transmits only BLE
+- **No subscription**: WiFi/BLE are free, no SIM card
+- **Transparent**: open code, modifiable, extensible
+- **Web UI**: configure from browser, no app
+- **Multi-FC**: works with ArduPilot, PX4, Betaflight, iNAV, native GPS
+- **HW Security**: ECDSA signature + permanent eFuse burn
+- **Total configurability**: power, channel, rate, GPIO — everything adjustable
+- **Higher BLE power** (18 vs 8 dBm)
+- **No barometric pressure dependency** — DRI requires SCALED_PRESSURE from FC to compose messages, we work with GPS + MAVLink only
+- **Extra protocols** — DRI only supports MAVLink 2; we also support MSP and NMEA (direct GPS)
+- **OTA updates via web** — DRI has no OTA, updates only via mobile app
 
-## DRI — analisi approfondita dall'integration guide
+## DRI — Deep Analysis from Integration Guide
 
-### MAVLink messages che DRI richiede dal flight controller
-- ALTITUDE (pressione)
-- SCALED_PRESSURE (dati barometrici)
-- GPS_RAW_INT (posizione GNSS)
-- SYSTEM_TIME (riferimento temporale)
-- GLOBAL_POSITION_INT (posizione globale)
-- HEARTBEAT (stato sistema)
-- OPEN_DRONE_ID_BASIC_ID (sovrascrive seriale DRI)
+### MAVLink messages DRI requires from flight controller
+- ALTITUDE (pressure)
+- SCALED_PRESSURE (barometric data)
+- GPS_RAW_INT (GNSS position)
+- SYSTEM_TIME (time reference)
+- GLOBAL_POSITION_INT (global position)
+- HEARTBEAT (system status)
+- OPEN_DRONE_ID_BASIC_ID (overrides DRI serial)
 - OPEN_DRONE_ID_LOCATION
 - OPEN_DRONE_ID_SYSTEM
 - OPEN_DRONE_ID_OPERATOR_ID
-- OPEN_DRONE_ID_ARM_STATUS (blocco decollo se RID non funziona)
+- OPEN_DRONE_ID_ARM_STATUS (locks takeoff if RID fails)
 
-### Certificazioni — il vero moat di Dronetag
+### Certifications — Dronetag's real moat
 
-| Aspetto | Dronetag DRI | Nostro ESP32 |
+| Aspect | Dronetag DRI | Our ESP32 |
 |---|---|---|
-| **FAA Standard RID** | Compliance matrix + DoC pronti | Dovremmo fare tutto da zero |
-| **FCC** | Usa modulo u-blox ANNA-B4 già certificato (FCC ID: XPYANNAB4) → "Contains FCC ID" | ESP32 ha FCC ID Espressif, ma custom board richiede nuova certificazione |
-| **EU C-class** | Guide per Modulo A/B+C/H con Notified Body | Nessun percorso definito |
-| **SN ANSI/CTA-2063-A** | Pre-programmato, ICAO prefix gestito | Solo MAC address |
-| **Antenne pre-approvate** | Lista ufficiale di antenne certificate | Nessuna |
-| **Lab testing** | ASTM F3586-22 da laboratorio accreditato | Mai fatto |
-| **Costo stimato certificazione** | Già sostenuto (incluso nel prezzo ~50-100€) | Migliaia di € + tempi lunghi |
+| **FAA Standard RID** | Compliance matrix + DoC ready | Would need to do everything from scratch |
+| **FCC** | Uses u-blox ANNA-B4 certified module (FCC ID: XPYANNAB4) → "Contains FCC ID" | ESP32 has FCC ID from Espressif, but custom board requires new certification |
+| **EU C-class** | Guides for Module A/B+C/H with Notified Body | No defined path |
+| **ANSI/CTA-2063-A SN** | Pre-programmed, ICAO prefix managed | MAC address only |
+| **Pre-approved antennas** | Official list of certified antennas | None |
+| **Lab testing** | ASTM F3586-22 from accredited lab | Never done |
+| **Estimated certification cost** | Already incurred (included in ~50-100€ price) | Thousands of € + long lead times |
 
-**Morale**: la certificazione è il loro vantaggio più difficile da battere. Per un prototipo DIY non serve, ma per un prodotto reale è un ostacolo significativo.
+**Takeaway**: certification is their hardest-to-beat advantage. For a DIY prototype it's not needed, but for a real product it's a significant barrier.
 
-### Punti di forza DRI (da colmare)
+### DRI Strengths (to close the gap)
 
-| Area | DRI | Nostro ESP32 | Gap |
+| Area | DRI | Our ESP32 | Gap |
 |---|---|---|---|
-| Consumo | 3 mA avg, 10 mA max | ~80-150 mA | **20-50x** |
-| Alimentazione | 3.3-17V con regolatore buck | 3.3V/5V via USB | Richiede regolatore esterno |
-| Temp. operativa | -40°C a +85°C | Tipica 0-85°C | Copertura inferiore |
-| Certificazioni | FCC/CE pre-certificato | Nessuna | Costoso da ottenere |
-| SN | ANSI/CTA-2063-A pre-programmato | Generato da MAC | Minimo, si può aggiungere |
-| UART forwarding | Sì (bypass integrato) | No | Occupa una UART |
-| Arming failsafe | Blocca decollo se RID assente | No logica failsafe | Da implementare |
-| Peso | 0.5-1.5g | Variabile | Gap notevole |
-| Dimensioni | 22.5×16×5 mm | Variabile | Gap notevole |
+| Consumption | 3 mA avg, 10 mA max | ~80-150 mA | **20-50x** |
+| Power supply | 3.3-17V with buck regulator | 3.3V/5V via USB | Needs external regulator |
+| Operating temp | -40°C to +85°C | Typical 0-85°C | Lower coverage |
+| Certifications | FCC/CE pre-certified | None | Expensive to obtain |
+| SN | ANSI/CTA-2063-A pre-programmed | Generated from MAC | Minor, can be added |
+| UART forwarding | Yes (integrated bypass) | No | Occupies one UART |
+| Arming failsafe | Locks takeoff if RID missing | No failsafe logic | To be implemented |
+| Weight | 0.5-1.5g | Variable | Significant gap |
+| Dimensions | 22.5×16×5 mm | Variable | Significant gap |
 
-### Cosa loro NON possono fare (e noi sì)
+### What THEY CANNOT do (and we can)
 
-- **Trasmettere su WiFi** — il DRI è solo BLE. WiFi ha portata maggiore ed è ricevibile da più dispositivi (telefoni, laptop, stazioni dedicate)
-- **Supportare protocolli non-MAVLink** — MSP (Betaflight/iNAV) e NMEA (GPS diretto) non sono supportati
-- **Ota firmware updates via web** — l'aggiornamento richiede app mobile + BLE
-- **Configurazione senza app** — noi abbiamo CLI seriale + web UI, loro solo app mobile
-- **Mesh relay** — impossibile via BLE, richiederebbe HW aggiuntivo
-- **Telemetry bridge WiFi** — il DRI usa solo UART, nessuna uscita telemetrica wireless
-- **Logging e debug** — nessuna interfaccia testuale o web per diagnostica
-- **Piena personalizzazione** — firmware closed, parametri limitati a ciò che l'app espone
+- **Transmit over WiFi** — DRI is BLE only. WiFi has longer range and is receivable by more devices (phones, laptops, dedicated stations)
+- **Support non-MAVLink protocols** — MSP (Betaflight/iNAV) and NMEA (direct GPS) are not supported
+- **OTA firmware updates via web** — updates require mobile app + BLE
+- **App-free configuration** — we have serial CLI + web UI, they only have mobile app
+- **Mesh relay** — impossible via BLE, would require additional HW
+- **WiFi telemetry bridge** — DRI uses only UART, no wireless telemetry output
+- **Logging and debug** — no text or web interface for diagnostics
+- **Full customization** — closed firmware, parameters limited to what the app exposes
 
-## Idee innovative per prototipo DIY
+## Innovative Ideas for DIY Prototype
 
-### Obiettivo
-> Trasmettitore RID che funziona **senza LTE, senza SIM, senza abbonamento**, superando Dronetag in features, flessibilità e costo, pur rimanendo **rilevante** per applicazioni reali.
+### Goal
+> An RID transmitter that works **without LTE, without SIM, without subscription**, surpassing Dronetag in features, flexibility, and cost, while remaining **relevant** for real-world applications.
 
 ### 1. ESP-NOW Mesh RID Relay ★★★★★
-- I droni in volo relayano i messaggi RID tra loro via ESP-NOW
-- Droni oltre la linea di vista risultano visibili se un altro drone li ha incontrati
-- Nessun prodotto commerciale offre mesh RID
-- Complessità: media — ESP-NOW è nativo su ESP32
+- Drones in flight relay RID messages between each other via ESP-NOW
+- Drones beyond line of sight become visible if another drone has encountered them
+- No commercial product offers mesh RID
+- Complexity: medium — ESP-NOW is native on ESP32
 
 ### 2. Dual-band 2.4 + 5 GHz ★★★★☆
-- ESP32-C5/S3 supporta 5 GHz
-- RID su 5 GHz è meno congestionato, più affidabile in aria
-- Nessun RID commerciale usa 5 GHz oggi
+- ESP32-C5/S3 supports 5 GHz
+- RID on 5 GHz is less congested, more reliable in flight
+- No commercial RID uses 5 GHz today
 
 ### 3. WiFi Telemetry Bridge ★★★★☆
-- Stessa interfaccia WiFi usata per RID la si usa come hotspot telemetry
-- Smartphone si connette direttamente al drone (nessuna SIM, nessun cloud)
-- MAVLink bidirezionale via UDP/WebSocket
+- Same WiFi interface used for RID also serves as telemetry hotspot
+- Smartphone connects directly to the drone (no SIM, no cloud)
+- Bidirectional MAVLink via UDP/WebSocket
 
 ### 4. LoRa Long-range Backup ★★★★☆
-- Modulo LoRa (SX1262) per RID a 10+ km
-- Doppia trasmissione: WiFi/BLE per corto raggio + LoRa per lungo raggio
-- Drone perso? Ultima posizione su LoRa ricevibile da terra con ricetrasmettitore cheap
+- LoRa module (SX1262) for 10+ km RID
+- Dual transmission: WiFi/BLE for short range + LoRa for long range
+- Lost drone? Last position on LoRa receivable from ground with cheap transceiver
 
 ### 5. SD Card Logging ★★★☆☆
-- Log completo volo su microSD: posizione, stato, trasmissioni
-- Geofence offline (no-fly zone caricate su SD)
-- Dronetag non ha SD
+- Full flight log on microSD: position, status, transmissions
+- Offline geofence (no-fly zones loaded from SD)
+- Dronetag has no SD
 
-### 6. CanBus / DroneCAN bridge ★★★☆☆
-- Lettura diretta CAN bus drone (CUAV, Zubax, ecc.)
-- Funziona senza MAVLink — posizione, batteria, stato motori
-- Utile per droni custom o FC che non espongono MAVLink
+### 6. CAN Bus / DroneCAN bridge ★★★☆☆
+- Direct CAN bus reading (CUAV, Zubax, etc.)
+- Works without MAVLink — position, battery, motor status
+- Useful for custom drones or FCs that don't expose MAVLink
 
 ### 7. ADSB Receiver ★★★☆☆
-- RTL-SDR (R820T2) cattura messaggi ADSB da aerei
-- Il drone vede aerei vicini e può evitarli
-- Feature che nessun RID commerciale ha
+- RTL-SDR (R820T2) captures ADSB messages from aircraft
+- Drone sees nearby aircraft and can avoid them
+- Feature no commercial RID has
 
-### 8. Edge ML anti-spoofing ★★☆☆☆
-- Confronta posizione GPS con WiFi RTT, IMU, cell tower RSSI
-- Rileva spoofing e firma i pacchetti RID con chiave attestata
-- Complesso ma realistica su ESP32-S3 con ESP-NN
+### 8. Edge ML Anti-spoofing ★★☆☆☆
+- Compares GPS position with WiFi RTT, IMU, cell tower RSSI
+- Detects spoofing and signs RID packets with attested key
+- Complex but realistic on ESP32-S3 with ESP-NN
 
-## Architettura proposta
+## Proposed Architecture
 
 ```
 ┌─────────────────────────────────────────┐
-│  ESP32 (S3 / C5 / C6)                   │
+│  ESP32 (S3 / C6)                        │
 │                                         │
 │  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ RID     │ │ MAVLink  │ │ WiFi     │ │  ← già fatto
+│  │ RID     │ │ MAVLink  │ │ WiFi     │ │  ← already done
 │  │ Beacon  │ │ /MSP/NMEA│ │ Hotspot  │ │
 │  └─────────┘ └──────────┘ └──────────┘ │
 │  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ LoRa    │ │ ESP-NOW  │ │ SD Card  │ │  ← da fare
+│  │ LoRa    │ │ ESP-NOW  │ │ SD Card  │ │  ← TODO
 │  │ SX1262  │ │ Mesh     │ │ Logging  │ │
 │  └─────────┘ └──────────┘ └──────────┘ │
 │  ┌─────────┐ ┌──────────┐              │
@@ -241,54 +241,54 @@ Cosa noi abbiamo e BS non ha:
 └─────────────────────────────────────────┘
 ```
 
-## Certificazione — cosa serve per un prodotto reale
+## Certification — What's Needed for a Real Product
 
-Se un giorno volessi trasformare il prototipo in prodotto, servono:
+If you ever want to turn the prototype into a product:
 
 ### USA (FAA + FCC)
-1. **Means of Compliance (MoC)** — ASTM F3411 + test ASTM F3586-22 da lab accreditato
-2. **Declaration of Compliance (DoC)** — sottomissione formale FAA
-3. **FCC Certification** — test EMC/RF da lab accreditato + TCB
-4. **SN ANSI/CTA-2063-A** — richiedere ICAO prefix + seriali unici
-5. **"Contains FCC ID"** — se usi modulo pre-certificato (es. ESP32 già ha FCC ID)
+1. **Means of Compliance (MoC)** — ASTM F3411 + ASTM F3586-22 test from accredited lab
+2. **Declaration of Compliance (DoC)** — formal FAA submission
+3. **FCC Certification** — EMC/RF testing from accredited lab + TCB
+4. **ANSI/CTA-2063-A SN** — request ICAO prefix + unique serials
+5. **"Contains FCC ID"** — if using pre-certified module (e.g., ESP32 already has FCC ID)
 
 ### EU (EASA)
-1. **Conformity assessment** — Modulo B+C o H con Notified Body
+1. **Conformity assessment** — Module B+C or H with Notified Body
 2. **CE marking + C-class label** (C0-C6)
 3. **EN 4709-002 compliance**
-4. **Technical documentation** completa
+4. **Complete technical documentation**
 
-### Minimo per credibilità tecnica (anche senza certificazione)
-- [ ] OPEN_DRONE_ID_ARM_STATUS → blocco decollo se RID non funziona
-- [ ] Failsafe GNSS → RTH se perde fix
-- [ ] Broadcast continuity → ultimi dati validi se GCS si disconnette
-- [ ] SN ANSI/CTA-2063-A configurabile
-- [ ] Operatore location da GCS (per FAA)
-- [ ] Tamper-resistant storage per SN (eFuse già presente)
+### Minimum for Technical Credibility (even without certification)
+- [ ] OPEN_DRONE_ID_ARM_STATUS → lock takeoff if RID fails
+- [ ] GNSS failsafe → RTH if position lost
+- [ ] Broadcast continuity → last valid data if GCS disconnects
+- [ ] Configurable ANSI/CTA-2063-A SN
+- [ ] Operator location from GCS (for FAA)
+- [ ] Tamper-resistant storage for SN (eFuse already present)
 
-## Posizionamento — dove batterli davvero
+## Positioning — Where to Really Beat Them
 
-| Dronetag fa | Noi facciamo meglio |
+| Dronetag does | We do better |
 |---|---|
-| BLE only | **WiFi + BLE** — nessun loro prodotto ha WiFi |
-| Solo mobile app | **Web UI + CLI** — niente app da installare |
-| Closed source | **Open source** — chiunque può contribuire |
-| Nessuna sicurezza documentata | **Firme ECDSA + eFuse lock** |
-| FW fisso | **OTA via web** verificato con SHA-256 |
-| Solo MAVLink (DRI) | **MAVLink + MSP + NMEA** — più protocolli |
-| Prodotto finito, punto | **Piattaforma estensibile** — mesh, LoRa, SD, CAN |
+| BLE only | **WiFi + BLE** — none of their products have WiFi |
+| Mobile app only | **Web UI + CLI** — no app to install |
+| Closed source | **Open source** — anyone can contribute |
+| No documented security | **ECDSA signatures + eFuse lock** |
+| Fixed firmware | **OTA via web** verified with SHA-256 |
+| MAVLink only (DRI) | **MAVLink + MSP + NMEA** — more protocols |
+| Finished product, period | **Extensible platform** — mesh, LoRa, SD, CAN |
 
-**La nostra tesi**: un RID transmitter non deve essere un prodotto chiuso. Deve essere una **piattaforma aperta** su cui costruire: mesh relay, telemetria, logging, integrazione con qualsiasi ecosistema drone. Dronetag vende dispositivi. Noi vendiamo **flessibilità**.
+**Our thesis**: an RID transmitter shouldn't be a closed product. It should be an **open platform** to build upon: mesh relay, telemetry, logging, integration with any drone ecosystem. Dronetag sells devices. We sell **flexibility**.
 
-## Priorità di implementazione
+## Implementation Priority
 
-1. **ESP-NOW Mesh** — impatto massimo, complessità media, nessuna dipendenza HW extra
-2. **WiFi Telemetry Bridge** — già parzialmente possibile, sfrutta WiFi esistente
-3. **LoRa backup** — impatto alto, richiede HW ma è economico (modulo 3-5€)
-4. **SD Card + geofence** — impatto medio, richiede HW ma standard
-5. **Dual-band 5 GHz** — impatto medio, richiede ESP32-S3/C5/C6
-6. **CanBus / ADSB / ML** — impatto basso o complessità alta, da valutare dopo
+1. **ESP-NOW Mesh** — maximum impact, medium complexity, no extra HW dependency
+2. **WiFi Telemetry Bridge** — already partially possible, leverages existing WiFi
+3. **LoRa backup** — high impact, requires HW but cheap (3-5€ module)
+4. **SD Card + geofence** — medium impact, requires HW but standard
+5. **Dual-band 5 GHz** — medium impact, requires ESP32-S3/C6
+6. **CAN Bus / ADSB / ML** — low impact or high complexity, evaluate later
 
-## Proposta commerciale sintetica
+## Executive Summary
 
-> **RID Mesh Open Source** — trasmettitore multi-link (WiFi + BLE + LoRa) con relay mesh ESP-NOW, telemetria WiFi nativa, logging su SD, zero abbonamenti. Costo BOM <20€. Aperto, espandibile, superiore.
+> **Open Source RID Mesh** — multi-link transmitter (WiFi + BLE + LoRa) with ESP-NOW mesh relay, native WiFi telemetry, SD logging, zero subscriptions. BOM cost <20€. Open, extensible, superior.
