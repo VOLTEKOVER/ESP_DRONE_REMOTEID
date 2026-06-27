@@ -459,7 +459,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="release-bar">
 <div class="rl-wrap">
 <div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 6 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 3 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
@@ -628,8 +628,7 @@ cd ESP_DRONE_REMOTEID/ESP32_DRONE_REMOTE_ID_Firmware
 C:\esp\v6.0.1\esp-idf\export.ps1
 
 # Set target
-idf.py set-target esp32        # esp32, esp32s2, esp32s3
-                               # esp32c2, esp32c3, esp32c6
+idf.py set-target esp32        # esp32, esp32s3, esp32c6
 
 # Build
 idf.py build
@@ -639,7 +638,7 @@ idf.py -p COM3 flash
 
 # Monitor
 idf.py -p COM3 monitor</pre>
-<p>CI builds all 6 targets automatically on push (see <code>.github/workflows/build.yml</code>).</p>
+<p>CI builds all 3 targets automatically on push (see <code>.github/workflows/build.yml</code>).</p>
 
 <h4>Method 3: esptool.py</h4>
 <p>For users who prefer a command-line tool without the full ESP-IDF:</p>
@@ -828,7 +827,7 @@ C:\esp\v6.0.1\esp-idf\export.ps1
 # Choose target
 idf.py set-target esp32       # ESP32 (original)
 idf.py set-target esp32s3     # ESP32-S3
-idf.py set-target esp32c3     # ESP32-C3
+idf.py set-target esp32c6     # ESP32-C6
 
 # Build
 idf.py build
@@ -909,7 +908,7 @@ idf.py -p COM3 monitor</pre>
 <tr><td>2</td><td>Set ID Type</td><td>Choose <b>Serial Number (1)</b> for ANSI/CTA-2063 serial numbers, or <b>CAA Registration (2)</b> for national authority IDs.</td></tr>
 <tr><td>3</td><td>Set UA Type</td><td>Select your aircraft type. <b>Multirotor (2)</b> is correct for most quadcopters and hexacopters.</td></tr>
 <tr><td>4</td><td>Set Operator ID</td><td>Enter your operator registration number if required. Format varies by country (e.g., <code>OP-MARIO-12345</code>).</td></tr>
-<tr><td>5</td><td>Enable Transmitters</td><td>In the <b>Transmission</b> section, check at least <b>WiFi Beacon</b> and <b>BLE 4.0</b>. These are the most compatible modes. BLE 5.0 LR requires ESP32-S3 or ESP32-C3.</td></tr>
+<tr><td>5</td><td>Enable Transmitters</td><td>In the <b>Transmission</b> section, check at least <b>WiFi Beacon</b> and <b>BLE 4.0</b>. These are the most compatible modes. BLE 5.0 LR requires ESP32-S3 or ESP32-C6.</td></tr>
 <tr><td>6</td><td>Set Baud Rate</td><td>In <b>WiFi AP &amp; Serial</b>, set the baud rate to match your flight controller's serial port. Common: 57600 or 115200.</td></tr>
 <tr><td>7</td><td>Set WiFi Password (optional)</td><td>Set a password for the ESP-RID network to prevent unauthorized access. Use WPA2 encryption.</td></tr>
 <tr><td>8</td><td>Verify GPS Status</td><td>Check the <b>Status</b> section. Wait for the protocol to be detected (MAVLink, MSP, or NMEA) and GPS fix to appear.</td></tr>
@@ -935,7 +934,7 @@ idf.py -p COM3 monitor</pre>
 <li><b>WiFi Beacon:</b> IEEE 802.11 beacon frames containing ODID packets. Most compatible with receivers.</li>
 <li><b>WiFi NAN:</b> Neighborhood Area Networking. Less common, but supported by some Android devices.</li>
 <li><b>BLE 4.0:</b> Legacy Bluetooth Low Energy advertising. Compatible with most phones and ODID receivers.</li>
-<li><b>BLE 5.0 LR:</b> BLE 5.0 Coded PHY long range mode. Requires ESP32-S3 or ESP32-C3. Increased range at lower data rate.</li>
+<li><b>BLE 5.0 LR:</b> BLE 5.0 Coded PHY long range mode. Requires ESP32-S3 or ESP32-C6. Increased range at lower data rate.</li>
 </ul>
 <p>Rates are in Hz (packets per second). The ASTM standard recommends at least 1 Hz. Higher rates increase compatibility but consume more power.</p>
 
@@ -989,7 +988,7 @@ idf.py -p COM3 monitor</pre>
 
 <h4>Prerequisites</h4>
 <ul>
-<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, or ESP32-C6).</li>
+<li>A <code>.bin</code> firmware file built for your ESP32 target (ESP32, ESP32-S3, or ESP32-C6).</li>
 <li>The ESP32 must be powered and connected to its WiFi network (you connected to ESP-RID).</li>
 <li>Your phone/PC must be connected to the ESP32's WiFi network.</li>
 </ul>
@@ -1263,57 +1262,82 @@ sudo ip link set wlan0 up</pre>
 <div class="gs-body">
 <h4>Comparison Table</h4>
 <table>
-<tr><th>Feature</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
-<tr><td>CPU</td><td>2x LX6 240M</td><td>1x LX7 240M</td><td>2x LX7 240M</td><td>1x RV 120M</td><td>1x RV 160M</td><td>1x RV 160M</td></tr>
-<tr><td>BLE</td><td>4.0/4.2</td><td>—</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td></tr>
-<tr><td>WiFi</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td><td>b/g/n</td></tr>
-<tr><td>Flash</td><td>4-16M</td><td>4-16M</td><td>8-16M</td><td>2-4M</td><td>4-8M</td><td>4-8M</td></tr>
-<tr><td>RAM</td><td>520K</td><td>520K</td><td>512K+2M PSRAM</td><td>272K</td><td>400K</td><td>512K</td></tr>
-<tr><td>BLE 5.0 LR</td><td>&#x274c;</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
-<tr><td>USB CDC</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
-<tr><td>Flash config</td><td>4 MB</td><td>4 MB</td><td>4 MB</td><td>2 MB</td><td>4 MB</td><td>4 MB</td></tr>
-<tr><td>Power</td><td>~150 mA</td><td>~130 mA</td><td>~130 mA</td><td>~90 mA</td><td>~100 mA</td><td>~110 mA</td></tr>
-<tr><td><b>Rcmd</b></td><td>Good</td><td>Budget</td><td><b>Best</b></td><td>Tiny</td><td>Good</td><td>Modern</td></tr>
+<tr><th>Feature</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C6</th></tr>
+<tr><td>CPU</td><td>2x LX6 240M</td><td>2x LX7 240M</td><td>1x RV 160M</td></tr>
+<tr><td>BLE</td><td>4.0/4.2</td><td>5.0 Coded PHY</td><td>5.0 Coded PHY</td></tr>
+<tr><td>WiFi</td><td>b/g/n</td><td>b/g/n</td><td>WiFi 6 (802.11ax)</td></tr>
+<tr><td>Flash</td><td>4-16M</td><td>8-16M</td><td>4-8M</td></tr>
+<tr><td>RAM</td><td>520K</td><td>512K+2M PSRAM</td><td>512K</td></tr>
+<tr><td>BLE 5.0 LR</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>USB CDC</td><td>&#x274c;</td><td>&#x2705;</td><td>&#x2705;</td></tr>
+<tr><td>Flash config</td><td>4 MB</td><td>4 MB</td><td>4 MB</td></tr>
+<tr><td>Power</td><td>~150 mA</td><td>~130 mA</td><td>~110 mA</td></tr>
+<tr><td><b>Rcmd</b></td><td>Compat</td><td>ML/PSRAM</td><td><b>Innovation</b></td></tr>
 </table>
-<p><b>ESP32-S2</b> has no BLE — only WiFi Beacon mode. <b>ESP32-C2</b> uses a 2 MB partition table. <b>ESP32-C6</b> is the newest RISC-V chip with WiFi 6 support.</p>
+<p><b>ESP32-C6</b> WiFi 6 OFDMA + 802.15.4 + Digital Signature HW — primary innovation target. <b>ESP32-S3</b> best for ML/PSRAM workloads.</p>
 
 <h4>Feature Support Matrix</h4>
 <table class="support-table">
-<tr><th>Feature</th><th>ESP32</th><th>S2</th><th>S3</th><th>C2</th><th>C3</th><th>C6</th></tr>
-<tr><td>WiFi Beacon (802.11)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>WiFi NAN</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="p">Partial</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>BLE 4.0 (Legacy)</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>BLE 5.0 LR Coded PHY</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>WebSerial Installer</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Web Config UI</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Demo Mode</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>MAVLink Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>MSP Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>NMEA 0183 Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Lock Level 1 (Signed)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Lock Level 2 (eFuse)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="p">Partial</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Status LED (GPIO)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>Analyzer Support</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><th>Feature</th><th>ESP32</th><th>S3</th><th>C6</th></tr>
+<tr><td>WiFi Beacon (802.11)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WiFi NAN</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 4.0 (Legacy)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 5.0 LR Coded PHY</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WiFi 6 (802.11ax)</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td></tr>
+<tr><td>802.15.4 / Thread</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Digital Signature HW</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td></tr>
+<tr><td>WebSerial Installer</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Web Config UI</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Demo Mode</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MAVLink Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>MSP Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>NMEA 0183 Input</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Lock Level 1 (Signed)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Lock Level 2 (eFuse)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Status LED (GPIO)</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>Analyzer Support</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
 <p><span class="tag tag-green">&#x2713; Supported</span> <span class="tag tag-red">&#x2717; Not supported</span> <span class="tag" style="background:#fff8e1;color:#e65100">Partial — limited or experimental</span></p>
 
 <h4>Which One to Choose?</h4>
 <ul>
-<li><b>ESP32-S3 (Recommended):</b> Best balance of features and power. BLE 5.0 Coded PHY (S=8) for longer BLE range. PSRAM for future expansion. Best for production builds.</li>
-<li><b>ESP32-C3 / C6:</b> Good budget/ modern option with BLE 5.0, RISC-V. Lower power. Good for compact builds.</li>
-<li><b>ESP32 (Original):</b> Works well but lacks BLE 5.0 Coded PHY. Good for existing hardware.</li>
-<li><b>ESP32-S2:</b> Budget option without BLE (WiFi Beacon only). Good for minimal builds.</li>
-<li><b>ESP32-C2:</b> Smallest/cheapest. 2 MB flash, BLE 5.0, RISC-V. Good for ultra-low-cost deployments.</li>
+<li><b>ESP32-C6 (Innovation Target):</b> WiFi 6 OFDMA, 802.15.4, Digital Signature HW. Lowest power, most modern. Primary target for long-range, secure, multi-link RID.</li>
+<li><b>ESP32-S3:</b> Best for ML on-device, PSRAM expansion, BLE 5.0 LR. Good for production builds needing extra compute.</li>
+<li><b>ESP32 (Original):</b> Compatible baseline. Lacks BLE 5.0 Coded PHY and modern features. Good for testing.</li>
 </ul>
+
+<h4>Kit Consigliati</h4>
+<table>
+<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Prezzo</th><th>Ideale per</th></tr>
+<tr>
+  <td><img src="images/esp32_devkitc.jpg" alt="ESP32 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>ESP32-DevKitC V4</td>
+  <td>ESP32</td><td>b/g/n</td><td>BLE 4.2</td><td>~5€</td>
+  <td>Prototipazione base, test</td>
+</tr>
+<tr>
+  <td><img src="images/esp32s3_devkitm1.png" alt="ESP32-S3 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>ESP32-S3-DevKitM-1</td>
+  <td>ESP32-S3</td><td>b/g/n</td><td>BLE 5.0 LR</td><td>~12€</td>
+  <td>ML on-device, PSRAM</td>
+</tr>
+<tr>
+  <td><img src="images/xiao_esp32c6.jpg" alt="XIAO ESP32-C6" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>Seeed XIAO ESP32-C6</td>
+  <td>ESP32-C6</td><td>WiFi 6</td><td>BLE 5.3</td><td>~5€ + 10€ GPS</td>
+  <td>Prodotto finale, taglia minima</td>
+</tr>
+</table>
+<p><b>Raccomandato:</b> XIAO ESP32-C6 + L76K GNSS — zero saldature, 21×18mm, USB-C, LiPo, U.FL. Vedi <a href="prototype_bom.md">BOM completo</a> e <a href="innovation_diy.md">confronto competitivo</a> per dettagli.</p>
 
 <h4>Pin Compatibility</h4>
 <table>
-<tr><th>Function</th><th>ESP32</th><th>ESP32-S2</th><th>ESP32-S3</th><th>ESP32-C2</th><th>ESP32-C3</th><th>ESP32-C6</th></tr>
-<tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO18</td><td>GPIO7</td><td>GPIO7</td><td>GPIO7</td></tr>
-<tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>4,5</td><td>0,1</td><td>0,1</td><td>0,1</td></tr>
-<tr><td>RGB LED R/G/B</td><td colspan="6">Configurable via Kconfig (any GPIO, default -1)</td></tr>
-<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td><td>GPIO9</td><td>GPIO9</td></tr>
+<tr><th>Function</th><th>ESP32</th><th>ESP32-S3</th><th>ESP32-C6</th></tr>
+<tr><td>UART RX (default)</td><td>GPIO16</td><td>GPIO18</td><td>GPIO7</td></tr>
+<tr><td>Alt UART RX</td><td>4,26</td><td>4,5</td><td>0,1</td></tr>
+<tr><td>RGB LED R/G/B</td><td colspan="3">Configurable via Kconfig (any GPIO, default -1)</td></tr>
+<tr><td>Boot button</td><td>GPIO0</td><td>GPIO0</td><td>GPIO9</td></tr>
 </table>
 <p>UART pins are configured in <code>main.c</code> via <code>uart_param_t</code>. RGB LED pins are set via menuconfig (<code>RID_LED_R/G/B_GPIO</code>).</p>
 </div>

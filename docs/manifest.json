@@ -14,35 +14,11 @@
       ]
     },
     {
-      "chipFamily": "ESP32-S2",
-      "parts": [
-        { "path": "firmware/esp32s2/bootloader.bin", "offset": 0x1000 },
-        { "path": "firmware/esp32s2/partition-table.bin", "offset": 0x8000 },
-        { "path": "firmware/esp32s2/esp-drone-remoteid.bin", "offset": 0x20000 }
-      ]
-    },
-    {
       "chipFamily": "ESP32-S3",
       "parts": [
         { "path": "firmware/esp32s3/bootloader.bin", "offset": 0x0 },
         { "path": "firmware/esp32s3/partition-table.bin", "offset": 0x8000 },
         { "path": "firmware/esp32s3/esp-drone-remoteid.bin", "offset": 0x20000 }
-      ]
-    },
-    {
-      "chipFamily": "ESP32-C2",
-      "parts": [
-        { "path": "firmware/esp32c2/bootloader.bin", "offset": 0x0 },
-        { "path": "firmware/esp32c2/partition-table.bin", "offset": 0x8000 },
-        { "path": "firmware/esp32c2/esp-drone-remoteid.bin", "offset": 0x20000 }
-      ]
-    },
-    {
-      "chipFamily": "ESP32-C3",
-      "parts": [
-        { "path": "firmware/esp32c3/bootloader.bin", "offset": 0x0 },
-        { "path": "firmware/esp32c3/partition-table.bin", "offset": 0x8000 },
-        { "path": "firmware/esp32c3/esp-drone-remoteid.bin", "offset": 0x20000 }
       ]
     },
     {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ESP DRONE REMOTEID [BETA] — Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C3/C2/C6/S2. ASTM F3411-22a WiFi Beacon and BLE Remote ID.">
+<meta name="description" content="ESP DRONE REMOTEID [BETA] — Open DroneID transmitter for ESP32/ESP32-S3/ESP32-C6. ASTM F3411-22a WiFi Beacon and BLE Remote ID.">
 <meta property="og:title" content="ESP DRONE REMOTEID [BETA] — Open DroneID Transmitter">
 <meta property="og:description" content="Open DroneID transmitter for ESP32 — WiFi Beacon, BLE 4.0/5.0, MAVLink, MSP, NMEA.">
 <meta property="og:type" content="website">
@@ -432,7 +432,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <div class="release-bar">
 <div class="rl-wrap">
 <div style="padding:12px 0;text-align:center">
-  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 6 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
+  <span style="font-size:.85em;color:#888">&#x1f6a7; Beta release v1.0.0-beta. All features implemented (demo mode, OTA with SHA-256, eFuse lock, 3 ESP32 targets). FC hardware verification in progress. See the <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID/blob/main/todolist/softwarestatus.md">software status</a> for details.</span>
 </div>
 </div>
 </div>
@@ -451,20 +451,8 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
     <span>ESP32</span>
   </label>
   <label class="chip-option">
-    <input type="radio" name="chip" value="ESP32-S2">
-    <span>ESP32-S2</span>
-  </label>
-  <label class="chip-option">
     <input type="radio" name="chip" value="ESP32-S3">
     <span>ESP32-S3</span>
-  </label>
-  <label class="chip-option">
-    <input type="radio" name="chip" value="ESP32-C2">
-    <span>ESP32-C2</span>
-  </label>
-  <label class="chip-option">
-    <input type="radio" name="chip" value="ESP32-C3">
-    <span>ESP32-C3</span>
   </label>
   <label class="chip-option">
     <input type="radio" name="chip" value="ESP32-C6">
@@ -520,7 +508,7 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <li><b>eFuse permanent lock:</b> one-time irreversible level 2 burn with "RID!" magic</li>
 <li><b>26 configurable parameters</b> matching ArduRemoteID feature set</li>
 <li><b>Browser-based flashing</b> via WebSerial &mdash; no toolchain needed</li>
-<li><b>6 ESP32 targets</b> via CI: ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C6</li>
+<li><b>3 ESP32 targets</b> via CI: ESP32, ESP32-S3, ESP32-C6</li>
 </ul>
 
 <h4>Regulatory Compliance</h4>
@@ -536,11 +524,11 @@ footer .fw-copy{font-size:.92em;color:var(--text-muted)}
 <h4>Technical Specifications</h4>
 <table>
 <tr><th>Parameter</th><th>Value</th></tr>
-<tr><td>MCU</td><td>ESP32, ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C6 (6 targets)</td></tr>
+<tr><td>MCU</td><td>ESP32, ESP32-S3, ESP32-C6 (3 targets)</td></tr>
 <tr><td>Radio</td><td>2.4 GHz WiFi + BLE 4.0/5.0</td></tr>
 <tr><td>WiFi Beacon</td><td>IEEE 802.11 b/g/n, 1-13 channels, configurable power 2-20 dBm + WiFi NAN</td></tr>
 <tr><td>BLE 4.0</td><td>Legacy advertising (SCAN_IND), configurable rate 0-5 Hz</td></tr>
-<tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C3/C6 only</td></tr>
+<tr><td>BLE 5.0</td><td>Coded PHY (S=8) long range, 0-5 Hz, S3/C6 only</td></tr>
 <tr><td>Demo mode</td><td>Built-in GPS patrol simulation (Rome Colosseum, 200m radius)</td></tr>
 <tr><td>UART</td><td>UART2 (GPIO16 RX default), baud 9600-921600</td></tr>
 <tr><td>Protocols</td><td>MAVLink v1/v2 (ardupilotmega), MSP v1, NMEA 0183</td></tr>
@@ -667,12 +655,12 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 
 <h4>ESP32 Support Overview</h4>
 <table class="support-table">
-<tr><th>Feature</th><th>ESP32</th><th>S2</th><th>S3</th><th>C2</th><th>C3</th><th>C6</th></tr>
-<tr><td>WiFi Beacon</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>BLE 4.0</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>BLE 5.0 LR</td><td class="n">&#x2717;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
-<tr><td>USB CDC</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><th>Feature</th><th>ESP32</th><th>S3</th><th>C6</th></tr>
+<tr><td>WiFi Beacon</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 4.0</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>BLE 5.0 LR</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>OTA Updates</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
+<tr><td>USB CDC</td><td class="n">&#x2717;</td><td class="y">&#x2713;</td><td class="y">&#x2713;</td></tr>
 </table>
 <p class="fw-info">Full matrix with all protocols, lock levels, and pin compatibility in <a href="guide.html#guide-variants">Technical Guide &rarr;</a></p>
 </div>
@@ -681,6 +669,30 @@ GPS TX &rarr; FC RX (unchanged)</pre>
 
 
 
+
+<h4>Kit Consigliati</h4>
+<table class="support-table">
+<tr><th>Kit</th><th>Board</th><th>Chip</th><th>WiFi</th><th>BLE</th><th>Prezzo</th><th>Ideale per</th></tr>
+<tr>
+  <td><img src="images/esp32_devkitc.jpg" alt="ESP32 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>ESP32-DevKitC V4</td>
+  <td>ESP32</td><td>b/g/n</td><td>BLE 4.2</td><td>~5€</td>
+  <td>Prototipazione base</td>
+</tr>
+<tr>
+  <td><img src="images/esp32s3_devkitm1.png" alt="ESP32-S3 DevKit" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>ESP32-S3-DevKitM-1</td>
+  <td>ESP32-S3</td><td>b/g/n</td><td>BLE 5.0 LR</td><td>~12€</td>
+  <td>ML on-device, PSRAM</td>
+</tr>
+<tr>
+  <td><img src="images/xiao_esp32c6.jpg" alt="XIAO ESP32-C6" style="max-width:120px;height:auto;border-radius:8px"></td>
+  <td>Seeed XIAO ESP32-C6</td>
+  <td>ESP32-C6</td><td>WiFi 6</td><td>BLE 5.3</td><td>~5€ + 10€ GPS</td>
+  <td>Prodotto finale, taglia minima</td>
+</tr>
+</table>
+<p class="fw-info"><b>Raccomandato:</b> XIAO ESP32-C6 + L76K GNSS — zero saldature, 21×18mm, USB-C, LiPo, U.FL. Vedi <a href="prototype_bom.md">BOM completo</a> per dettagli.</p>
 
 <!-- Full technical guide moved to guide.html -->
 <div style="margin:28px 0;text-align:center;background:var(--surface-alt);border:2px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;box-shadow:var(--shadow-md)">
