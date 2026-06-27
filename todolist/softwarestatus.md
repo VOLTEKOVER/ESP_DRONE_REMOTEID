@@ -125,8 +125,9 @@
 - Declares: `nvs_storage_init()`, `nvs_storage_save()`, `nvs_storage_load()`, `nvs_storage_erase()`.
 - **OK.**
 
-#### `led_status.h` (10 lines)
-- Declares: `led_status_init()`, `led_status_update()`.
+#### `led_status.h` (30 lines)
+- Declares: `led_status_init()`, `led_status_reconfigure()`, `led_status_set_state()`, `led_status_tx_flash()`, `led_status_tick()`.
+- Enum: `rid_led_state_t` (BOOT, NO_GPS, GPS_OK, DEMO, LOCKED, OTA, ERROR).
 - **OK.**
 
 #### `rid_patrol.h` (10 lines)
@@ -153,6 +154,7 @@
 - ✅ `force_tx` — FIXED: outer condition now only checks `latitude != 0.0` (removed `fix_type >= 2` redundancy).
 - ✅ Identity override: MAVLink ODID identity overwrites config identity when valid.
 - ✅ CLI: calls `cli_init()` at end of init sequence.
+- ✅ LED: uses new state machine API (`set_state` + `tx_flash` + `tick`).
 - **OK.**
 
 #### `wifi.c` (614 lines)
@@ -227,8 +229,12 @@
 - NVS persistence for `rid_config_t` in namespace `esp_rid`.
 - **OK.**
 
-#### `led_status.c` (76 lines)
-- RGB LED via 3 configurable GPIOs (Kconfig). Red=no fix, Green=fix OK, 80ms blink on TX.
+#### `led_status.c` (199 lines)
+- RGB LED via 3 configurable GPIOs (Kconfig) with LEDC PWM (5kHz, 8-bit).
+- State machine: 7 states with color + pattern encoding.
+- Patterns: SOLID, BLINK_1Hz, BLINK_4Hz, DOUBLE_BLINK, PULSE (triangular 2s), RAINBOW (cycling).
+- TX flash: 80ms white flash superimposed on base state.
+- States: BOOT (blue pulse), NO_GPS (yellow 1Hz), GPS_OK (green solid), DEMO (purple pulse), LOCKED (red double-blink), OTA (rainbow), ERROR (red 4Hz).
 - **OK.**
 
 #### `rid_patrol.c` (31 lines)
@@ -580,15 +586,15 @@
 | 21 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/mavlink_parser.h` | 40 | ✅ |
 | 22 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/web_config.h` | 15 | ✅ |
 | 23 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/nvs_storage.h` | 20 | ✅ |
-| 24 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/led_status.h` | 10 | ✅ |
+| 24 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/led_status.h` | 30 | ✅ |
 | 25 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/rid_patrol.h` | 10 | ✅ |
 | 26 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/include/cli.h` | 7 | ✅ |
 | 27 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/cli.c` | 283 | ✅ |
-| 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/esp_remote_id.c` | 447 | ✅ |
+| 28 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/esp_remote_id.c` | 458 | ✅ |
 | 29 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi.c` | 614 | ✅ |
 | 30 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/wifi_tx.c` | 204 | ✅ |
 | 31 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/ble_tx.c` | 183 | ✅ |
-| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 735 | ✅ |
+| 32 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/web_config.c` | 738 | ✅ |
 | 33 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/protocol_detect.c` | 75 | ✅ |
 | 34 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nmea_parser.c` | 136 | ✅ |
 | 35 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/msp_parser.c` | 126 | ✅ |
@@ -596,7 +602,7 @@
 | 37 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/mav2odid.c` | 636 | ✅ (partial use) |
 | 38 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/opendroneid.c` | 1477 | ✅ |
 | 39 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/nvs_storage.c` | 174 | ✅ |
-| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 76 | ✅ |
+| 40 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/led_status.c` | 199 | ✅ |
 | 41 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_patrol.c` | 31 | ✅ |
 | 42 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2340 | ✅ |
 | 43-122 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |

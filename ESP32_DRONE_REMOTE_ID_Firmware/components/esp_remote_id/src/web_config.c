@@ -17,6 +17,7 @@
 #include "esp_remote_id.h"
 #include "protocol_detect.h"
 #include "esp_efuse.h"
+#include "led_status.h"
 
 #define TAG "WEB_CFG"
 #define BUF_SIZE 4096
@@ -532,6 +533,8 @@ static esp_err_t handle_ota(httpd_req_t *req)
         httpd_resp_sendstr(req, "OTA failed: SHA-256 setup error");
         return ESP_FAIL;
     }
+
+    led_status_set_state(RID_LED_OTA);
 
     while ((ret = httpd_req_recv(req, buf, sizeof(buf))) > 0) {
         if (psa_hash_update(&sha_ctx, (const unsigned char *)buf, ret) != PSA_SUCCESS) {

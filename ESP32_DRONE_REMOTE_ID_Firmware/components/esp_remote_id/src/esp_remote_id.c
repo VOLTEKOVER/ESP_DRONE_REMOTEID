@@ -380,7 +380,7 @@ static void rid_task(void *arg)
                 }
 
                 bool tx = update_transmissions();
-                led_status_update(g_state.gps_valid, tx);
+                if (tx) led_status_tx_flash();
             }
         } else if (cfg_opts & RID_OPT_DEMO_MODE) {
             if (g_lock) xSemaphoreTake(g_lock, portMAX_DELAY);
@@ -402,15 +402,24 @@ static void rid_task(void *arg)
             if (g_lock) xSemaphoreGive(g_lock);
 
             bool tx = update_transmissions();
-            led_status_update(g_state.gps_valid, tx);
-        } else {
-            led_status_update(false, false);
+            if (tx) led_status_tx_flash();
         }
 
         uint32_t now_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
         if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
             g_state.gps_valid = false;
         }
+
+        if (g_config.lock_level >= 2) {
+            led_status_set_state(RID_LED_LOCKED);
+        } else if (cfg_opts & RID_OPT_DEMO_MODE) {
+            led_status_set_state(RID_LED_DEMO);
+        } else if (g_state.gps_valid) {
+            led_status_set_state(RID_LED_GPS_OK);
+        } else {
+            led_status_set_state(RID_LED_NO_GPS);
+        }
+        led_status_tick();
 
         if (cfg_opts & RID_OPT_PRINT_RID_MAVLINK) {
             ESP_LOGI(TAG, "RID uas=%s lat=%.6f lon=%.6f alt=%.1f speed=%.1f hdg=%d fix=%d sat=%u",
