@@ -25,7 +25,7 @@ typedef enum {
     PAT_RAINBOW,
 } pattern_t;
 
-static const struct {
+static const struct state_entry {
     struct rgb   color;
     pattern_t    pat;
     const char  *name;
@@ -195,10 +195,7 @@ void led_status_tick(void)
         return;
     }
 
-    const struct {
-        struct rgb  color;
-        pattern_t   pat;
-    } *st = &state_table[current_state];
+    const struct state_entry *st = &state_table[current_state];
 
     struct rgb out = {0,0,0};
     switch (st->pat) {
