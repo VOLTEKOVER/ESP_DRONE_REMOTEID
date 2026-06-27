@@ -91,8 +91,8 @@ static int cmd_status(int argc, char **argv)
            (unsigned long)state.transmissions_count,
            (unsigned long)state.wifi_bcn_count, (unsigned long)state.wifi_nan_count,
            (unsigned long)state.ble4_count, (unsigned long)state.ble5_count);
-    uint32_t free = esp_get_free_heap_size();
-    uint32_t total = heap_caps_get_total_size(MALLOC_CAP_DEFAULT);
+    uint32_t heap_free = esp_get_free_heap_size();
+    uint32_t heap_total = heap_caps_get_total_size(MALLOC_CAP_DEFAULT);
     int64_t us = esp_timer_get_time();
     uint32_t sec = (uint32_t)(us / 1000000);
     printf("  Heap      : %lu KB / %lu KB\n", (unsigned long)(heap_free / 1024), (unsigned long)(heap_total / 1024));
