@@ -9,10 +9,29 @@
 #define ESP_RID_MAX_KEY_LEN 256
 #define ESP_RID_NUM_KEYS 5
 
-#define RID_OPT_FORCE_ARM_OK      (1 << 0)
-#define RID_OPT_DONT_SAVE_BASIC_ID (1 << 1)
-#define RID_OPT_PRINT_RID_MAVLINK  (1 << 2)
-#define RID_OPT_DEMO_MODE          (1 << 3)
+#define RID_OPT_FORCE_ARM_OK          (1 << 0)
+#define RID_OPT_DONT_SAVE_BASIC_ID   (1 << 1)
+#define RID_OPT_PRINT_RID_MAVLINK    (1 << 2)
+#define RID_OPT_DEMO_MODE            (1 << 3)
+#define RID_OPT_KALMAN_FILTER        (1 << 4)
+#define RID_OPT_AUTH_ED25519         (1 << 5)
+#define RID_OPT_MAVLINK_ARM_STATUS   (1 << 6)
+#define RID_OPT_MAVLINK_OP_LOC_LOOP  (1 << 7)
+#define RID_OPT_IDENTITY_READY_GATE  (1 << 8)
+
+/* Max Authentication pages (ASTM F3411-22a) */
+#ifndef ODID_AUTH_MAX_PAGES
+#define ODID_AUTH_MAX_PAGES 16
+#endif
+#ifndef ODID_MESSAGE_SIZE
+#define ODID_MESSAGE_SIZE 25
+#endif
+/* Values used by identity readiness gate */
+#define INV_ALT  (-1000.0f)
+#define INV_SPEED_H 255
+#define INV_SPEED_V 63
+#define INV_DIR 361
+#define MAX_TIMESTAMP 0xFFFF
 
 typedef enum {
     RID_PROTOCOL_UNKNOWN = 0,
@@ -56,6 +75,14 @@ typedef struct {
     char uas_id_2[ESP_RID_MAX_STR_LEN + 1];
     uint8_t id_type_2;
     uint8_t ua_type_2;
+    /* Self-ID from MAVLink */
+    bool has_self_id;
+    uint8_t self_id_desc_type;
+    /* Authentication from MAVLink relay */
+    bool has_ext_auth;
+    uint8_t ext_auth_last_page;
+    uint16_t ext_auth_pages_received;
+    uint8_t ext_auth_pages[ODID_AUTH_MAX_PAGES][ODID_MESSAGE_SIZE];
 } rid_identity_t;
 
 typedef struct {
@@ -96,12 +123,38 @@ typedef struct {
     float operator_alt;
     char self_id_text[ESP_RID_MAX_STR_LEN + 1];
 
-    uint8_t options;
+    uint16_t options;
     int8_t lock_level;
 
     int8_t led_r_gpio;
     int8_t led_g_gpio;
     int8_t led_b_gpio;
+
+    /* WS2812 addressable RGB LED */
+    int8_t ws2812_gpio;
+    uint8_t ws2812_brightness;
+
+    /* External GPIO lighting outputs */
+    int8_t lighting_pins[5];
+    uint8_t lighting_patterns[5];
+    int16_t lighting_phase_offsets[5];
+
+    /* DroneCAN */
+    int8_t dronecan_rx_gpio;
+    int8_t dronecan_tx_gpio;
+    uint32_t dronecan_bitrate;
+
+    /* MAVLink USB transport */
+    bool mavlink_usb_enable;
+
+    /* OTA trigger GPIO (-1 = disabled) */
+    int8_t ota_trigger_gpio;
+
+    /* Authentication private key PEM */
+    char auth_private_key[512];
+
+    /* Startup delay before transmission (ms) */
+    uint32_t start_delay_ms;
 
     char public_keys[ESP_RID_NUM_KEYS][ESP_RID_MAX_KEY_LEN + 1];
 } rid_config_t;
@@ -117,6 +170,23 @@ typedef struct {
     uint32_t ble4_count;
     uint32_t ble5_count;
     bool gps_valid;
+
+    /* Identity readiness */
+    bool identity_ready;
+
+    /* MAVLink status */
+    bool mavlink_armed;
+    uint32_t mavlink_sysid;
+
+    /* Operator location */
+    double operator_lat;
+    double operator_lon;
+    float operator_alt;
+    uint32_t operator_position_updated_ms;
+    uint8_t operator_location_type;
+
+    /* Auth status */
+    bool auth_enabled;
 } rid_state_t;
 
 void esp_rid_init(void);

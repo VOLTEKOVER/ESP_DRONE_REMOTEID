@@ -15,6 +15,14 @@ idf_component_register(
         "src/led_status.c"
         "src/esp_remote_id.c"
         "src/rid_patrol.c"
+        "src/rid_kalman.c"
+        "src/rid_mavlink_tx.c"
+        "src/rid_auth.c"
+        "src/rid_ota.c"
+        "src/led_ws2812.c"
+        "src/rid_lighting.c"
+        "src/rid_dronecan.c"
+        "src/rid_mavlink_usb.c"
     INCLUDE_DIRS
         "include"
         "mavlink"
@@ -31,6 +39,8 @@ idf_component_register(
         esp_driver_uart
         esp_driver_gpio
         esp_driver_ledc
+        esp_driver_rmt
+        esp_driver_twai
         mbedtls
         efuse
     EMBED_TXTFILES

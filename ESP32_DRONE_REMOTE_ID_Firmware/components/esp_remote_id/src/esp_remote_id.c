@@ -19,6 +19,14 @@
 #include "led_status.h"
 #include "rid_patrol.h"
 #include "cli.h"
+#include "rid_kalman.h"
+#include "rid_mavlink_tx.h"
+#include "rid_auth.h"
+#include "rid_ota.h"
+#include "led_ws2812.h"
+#include "rid_lighting.h"
+#include "rid_dronecan.h"
+#include "rid_mavlink_usb.h"
 
 #define TAG "ESP_RID"
 
@@ -32,6 +40,7 @@ static rid_config_t g_config;
 static rid_state_t g_state;
 static bool g_running = false;
 static SemaphoreHandle_t g_lock = NULL;
+static rid_kalman_3d_t g_kalman;
 
 static void default_config(rid_config_t *cfg)
 {
@@ -96,21 +105,68 @@ static void default_config(rid_config_t *cfg)
         -1;
 #endif
 
+    cfg->ws2812_gpio = -1;
+    cfg->ws2812_brightness = 16;
+
+    memset(cfg->lighting_pins, -1, sizeof(cfg->lighting_pins));
+    memset(cfg->lighting_patterns, 0, sizeof(cfg->lighting_patterns));
+    memset(cfg->lighting_phase_offsets, 0, sizeof(cfg->lighting_phase_offsets));
+
+    cfg->dronecan_rx_gpio = -1;
+    cfg->dronecan_tx_gpio = -1;
+    cfg->dronecan_bitrate = 1000000;
+
+    cfg->mavlink_usb_enable = false;
+
+    cfg->ota_trigger_gpio = -1;
+
+    cfg->auth_private_key[0] = '\0';
+
+    cfg->start_delay_ms = 10000;
+
     for (int i = 0; i < ESP_RID_NUM_KEYS; i++)
         cfg->public_keys[i][0] = '\0';
+}
+
+static bool identity_is_sane(const rid_identity_t *id)
+{
+    if (id->uas_id[0] == '\0') return false;
+    if (strstr((const char *)id->uas_id, "ESP32-RID-") == (const char *)id->uas_id) return false;
+    if (strstr((const char *)id->operator_id, "OP-UNKNOWN") != NULL) return false;
+    if (id->operator_id[0] == '\0') return false;
+    return true;
+}
+
+static bool position_is_sane(const rid_gps_data_t *gps)
+{
+    if (gps->latitude < -90.0 || gps->latitude > 90.0) return false;
+    if (gps->longitude < -180.0 || gps->longitude > 180.0) return false;
+    return true;
 }
 
 void esp_rid_init(void)
 {
     ESP_LOGI(TAG, "ESP DRONE REMOTEID v%s initializing", ESP_RID_VERSION);
 
+    nvs_storage_init();
+    default_config(&g_config);
+    nvs_storage_load(&g_config);
+
+    /* Check OTA mode (reads ota_trigger_gpio from config) */
+    rid_ota_check_and_run(&g_config);
+
     g_lock = xSemaphoreCreateMutex();
 
-    default_config(&g_config);
     memset(&g_state, 0, sizeof(rid_state_t));
 
-    nvs_storage_init();
-    nvs_storage_load(&g_config);
+    /* Apply BLE TX power (default 9 dBm) */
+    ble_tx_set_power(9);
+
+    /* Startup delay */
+    if (g_config.start_delay_ms > 0) {
+        ESP_LOGI(TAG, "Startup delay %lu ms", (unsigned long)g_config.start_delay_ms);
+        vTaskDelay(pdMS_TO_TICKS(g_config.start_delay_ms));
+    }
 
     protocol_detect_init();
     nmea_parser_init();
@@ -122,6 +178,40 @@ void esp_rid_init(void)
 
     wifi_tx_init();
     ble_tx_init();
+
+    /* MAVLink bidirectional link */
+    if (g_config.options & (RID_OPT_MAVLINK_ARM_STATUS | RID_OPT_MAVLINK_OP_LOC_LOOP)) {
+        rid_mavlink_tx_init();
+        xTaskCreate(rid_mavlink_tx_task, "rid_mavlink_tx", 2048, NULL, 3, NULL);
+    }
+
+    /* Authentication */
+    if (g_config.options & RID_OPT_AUTH_ED25519) {
+        rid_auth_init(g_config.auth_private_key);
+    }
+
+    /* WS2812 addressable LED */
+    led_ws2812_init(g_config.ws2812_gpio, g_config.ws2812_brightness);
+
+    /* External lighting outputs */
+    for (int i = 0; i < RID_LIGHTING_MAX_OUTPUTS; i++) {
+        if (g_config.lighting_pins[i] >= 0) {
+            rid_lighting_init(g_config.lighting_pins, g_config.lighting_patterns,
+                             g_config.lighting_phase_offsets);
+            break;
+        }
+    }
+
+    /* DroneCAN */
+    if (g_config.dronecan_rx_gpio >= 0 && g_config.dronecan_tx_gpio >= 0) {
+        rid_dronecan_init(g_config.dronecan_rx_gpio, g_config.dronecan_tx_gpio,
+                         g_config.dronecan_bitrate);
+    }
+
+    /* USB Serial MAVLink */
+    if (g_config.mavlink_usb_enable) {
+        rid_mavlink_usb_init();
+    }
 
     if (strcmp(g_config.uas_id, "ESP32-RID-001") == 0 ||
         strcmp(g_config.operator_id, "OP-UNKNOWN") == 0) {
@@ -137,6 +227,8 @@ void esp_rid_init(void)
 
     cli_init();
 
+    rid_kalman_init(&g_kalman);
+
     ESP_LOGI(TAG, "\xE2\x9C\x93 Remote ID initialized");
 }
 
@@ -151,6 +243,7 @@ void esp_rid_set_config(const rid_config_t *config)
         }
         mavlink_parser_set_sysid_filter(g_config.mavlink_sysid);
         led_status_reconfigure(g_config.led_r_gpio, g_config.led_g_gpio, g_config.led_b_gpio);
+        led_ws2812_init(g_config.ws2812_gpio, g_config.ws2812_brightness);
         xSemaphoreGive(g_lock);
     }
 }
@@ -200,12 +293,15 @@ static bool rate_allowed(int64_t *last_us, float rate_hz)
 
 static uint8_t g_nan_counter = 0;
 
-/* ---------- Demo / Patrol simulation (delegated to rid_patrol.c) ---------- */
-
 static bool update_transmissions(void)
 {
     if (!g_state.gps_valid && !g_config.bcast_powerup) return false;
     if (g_state.active_protocol == RID_PROTOCOL_UNKNOWN) return false;
+
+    /* Identity readiness gate */
+    if (g_config.options & RID_OPT_IDENTITY_READY_GATE) {
+        if (!g_state.identity_ready) return false;
+    }
 
     bool tx = false;
 
@@ -271,17 +367,26 @@ static void print_status_box(void)
 
     const char *gps_str = g_state.gps_valid ? "YES" : "NO";
     const char *proto = proto_name(g_state.active_protocol);
+    const char *kal_str;
+    if (g_config.options & RID_OPT_KALMAN_FILTER)
+        kal_str = rid_kalman_valid_age(&g_kalman, esp_timer_get_time()) ? "ON" : "INIT";
+    else
+        kal_str = "OFF";
+
+    const char *rdy_str = g_state.identity_ready ? "YES" : "NO";
 
     printf(C_GRN);
     printf("\n");
-    printf("  \xE2\x94\x8C\xE2\x94\x80 ESP Drone Remote ID \xE2\x94\x80 status \xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x90\n");
+    printf("  \xE2\x94\x8C\xE2\x94\x80 ESP Drone Remote ID \xE2\x94\x80 status \xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x90\n");
     printf("  \xE2\x94\x82  Protocol  : %-33s \xE2\x94\x82\n", proto);
     printf("  \xE2\x94\x82  GPS Fix   : %-3s           (%d/%d)       \xE2\x94\x82\n",
            gps_str, g_state.gps.fix_type, g_state.gps.satellites);
     printf("  \xE2\x94\x82  Lat / Lon : %s / %-12s       \xE2\x94\x82\n", lat_str, lon_str);
     printf("  \xE2\x94\x82  TX count  : %-35lu \xE2\x94\x82\n",
            (unsigned long)g_state.transmissions_count);
-    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
+    printf("  \xE2\x94\x82  Kalman    : %-33s \xE2\x94\x82\n", kal_str);
+    printf("  \xE2\x94\x82  Identity  : %-33s \xE2\x94\x82\n", rdy_str);
+    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
     printf(C_RST);
 }
 
@@ -299,7 +404,7 @@ static void print_system_box(void)
            (unsigned long)(heap_free / 1024), (unsigned long)(heap_total / 1024));
     printf("  \xE2\x94\x82  Uptime    : %02lu:%02lu:%02lu                                      \xE2\x94\x82\n",
            (unsigned long)h, (unsigned long)m, (unsigned long)s);
-    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
+    printf("  \xE2\x94\x94\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x98\n");
     printf(C_RST);
 }
 
@@ -307,6 +412,7 @@ static void rid_task(void *arg)
 {
     g_state.active_protocol = RID_PROTOCOL_UNKNOWN;
     uint32_t log_cycle = 0;
+    bool had_gps = false;
 
     while (g_running) {
         rid_gps_data_t gps_data;
@@ -316,7 +422,7 @@ static void rid_task(void *arg)
 
         if (g_lock) xSemaphoreTake(g_lock, portMAX_DELAY);
         rid_protocol_t cfg_proto = g_config.protocol;
-        uint8_t cfg_opts = g_config.options;
+        uint16_t cfg_opts = g_config.options;
         if (g_lock) xSemaphoreGive(g_lock);
 
         if (cfg_proto == RID_PROTOCOL_AUTO)
@@ -326,28 +432,45 @@ static void rid_task(void *arg)
 
         g_state.active_protocol = proto;
 
+        bool have_data = false;
+
         switch (proto) {
         case RID_PROTOCOL_NMEA:
-            nmea_parser_get(&gps_data);
+            have_data = nmea_parser_get(&gps_data);
             break;
         case RID_PROTOCOL_MSP:
-            msp_parser_get(&gps_data);
+            have_data = msp_parser_get(&gps_data);
             break;
         case RID_PROTOCOL_MAVLINK:
-            mavlink_parser_get(&gps_data);
+            have_data = mavlink_parser_get(&gps_data);
             break;
         default:
             break;
         }
 
-        if (gps_data.latitude != 0.0) {
+        /* Try DroneCAN as secondary input */
+        if (!have_data && rid_dronecan_is_active()) {
+            have_data = rid_dronecan_get(&gps_data);
+            if (have_data) g_state.active_protocol = RID_PROTOCOL_NONE;
+        }
+
+        had_gps = false;
+
+        if (have_data && gps_data.latitude != 0.0) {
             bool force_tx = (cfg_opts & RID_OPT_FORCE_ARM_OK) && gps_data.armed;
 
             if (force_tx || gps_data.fix_type >= 2) {
+                had_gps = true;
                 if (g_lock) xSemaphoreTake(g_lock, portMAX_DELAY);
                 memcpy(&g_state.gps, &gps_data, sizeof(rid_gps_data_t));
                 g_state.gps_valid = true;
                 g_state.last_update_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+
+                /* MAVLink arm status */
+                if (proto == RID_PROTOCOL_MAVLINK) {
+                    mavlink_parser_get_armed(&g_state.mavlink_armed);
+                }
+                g_state.gps.armed = g_state.mavlink_armed;
 
                 rid_identity_t mav_id;
                 bool have_mav_id = false;
@@ -368,9 +491,20 @@ static void rid_task(void *arg)
                     g_state.identity.ua_type_2 = g_config.ua_type_2;
                 }
 
-                g_state.gps.operator_lat = g_config.operator_lat;
-                g_state.gps.operator_lon = g_config.operator_lon;
-                g_state.gps.operator_alt = g_config.operator_alt;
+                /* Update operator location from MAVLink */
+                double op_lat, op_lon;
+                float op_alt;
+                if (mavlink_parser_get_operator_location(&op_lat, &op_lon, &op_alt)) {
+                    g_state.operator_lat = op_lat;
+                    g_state.operator_lon = op_lon;
+                    g_state.operator_alt = op_alt;
+                    g_state.operator_position_updated_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    g_state.operator_location_type = 1;
+                } else {
+                    g_state.gps.operator_lat = g_config.operator_lat;
+                    g_state.gps.operator_lon = g_config.operator_lon;
+                    g_state.gps.operator_alt = g_config.operator_alt;
+                }
 
                 if (g_lock) xSemaphoreGive(g_lock);
 
@@ -379,13 +513,20 @@ static void rid_task(void *arg)
                     g_state.identity.uas_id_2[0] = '\0';
                 }
 
-                bool tx = update_transmissions();
-                if (tx) led_status_tx_flash();
+                /* Identity readiness gate */
+                if ((cfg_opts & RID_OPT_IDENTITY_READY_GATE) &&
+                    identity_is_sane(&g_state.identity) &&
+                    position_is_sane(&g_state.gps)) {
+                    g_state.identity_ready = true;
+                } else if (!(cfg_opts & RID_OPT_IDENTITY_READY_GATE)) {
+                    g_state.identity_ready = true;
+                }
             }
         } else if (cfg_opts & RID_OPT_DEMO_MODE) {
             if (g_lock) xSemaphoreTake(g_lock, portMAX_DELAY);
             rid_patrol_tick(&g_state.gps);
             g_state.gps_valid = true;
+            had_gps = true;
             g_state.last_update_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
             g_state.active_protocol = RID_PROTOCOL_NONE;
 
@@ -401,13 +542,47 @@ static void rid_task(void *arg)
 
             if (g_lock) xSemaphoreGive(g_lock);
 
-            bool tx = update_transmissions();
-            if (tx) led_status_tx_flash();
+            g_state.identity_ready = true;
+        }
+
+        bool kalman_en = (cfg_opts & RID_OPT_KALMAN_FILTER) && !(cfg_opts & RID_OPT_DEMO_MODE);
+        uint64_t now_us = kalman_en ? esp_timer_get_time() : 0;
+        if (kalman_en) {
+
+            if (had_gps && gps_data.latitude != 0.0 && gps_data.fix_type >= 2) {
+                rid_kalman_update(&g_kalman, gps_data.latitude, gps_data.longitude,
+                                 gps_data.altitude_msl, now_us);
+            }
+
+            rid_kalman_predict(&g_kalman, now_us);
+
+            if (rid_kalman_valid_age(&g_kalman, now_us)) {
+                double klat, klon;
+                float kalt, kspeed, kclimb;
+                int16_t kheading;
+                rid_kalman_get(&g_kalman, &klat, &klon, &kalt, &kspeed, &kclimb, &kheading);
+                g_state.gps.latitude = klat;
+                g_state.gps.longitude = klon;
+                g_state.gps.altitude_msl = kalt;
+                g_state.gps.speed = kspeed;
+                g_state.gps.speed_vertical = kclimb;
+                g_state.gps.heading = kheading;
+                g_state.gps_valid = true;
+            } else if (!had_gps) {
+                g_state.gps_valid = false;
+            }
         }
 
         uint32_t now_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
-        if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
-            g_state.gps_valid = false;
+        if (!kalman_en || !rid_kalman_valid_age(&g_kalman, now_us)) {
+            if (g_state.gps_valid && (now_ms - g_state.last_update_ms > 10000)) {
+                g_state.gps_valid = false;
+            }
+        }
+
+        if (had_gps) {
+            bool tx = update_transmissions();
+            if (tx) led_status_tx_flash();
         }
 
         if (g_config.lock_level >= 2) {
@@ -421,12 +596,24 @@ static void rid_task(void *arg)
         }
         led_status_tick();
 
+        /* WS2812 LED (if configured) */
+        if (g_state.gps_valid) {
+            led_ws2812_set_rgb(0, 255, 0);
+        } else {
+            led_ws2812_set_rgb(255, 200, 0);
+        }
+
+        /* External lighting outputs */
+        rid_lighting_set_state(g_state.mavlink_armed, g_state.gps_valid);
+        rid_lighting_tick();
+
         if (cfg_opts & RID_OPT_PRINT_RID_MAVLINK) {
-            ESP_LOGI(TAG, "RID uas=%s lat=%.6f lon=%.6f alt=%.1f speed=%.1f hdg=%d fix=%d sat=%u",
+            ESP_LOGI(TAG, "RID uas=%s lat=%.6f lon=%.6f alt=%.1f speed=%.1f hdg=%d fix=%d sat=%u ready=%d",
                 g_state.identity.uas_id,
                 g_state.gps.latitude, g_state.gps.longitude,
                 (double)g_state.gps.altitude_msl, (double)g_state.gps.speed,
-                g_state.gps.heading, g_state.gps.fix_type, g_state.gps.satellites);
+                g_state.gps.heading, g_state.gps.fix_type, g_state.gps.satellites,
+                g_state.identity_ready);
         }
 
         log_cycle++;

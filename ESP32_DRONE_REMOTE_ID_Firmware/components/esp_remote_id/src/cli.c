@@ -43,6 +43,7 @@ static int cmd_patrol(int argc, char **argv);
 static int cmd_transmit(int argc, char **argv);
 static int cmd_mac(int argc, char **argv);
 static int cmd_uptime(int argc, char **argv);
+static int cmd_kalman(int argc, char **argv);
 
 typedef struct { const char *name; const char *help; int (*func)(int, char**); } cmd_t;
 
@@ -61,6 +62,7 @@ static const cmd_t cmds[] = {
     { "transmit", "Show/set TX: transmit <wifi_bcn|wifi_nan|ble4|ble5|all> <on|off>", cmd_transmit },
     { "mac",      "Show MAC addresses", cmd_mac },
     { "uptime",   "Show system uptime", cmd_uptime },
+    { "kalman",   "Show/set Kalman filter: kalman [on|off]", cmd_kalman },
 };
 #define NCMDS (sizeof(cmds) / sizeof(cmds[0]))
 
@@ -97,6 +99,7 @@ static int cmd_status(int argc, char **argv)
     uint32_t sec = (uint32_t)(us / 1000000);
     printf("  Heap      : %lu KB / %lu KB\n", (unsigned long)(heap_free / 1024), (unsigned long)(heap_total / 1024));
     printf("  Uptime    : %02lu:%02lu:%02lu\n", (unsigned long)(sec / 3600), (unsigned long)((sec % 3600) / 60), (unsigned long)(sec % 60));
+    printf("  Kalman    : %s\n", (cfg.options & RID_OPT_KALMAN_FILTER) ? "ON" : "OFF");
     printf("  Lock lvl  : %d\n\n", cfg.lock_level);
     return 0;
 }
@@ -122,7 +125,8 @@ static int cmd_config(int argc, char **argv)
     printf("  BLE4        : %.1f Hz  power=%.1f dBm\n", (double)cfg.ble4_rate_hz, (double)cfg.ble4_power_dbm);
     printf("  BLE5        : %.1f Hz  power=%.1f dBm\n", (double)cfg.ble5_rate_hz, (double)cfg.ble5_power_dbm);
     printf("  Operator    : %.6f / %.6f  alt=%.1f\n", cfg.operator_lat, cfg.operator_lon, (double)cfg.operator_alt);
-    printf("  Options     : 0x%02x\n", cfg.options);
+    printf("  Options     : 0x%02x  (Kalman=%s)\n", cfg.options,
+           (cfg.options & RID_OPT_KALMAN_FILTER) ? "ON" : "OFF");
     printf("  Web server  : %s\n", cfg.webserver_en ? "enabled" : "disabled");
     printf("  Lock level  : %d\n\n", cfg.lock_level);
     return 0;
@@ -252,6 +256,25 @@ static int cmd_uptime(int argc, char **argv)
     int64_t us = esp_timer_get_time();
     uint32_t sec = (uint32_t)(us / 1000000);
     printf("  Uptime: %02lu:%02lu:%02lu\n", (unsigned long)(sec / 3600), (unsigned long)((sec % 3600) / 60), (unsigned long)(sec % 60));
+    return 0;
+}
+
+static int cmd_kalman(int argc, char **argv)
+{
+    rid_config_t cfg;
+    esp_rid_get_config(&cfg);
+    if (argc >= 2) {
+        if (strcasecmp(argv[1], "on") == 0)
+            cfg.options |= RID_OPT_KALMAN_FILTER;
+        else if (strcasecmp(argv[1], "off") == 0)
+            cfg.options &= ~RID_OPT_KALMAN_FILTER;
+        else {
+            printf("Usage: kalman [on|off]\n");
+            return 1;
+        }
+        esp_rid_set_config(&cfg);
+    }
+    printf("Kalman filter: %s\n", (cfg.options & RID_OPT_KALMAN_FILTER) ? "ON" : "OFF");
     return 0;
 }
 

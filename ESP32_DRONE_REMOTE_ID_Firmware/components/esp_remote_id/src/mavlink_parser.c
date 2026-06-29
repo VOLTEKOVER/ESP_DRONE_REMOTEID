@@ -21,16 +21,70 @@ static mavlink_status_t g_mav_status;
 static uint8_t g_mav_buf[MAV_RX_BUF];
 static uint8_t g_sysid_filter = 0;
 
+/* Extended state */
+static bool g_has_armed = false;
+static bool g_armed = false;
+static uint8_t g_mav_sysid = 0;
+static double g_operator_lat = 0.0;
+static double g_operator_lon = 0.0;
+static float g_operator_alt = 0.0f;
+static uint32_t g_operator_location_update = 0;
+
 void mavlink_parser_init(void)
 {
     memset(&g_last_gps, 0, sizeof(rid_gps_data_t));
     memset(&g_last_identity, 0, sizeof(rid_identity_t));
     memset(&g_mav_status, 0, sizeof(g_mav_status));
+    g_has_armed = false;
+    g_armed = false;
+    g_mav_sysid = 0;
+    g_operator_lat = 0.0;
+    g_operator_lon = 0.0;
+    g_operator_alt = 0.0f;
+    g_operator_location_update = 0;
 }
 
 void mavlink_parser_set_sysid_filter(uint8_t sysid)
 {
     g_sysid_filter = sysid;
+}
+
+bool mavlink_parser_get_sysid(uint8_t *sysid)
+{
+    if (g_mav_sysid != 0) {
+        *sysid = g_mav_sysid;
+        return true;
+    }
+    return false;
+}
+
+bool mavlink_parser_get_armed(bool *armed)
+{
+    if (g_has_armed) {
+        *armed = g_armed;
+        return true;
+    }
+    return false;
+}
+
+bool mavlink_parser_get_operator_location(double *lat, double *lon, float *alt)
+{
+    if (g_operator_location_update != 0 &&
+        (xTaskGetTickCount() * portTICK_PERIOD_MS - g_operator_location_update) < 30000) {
+        *lat = g_operator_lat;
+        *lon = g_operator_lon;
+        *alt = g_operator_alt;
+        return true;
+    }
+    return false;
+}
+
+void mavlink_parser_set_operator_location(double lat, double lon, float alt)
+{
+    g_operator_lat = lat;
+    g_operator_lon = lon;
+    g_operator_alt = alt;
+    g_operator_location_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
 }
 
 bool mavlink_parser_get(rid_gps_data_t *gps)
@@ -43,6 +97,8 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
         for (int i = 0; i < len; i++) {
             if (mavlink_parse_char(MAVLINK_COMM_0, g_mav_buf[i], &msg, &status)) {
                 if (g_sysid_filter != 0 && msg.sysid != g_sysid_filter) continue;
+
+                g_mav_sysid = msg.sysid;
 
                 switch (msg.msgid) {
                 case MAVLINK_MSG_ID_GLOBAL_POSITION_INT: {
@@ -95,8 +151,11 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                     break;
                 }
                 case MAVLINK_MSG_ID_HEARTBEAT: {
-                    const uint8_t *p = (const uint8_t *)msg.payload64;
-                    g_last_gps.armed = (p[2] & 128) != 0;
+                    mavlink_heartbeat_t hb;
+                    mavlink_msg_heartbeat_decode(&msg, &hb);
+                    g_armed = (hb.base_mode & MAV_MODE_FLAG_SAFETY_ARMED) != 0;
+                    g_has_armed = true;
+                    g_last_gps.armed = g_armed;
                     break;
                 }
                 case MAVLINK_MSG_ID_OPEN_DRONE_ID_LOCATION: {
@@ -135,12 +194,56 @@ bool mavlink_parser_get(rid_gps_data_t *gps)
                     g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
                     break;
                 }
+
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_SELF_ID: {
+                    mavlink_open_drone_id_self_id_t odid_self;
+                    mavlink_msg_open_drone_id_self_id_decode(&msg, &odid_self);
+                    int text_len = ODID_ID_SIZE;
+                    if (text_len > ESP_RID_MAX_STR_LEN) text_len = ESP_RID_MAX_STR_LEN;
+                    memcpy(g_last_identity.self_id_text, odid_self.description, text_len);
+                    g_last_identity.self_id_text[text_len] = '\0';
+                    g_last_identity.self_id_desc_type = odid_self.description_type;
+                    g_last_identity.has_self_id = true;
+                    g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_AUTHENTICATION: {
+                    mavlink_open_drone_id_authentication_t odid_auth;
+                    mavlink_msg_open_drone_id_authentication_decode(&msg, &odid_auth);
+                    if (odid_auth.data_page < ODID_AUTH_MAX_PAGES) {
+                        memcpy(g_last_identity.ext_auth_pages[odid_auth.data_page],
+                               odid_auth.authentication_data, ODID_MESSAGE_SIZE);
+                        g_last_identity.ext_auth_last_page = odid_auth.last_page_index;
+                        g_last_identity.ext_auth_pages_received |= (1 << odid_auth.data_page);
+                        g_last_identity.has_ext_auth = true;
+                    }
+                    g_last_identity_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    break;
+                }
                 case MAVLINK_MSG_ID_OPEN_DRONE_ID_SYSTEM: {
                     mavlink_open_drone_id_system_t odid_sys;
                     mavlink_msg_open_drone_id_system_decode(&msg, &odid_sys);
                     g_last_gps.latitude = odid_sys.operator_latitude / 1e7;
                     g_last_gps.longitude = odid_sys.operator_longitude / 1e7;
                     g_last_gps.satellites = odid_sys.area_count;
+                    g_operator_lat = odid_sys.operator_latitude / 1e7;
+                    g_operator_lon = odid_sys.operator_longitude / 1e7;
+                    g_operator_alt = odid_sys.operator_altitude_geo;
+                    g_operator_location_update = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                    break;
+                }
+                case MAVLINK_MSG_ID_OPEN_DRONE_ID_MESSAGE_PACK: {
+                    mavlink_open_drone_id_message_pack_t pack;
+                    mavlink_msg_open_drone_id_message_pack_decode(&msg, &pack);
+                    for (int p = 0; p < pack.msg_pack_size && p < 9; p++) {
+                        if (pack.single_message_size == 0) break;
+                        const uint8_t *submsg = pack.messages + p * 25;
+                        if (submsg[0] == 0) break;
+                        switch (submsg[0]) {
+                        case 0:  break;
+                        default: break;
+                        }
+                    }
                     break;
                 }
                 default:

@@ -6,5 +6,6 @@
 void ble_tx_init(void);
 bool ble_tx_transmit_legacy(rid_gps_data_t *gps, rid_identity_t *identity);
 bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity);
+void ble_tx_set_power(int8_t dbm);
 
 #endif

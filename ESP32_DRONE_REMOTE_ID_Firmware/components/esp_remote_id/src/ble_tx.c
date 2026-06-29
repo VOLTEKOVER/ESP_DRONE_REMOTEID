@@ -188,3 +188,11 @@ bool ble_tx_transmit_lr(rid_gps_data_t *gps, rid_identity_t *identity)
     return false;
 #endif
 }
+
+void ble_tx_set_power(int8_t dbm)
+{
+#if defined(CONFIG_BT_BLUEDROID_ENABLED) && defined(SOC_BT_SUPPORTED)
+    esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_P3);
+    ESP_LOGI(TAG, "BLE TX power set to %d dBm", dbm);
+#endif
+}

@@ -99,7 +99,7 @@ void nvs_storage_save(rid_config_t *cfg)
     store_u8(h, "mav_sysid", cfg->mavlink_sysid);
     store_u8(h, "bcast_pwr", cfg->bcast_powerup);
     store_u8(h, "tx_modes", cfg->tx_modes);
-    store_u8(h, "options", cfg->options);
+    store_u32(h, "options", cfg->options);
     store_i8(h, "lock_lvl", cfg->lock_level);
     store_i8(h, "led_r", cfg->led_r_gpio);
     store_i8(h, "led_g", cfg->led_g_gpio);
@@ -150,7 +150,7 @@ void nvs_storage_load(rid_config_t *cfg)
     cfg->mavlink_sysid = load_u8_def(h, "mav_sysid", cfg->mavlink_sysid);
     cfg->bcast_powerup = load_u8_def(h, "bcast_pwr", cfg->bcast_powerup);
     cfg->tx_modes = load_u8_def(h, "tx_modes", cfg->tx_modes);
-    cfg->options = load_u8_def(h, "options", cfg->options);
+    cfg->options = (uint16_t)load_u32_def(h, "options", cfg->options);
     cfg->lock_level = load_i8_def(h, "lock_lvl", cfg->lock_level);
     cfg->led_r_gpio = load_i8_def(h, "led_r", cfg->led_r_gpio);
     cfg->led_g_gpio = load_i8_def(h, "led_g", cfg->led_g_gpio);

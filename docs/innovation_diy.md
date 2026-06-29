@@ -205,6 +205,69 @@ What we have that BS doesn't:
 - Offline geofence (no-fly zones loaded from SD)
 - Dronetag has no SD
 
+### 6. Ed25519 Authentication (F3411-22a) ★★★★★
+- Sign all 4 mandatory ODID messages with Ed25519 per broadcast cycle
+- 4 auth pages distributed alongside base messages
+- PKI hierarchy: CA root → device certificate → per-device key
+- NVS private key provisioning + optional compile-time embedded key
+- Already implemented in peinser/esp-remoteid — port to this codebase
+- No extra HW required (ESP32 has SHA256 + RNG)
+
+### 7. MAVLink Bidirectional Status ★★★★★
+- Transmit HEARTBEAT (component MAV_TYPE_ODID) back to flight controller
+- Transmit OPEN_DRONE_ID_ARM_STATUS (GOOD_TO_ARM / PRE_ARM_FAIL)
+- Enables ArduPilot DID pre-arm gating: no RID → no takeoff
+- Operator-location freshness loop: re-stamp fixed operator position autonomously
+- Requires TX UART GPIO (already present in config)
+- Already implemented in peinser/esp-remoteid
+
+### 8. OTA Update Server ★★★★☆
+- Wi-Fi AP mode on trigger (GPIO button or always-on)
+- HTTP server with endpoints: /status, /update, /nvs, /rollback, /factory-reset
+- OTA dual-slot partition management (already have ota_0/ota_1 layout)
+- SHA-256 firmware validation (already mandatory in web_config.c)
+- AP MAC address randomization for privacy
+- Already implemented in peinser/esp-remoteid
+
+### 9. DroneCAN Input ★★★☆☆
+- TWAI/CAN controller receive DroneCAN frames
+- Decode uavcan.equipment.gnss.Fix2 for position
+- Decode custom com.peinser.remoteid.Identity for UAS/Operator ID
+- CAN transceiver required (~3€ external module)
+- Already implemented in peinser/esp-remoteid
+
+### 10. WS2812 RGB LED (RMT) ★★★☆☆
+- Replace or augment LEDC PWM LED driver with addressable RGB
+- Single GPIO drives RGB LED with RMT waveform
+- Simplifies wiring (3 GPIOs → 1 GPIO)
+- Enables addressable patterns not possible with PWM
+- Already implemented in peinser/esp-remoteid
+
+### 11. External GPIO Lighting Outputs ★★★☆☆
+- Up to 5 independently configurable trigger outputs
+- Patterns: solid, beacon 1Hz short/50%, single/double/triple strobe, fast strobe
+- Separate from onboard RGB — transistor/MOSFET drivers for aviation lights
+- Already implemented in peinser/esp-remoteid
+
+### 12. Flash Encryption (eFuse) ★★★★☆
+- AES-256 flash encryption on first boot
+- Development mode (reversible) → Release mode (permanent)
+- Protects NVS private key and firmware at rest
+- OTA update still works in encrypted mode
+- Already implemented in peinser/esp-remoteid
+
+### 13. Cloudbuild Web Configurator ★★★☆☆
+- Browser form → sdkconfig overlay → GitHub Actions dispatch → ready-to-flash ZIP
+- No local ESP-IDF toolchain required for users
+- Uses GitHub Actions for free CI build minutes
+- Already implemented in peinser/esp-remoteid
+
+### 14. Devcontainer + Makefile Build System ★★★☆☆
+- VS Code devcontainer with ESP-IDF pre-installed
+- Makefile targets: build, flash, monitor, ota-flash, ota-status
+- macOS serial bridge (socat) for Docker-based dev
+- Already implemented in peinser/esp-remoteid
+
 ### 6. CAN Bus / DroneCAN bridge ★★★☆☆
 - Direct CAN bus reading (CUAV, Zubax, etc.)
 - Works without MAVLink — position, battery, motor status
@@ -223,22 +286,30 @@ What we have that BS doesn't:
 ## Proposed Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│  ESP32 (S3 / C6)                        │
-│                                         │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ RID     │ │ MAVLink  │ │ WiFi     │ │  ← already done
-│  │ Beacon  │ │ /MSP/NMEA│ │ Hotspot  │ │
-│  └─────────┘ └──────────┘ └──────────┘ │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ LoRa    │ │ ESP-NOW  │ │ SD Card  │ │  ← TODO
-│  │ SX1262  │ │ Mesh     │ │ Logging  │ │
-│  └─────────┘ └──────────┘ └──────────┘ │
-│  ┌─────────┐ ┌──────────┐              │
-│  │ ADSB    │ │ DroneCAN │              │  ← nice to have
-│  │ RTL-SDR │ │ CAN bus  │              │
-│  └─────────┘ └──────────┘              │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  ESP32 (S3 / C6)                                     │
+│                                                      │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ RID      │ │ MAVLink   │ │ WiFi      │ │ BLE   │ │  ← done
+│  │ Beacon   │ │ /MSP/NMEA │ │ Hotspot   │ │ 4+5   │ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ Kalman   │ │ Ed25519   │ │ MAVLink   │ │ OTA   │ │  ← new
+│  │ Predict  │ │ Auth      │ │ ARM_STATUS│ │ Server│ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ ESP-NOW  │ │ LoRa      │ │ SD Card   │ │ Flash │ │  ← TODO
+│  │ Mesh     │ │ SX1262    │ │ Logging   │ │ Crypt │ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐           │
+│  │ DroneCAN │ │ ADSB      │ │ Edge ML   │           │  ← nice to have
+│  │ CAN bus  │ │ RTL-SDR   │ │ Anti-spoof│           │
+│  └──────────┘ └───────────┘ └───────────┘           │
+│  ┌──────────┐ ┌───────────┐                          │
+│  │ GPIO     │ │ Cloudbuild│                          │  ← infra
+│  │ Lighting │ │ UI        │                          │
+│  └──────────┘ └───────────┘                          │
+└──────────────────────────────────────────────────────┘
 ```
 
 ## Certification — What's Needed for a Real Product
@@ -282,12 +353,24 @@ If you ever want to turn the prototype into a product:
 
 ## Implementation Priority
 
-1. **ESP-NOW Mesh** — maximum impact, medium complexity, no extra HW dependency
-2. **WiFi Telemetry Bridge** — already partially possible, leverages existing WiFi
-3. **LoRa backup** — high impact, requires HW but cheap (3-5€ module)
-4. **SD Card + geofence** — medium impact, requires HW but standard
-5. **Dual-band 5 GHz** — medium impact, requires ESP32-S3/C6
-6. **CAN Bus / ADSB / ML** — low impact or high complexity, evaluate later
+| Prio | Feature | Impact | Complexity | HW Needed | Status |
+|------|---------|--------|------------|-----------|--------|
+| 1 | **Kalman Position Predictor** | ★★★★★ | ★★☆☆☆ | None | ✅ Just implemented |
+| 2 | **MAVLink ARM_STATUS** | ★★★★★ | ★★☆☆☆ | TX GPIO (already have) | 📥 Port from peinser |
+| 3 | **Ed25519 Auth (F3411-22a)** | ★★★★★ | ★★★☆☆ | None | 📥 Port from peinser |
+| 4 | **ESP-NOW Mesh** | ★★★★★ | ★★★☆☆ | None | 🔜 Next after Kalman |
+| 5 | **OTA Update Server** | ★★★★☆ | ★★★☆☆ | Button GPIO | 📥 Port from peinser |
+| 6 | **Flash Encryption** | ★★★★☆ | ★★☆☆☆ | None (efuse) | 📥 Port from peinser |
+| 7 | **WiFi Telemetry Bridge** | ★★★★☆ | ★★☆☆☆ | Already have WiFi | 🟡 Partial |
+| 8 | **LoRa backup** | ★★★★☆ | ★★★☆☆ | SX1262 (~5€) | 🔜 Future |
+| 9 | **DroneCAN Input** | ★★★☆☆ | ★★★☆☆ | CAN transceiver (~3€) | 📥 Port from peinser |
+| 10 | **SD Card + geofence** | ★★★☆☆ | ★★☆☆☆ | SD slot | 🔜 Future |
+| 11 | **GPIO Lighting Outputs** | ★★★☆☆ | ★☆☆☆☆ | MOSFET driver | 📥 Port from peinser |
+| 12 | **WS2812 RGB LED (RMT)** | ★★☆☆☆ | ★☆☆☆☆ | None (1 GPIO) | 📥 Port from peinser |
+| 13 | **Dual-band 5 GHz** | ★★☆☆☆ | ★★☆☆☆ | ESP32-S3/C6 | 🟡 Hardware limit |
+| 14 | **Devcontainer + Makefile** | ★★☆☆☆ | ★☆☆☆☆ | None | 📥 Port from peinser |
+| 15 | **Cloudbuild Web UI** | ★★☆☆☆ | ★★★★☆ | None (GitHub infra) | 📥 Port from peinser |
+| 16 | **CAN Bus / ADSB / ML** | ★★☆☆☆ | ★★★★★ | Various | 🔜 Evaluate later |
 
 ## Executive Summary
 
