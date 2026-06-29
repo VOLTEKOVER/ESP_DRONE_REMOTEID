@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ESP DRONE REMOTEID — Analyzer</title>
+<title>RID Hub — Ground Station</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,7 @@
 <div id="app">
   <header>
     <div class="header-left">
-      <h1><span class="gradient">ESP DRONE REMOTEID</span> <span class="sub">Analyzer</span></h1>
+      <h1><span class="gradient">RID Hub</span> <span class="sub">Ground Station</span></h1>
     </div>
     <div class="header-right">
       <span id="ws-status" class="badge badge-off">Disconnected</span>
@@ -170,18 +170,19 @@
   <!-- ABOUT TAB -->
   <div class="tab-content" id="tab-about">
     <div class="about-box">
-      <h2>ESP DRONE REMOTEID — Analyzer</h2>
-      <p>Professional-grade real-time Open Drone ID (ASTM F3411-22a) WiFi beacon analyzer.</p>
+      <h2>RID Hub — Ground Station</h2>
+      <p>Real-time Open Drone ID (ASTM F3411-22a) ground receiver and analyzer.</p>
       <ul>
-        <li><strong>Capture</strong>: Scapy-based, single or multi-channel scan</li>
+        <li><strong>Capture</strong>: Scapy-based, single or multi-channel WiFi scan</li>
         <li><strong>Decode</strong>: Full ASTM F3411-22a decoder (Basic ID, Location, System, Operator, Self ID, Auth, Pack)</li>
         <li><strong>UI</strong>: Chart.js + Leaflet + WebSocket real-time dashboard</li>
         <li><strong>Tracker</strong>: Per-drone GPS trail history on map</li>
         <li><strong>Export</strong>: CSV, KML, session JSON replay</li>
         <li><strong>Recording</strong>: In-memory session capture with replay</li>
         <li><strong>Compatibility</strong>: Windows, macOS, Linux</li>
+        <li><strong>Electron</strong>: Cross-platform desktop app</li>
       </ul>
-      <p>Built with <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">ESP DRONE REMOTEID</a>.</p>
+      <p>Part of <a href="https://github.com/VOLTEKOVER/ESP_DRONE_REMOTEID">ESP DRONE REMOTEID</a> project.</p>
     </div>
   </div>
 </div>

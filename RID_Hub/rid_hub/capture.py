@@ -9,7 +9,7 @@ import logging
 from typing import Optional, Callable
 from pathlib import Path
 
-from ESP_DRONE_REMOTEID_Analyzer.decoder import extract_odid_from_beacon, format_summary
+from rid_hub.decoder import extract_odid_from_beacon, format_summary
 
 logger = logging.getLogger(__name__)
 

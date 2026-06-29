@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-"""PyInstaller build spec for RID Analyzer (Windows exe)."""
+"""PyInstaller build spec for RID Hub (Windows exe)."""
 
 import sys
 import os
@@ -39,7 +39,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="ESP_DRONE_REMOTEID_Analyzer",
+    name="RID_Hub",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

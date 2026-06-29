@@ -56,13 +56,12 @@ const els = {
 };
 
 /* ---- WebSocket ---- */
-const WS_URL = typeof WS_CONFIG !== "undefined" ? WS_CONFIG : "__WS_URL__";
+const WS_URL = typeof WS_CONFIG !== "undefined" ? WS_CONFIG : "ws://127.0.0.1:8765";
 let ws = null;
 let wsReplay = null;
 
 function connectWs() {
   if (ws && ws.readyState === WebSocket.OPEN) return;
-  const url = WS_URL.startsWith("__") ? "ws://127.0.0.1:8765" : WS_URL;
   ws = new WebSocket(url);
   ws.onopen = () => {
     els.status.textContent = "Connected";

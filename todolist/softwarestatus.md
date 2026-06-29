@@ -385,74 +385,122 @@
 
 ---
 
-## `ESP_DRONE_REMOTEID_Analyzer/` — Python Analyzer (standalone package)
+## `RID_Hub/` — Ground Station (Electron + Python)
 
-### Package Structure
+### Overview
+- **Renamed from `ESP_DRONE_REMOTEID_Analyzer` to `RID_Hub`**.
+- **Electron wrapper** (`main.js` + `package.json` + `preload.js`) spawns Python backend.
+- Python backend runs as `python -m rid_hub serve` (WebSocket server + WiFi capture).
+- Electron loads `rid_hub/web/index.html` as the renderer, connects via WebSocket.
+
+### Structure
+```
+RID_Hub/
+├── package.json          # Electron project manifest
+├── main.js               # Electron main process (spawns Python, creates window)
+├── preload.js            # Exposes WS_URL to renderer
+├── rid_hub/              # Python package (rename of ESP_DRONE_REMOTEID_Analyzer)
+│   ├── __init__.py       # Version 1.0.0
+│   ├── __main__.py       # Entry: `python -m rid_hub serve|gui|tool`
+│   ├── capture.py        # WiFi beacon capture via Scapy
+│   ├── decoder.py        # ASTM F3411-22a pure Python decoder
+│   ├── server.py         # WebSocket broadcast server
+│   ├── gui.py            # Legacy pywebview GUI (Electron recommended)
+│   ├── rid_cli.py        # Headless CLI
+│   ├── build.spec        # PyInstaller spec
+│   ├── web/              # Frontend (HTML/JS/CSS)
+│   └── tools/            # Ground tools
+└── requirements.txt      # Python dependencies
+```
+
+### Python Backend (`rid_hub/`)
 
 #### `__init__.py` (3 lines)
-- Package marker. Exports `__version__ = "2.0.0-dev"`.
-- ✅ Tools subpackage (`tools/`) registered for ground-side tools.
+- Package marker. Exports `__version__ = "1.0.0"`.
+- Renamed from `ESP_DRONE_REMOTEID_Analyzer` → `rid_hub`.
 
 #### `__main__.py` (40 lines)
-- Entry point: `python -m ESP_DRONE_REMOTEID_Analyzer [tool]`.
+- Entry point: `python -m rid_hub <serve|gui|scanner|mapper|bridge|...>`.
+- `serve` — starts WebSocket server + capture (for Electron).
+- `gui` — legacy pywebview desktop app.
 - Tools: `scanner`, `mapper`, `bridge`, `timing`, `ble-check`, `serial`, `provision`, `verify`.
-- No argument → launches desktop GUI (pywebview) as before.
-- **OK.** Extensible tool dispatch.
+- **OK.** Electron-friendly entry point.
 
 #### `capture.py` (~200 lines)
 - WiFi beacon capture via Scapy (`sniff` on Dot11Beacon frames).
-- `RIDCapture` class: interface listing, monitor-mode helpers (Linux/macOS/Windows).
-- **v2:** PCAP batch write via `wrpcap()` for offline analysis in Wireshark.
-- **v2:** Multi-channel hopping support (`set_channels()`, `set_channel_hopping()` with configurable interval).
-- Callback-based: `on_packet(data)` receives parsed RSSI, source MAC, summary.
-- **Gap:** Requires monitor-mode WiFi adapter + root/admin privileges. Not available on all hardware.
+- `RIDCapture` class: interface listing, monitor-mode helpers.
+- PCAP batch write, multi-channel hopping.
+- **Gap:** Requires monitor-mode WiFi adapter + root/admin privileges.
 
 #### `decoder.py` (510 lines)
 - Pure Python ASTM F3411-22a packet decoder.
-- All message types: Basic ID, Location, Auth, Self-ID, System, Operator ID.
-- `extract_odid_from_beacon()` — parses raw 802.11 beacon payload → ODID data.
-- `format_summary()` — one-line human-readable summary of a decoded packet.
-- **OK.** Comprehensive.
+- All message types: Basic ID, Location, Auth, Self-ID, System, Operator ID, Pack.
+- **OK.**
 
-#### `server.py` (~550 lines)
-- WebSocket broadcast server (`simple-websocket-server`).
-- `RIDDevice` dataclass: per-device state (MAC, RSSI samples, trail history, basic ID, operator ID, location, system).
-- **v2:** GPS track trail history — 500-point position ring buffer per device.
-- **v2:** Session recording — `session_start()`, `session_stop()`, JSON persist/load/replay.
-- **v2:** CSV/KML export — `cmd_get_csv()`, `cmd_get_kml()` generate downloadable content.
-- **v2:** `to_detail_dict()` — full device snapshot with RSSI samples + trail + message timeline.
-- **v2:** Snapshot on WS connect — new clients receive current device state immediately.
-- **v2:** Command dispatch — `get_csv`, `get_kml`, `get_session`, `get_device_detail`, `session_start`, `session_stop`.
-- Device deduplication + 60s stale timeout.
+#### `server.py` (~387 lines)
+- WebSocket broadcast server.
+- `RIDDevice` dataclass with 500-point trail, session recording, CSV/KML export.
+- Snapshot on WS connect, full command dispatch.
 - **OK.**
 
 #### `rid_cli.py` (115 lines)
-- Headless CLI: `rid-capture`, `rid-scan`, `rid-monitor`, `rid-listen`, `rid-list-ifaces`.
-- argparse-based subcommands.
+- Headless CLI: `capture`, `serve` subcommands.
 - **OK.**
 
-#### `gui.py` (~80 lines)
-- **v2: Standalone pywebview desktop app** — no HTTP server, loads `index.html` from `file://`.
-- `main()` — starts WebSocket server thread + capture thread, opens native window.
-- **Security:** No browser accessibility — only the local pywebview window can connect.
+#### `gui.py` (~91 lines)
+- Legacy pywebview desktop app (Electron now recommended).
+- Starts backend + opens native window.
 - **OK.**
 
 #### `build.spec` (56 lines)
-- PyInstaller spec for Windows executable.
-- Bundles `web/` HTML/JS/CSS as data files.
+- PyInstaller spec for Windows exe (name: `RID_Hub`).
 - **OK.**
 
-#### `requirements.txt` (18 lines)
-- `scapy>=2.5.0` — WiFi capture
-- `simple-websocket-server>=0.4.0` — WebSocket bridge
-- `pywebview>=4.4.1` — native window
-- ✅ Added `bleak>=0.22.0` — BLE validation (macOS/Windows)
-- ✅ Added `pyserial>=3.5` — Meshtastic bridge, NVS provisioning
-- ✅ Added `pyyaml>=6.0` — OpenAPI spec parsing
-- ✅ Added `cryptography>=41.0.0` — ECDSA signature verification
+### Web Frontend (`rid_hub/web/`)
 
-#### `ESP_DRONE_REMOTEID_Analyzer.py` / `main_analyzer.pyw`
-- ❌ **Removed** from current tree (deprecated launchers).
+#### `index.html` (~202 lines)
+- RID Hub branding. 5 tabs: Devices, Map, Timeline, Statistics, About.
+- Leaflet map, detail panel, recording controls.
+- **OK.**
+
+#### `app.js` (~834 lines)
+- WebSocket client, device table, Leaflet map, Chart.js charts.
+- Session recording, replay, CSV/KML export.
+- **OK.**
+
+#### `style.css` (~271 lines)
+- Clean dark/light theme, responsive.
+- **OK.**
+
+### Electron Shell
+
+#### `main.js` (90 lines)
+- Spawns `python -m rid_hub serve` as child process.
+- Creates BrowserWindow loading `rid_hub/web/index.html`.
+- Graceful shutdown on window close / app quit.
+- **OK.**
+
+#### `package.json` (60 lines)
+- Electron project config with electron-builder.
+- Targets: Windows (NSIS), macOS (DMG), Linux (AppImage).
+- **OK.**
+
+#### `preload.js` (6 lines)
+- Exposes `WS_CONFIG` via contextBridge to renderer.
+- **OK.**
+
+### Ground Tools (`rid_hub/tools/`)
+| # | File | Status |
+|---|------|--------|
+| G0 | `openapi_spec.yaml` | ✅ |
+| G1 | `scanner_wifi_ble.py` | 🟡 skeleton |
+| G2 | `ble_validation.py` | 🟡 skeleton |
+| G3 | `serial_bridge.py` | 🟡 skeleton |
+| G4 | `timing_analysis.py` | 🟡 skeleton |
+| G5 | `public_key_verify.py` | 🟡 skeleton |
+| G6 | `nvs_provisioning.py` | 🟡 skeleton |
+| G7 | `mesh_mapper.py` | 🟡 skeleton |
+| G8 | `meshtastic_bridge.py` | 🟡 skeleton |
 
 ### Ground Tools (`tools/`)
 

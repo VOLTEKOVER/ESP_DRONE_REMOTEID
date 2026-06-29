@@ -1,4 +1,4 @@
-"""pywebview native window — standalone desktop app (no HTTP server)."""
+"""pywebview native window — standalone desktop app (Electron recommended)."""
 
 from __future__ import annotations
 import sys
@@ -17,8 +17,8 @@ WEB_DIR = Path(__file__).parent / "web"
 
 
 def run_backend(ws_port: int, capture_iface: str, capture_channel: int):
-    from ESP_DRONE_REMOTEID_Analyzer.server import BroadcastServer
-    from ESP_DRONE_REMOTEID_Analyzer.capture import RIDCapture
+    from rid_hub.server import BroadcastServer
+    from rid_hub.capture import RIDCapture
 
     server = BroadcastServer(port=ws_port)
     server.start()
@@ -38,7 +38,7 @@ def run_backend(ws_port: int, capture_iface: str, capture_channel: int):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="ESP DRONE REMOTEID Analyzer")
+    parser = argparse.ArgumentParser(description="RID Hub — Ground Station")
     parser.add_argument("--port", type=int, default=8765, help="WebSocket port (default: 8765)")
     parser.add_argument("--iface", default=None, help="WiFi interface for capture")
     parser.add_argument("--channel", type=int, default=6, help="WiFi channel (default: 6)")
@@ -47,7 +47,7 @@ def main():
     args = parser.parse_args()
 
     if args.list_ifaces:
-        from ESP_DRONE_REMOTEID_Analyzer.capture import list_interfaces
+        from rid_hub.capture import list_interfaces
         ifaces = list_interfaces()
         print("Available interfaces:")
         for i in ifaces:
@@ -74,7 +74,7 @@ def main():
 
         index_path = WEB_DIR / "index.html"
         window = webview.create_window(
-            title="ESP DRONE REMOTEID Analyzer",
+            title="RID Hub",
             url=str(index_path),
             width=1280,
             height=860,

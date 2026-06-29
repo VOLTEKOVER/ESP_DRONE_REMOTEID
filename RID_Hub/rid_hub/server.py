@@ -361,7 +361,7 @@ class BroadcastServer:
             '<?xml version="1.0" encoding="UTF-8"?>',
             '<kml xmlns="http://www.opengis.net/kml/2.2">',
             '<Document>',
-            '<name>ESP DRONE REMOTEID — Drone Report</name>',
+            '<name>RID Hub — Drone Report</name>',
         ]
         with self._stats_lock:
             for dev in self._devices.values():
