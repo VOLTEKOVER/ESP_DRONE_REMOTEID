@@ -670,11 +670,9 @@ RID_Hub/
 - Version `1.0.0-beta`, config URL `http://192.168.4.1`.
 - **Gap:** Hardcoded version (should be auto-generated from CI).
 
-### `innovation_diy.md` (294 lines)
-- Competitive analysis vs Dronetag Mini 4G, DRI, BS gen.2, Beacon gen.2.
-- Full innovation roadmap: ESP-NOW mesh, Kalman predictor, LoRa, ADSB, Edge ML.
-- Comparison tables: features, power, size, cost, certifications.
-- **OK.**
+### ~~`innovation_diy.md` (294 lines)~~ ❌ Deleted
+- Content merged into Innovation Roadmap section above (architecture diagram, priority table, TODO ideas, certification, positioning).
+- 🗑️ Deleted — update links in `README.md` and `docs/guide.html`.
 
 ### `prototype_bom.md` (68 lines)
 - Zero-solder BOM: Seeed XIAO ESP32-C6 + L76K GNSS, total ~15$.
@@ -693,7 +691,7 @@ RID_Hub/
 ### `README.md` (~136 lines)
 - Project overview, CI badges, 3 supported platforms (ESP32/S3/C6), quick start, wiring, build.
 - ✅ Updated: protocol table (13 rows, 4 categories), XIAO ESP32-C6 recommended.
-- ✅ Links to `docs/innovation_diy.md` and `docs/prototype_bom.md`.
+- ✅ Links to `docs/prototype_bom.md`. ~~`docs/innovation_diy.md`~~ (deleted, content merged into this file).
 - **Gap:** Mentions "no extra GPS needed" — firmware actually requires FC with GPS or demo mode.
 
 ### `.gitignore` (140 lines)
@@ -831,6 +829,123 @@ RID_Hub/
 
 ---
 
+### 🧠 Innovation Roadmap
+
+#### Architecture Overview
+```
+┌──────────────────────────────────────────────────────┐
+│  ESP32 (S3 / C6)                                     │
+│                                                      │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ RID      │ │ MAVLink   │ │ WiFi      │ │ BLE   │ │  ← done
+│  │ Beacon   │ │ /MSP/NMEA │ │ Hotspot   │ │ 4+5   │ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ Kalman   │ │ Ed25519   │ │ MAVLink   │ │ OTA   │ │  ← done
+│  │ Predict  │ │ Auth      │ │ ARM_STATUS│ │ Server│ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
+│  │ ESP-NOW  │ │ LoRa      │ │ SD Card   │ │ Flash │ │  ← TODO
+│  │ Mesh     │ │ SX1262    │ │ Logging   │ │ Crypt │ │
+│  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
+│  ┌──────────┐ ┌───────────┐ ┌───────────┐           │
+│  │ DroneCAN │ │ ADSB      │ │ Edge ML   │           │  ← done / nice to have
+│  │ CAN bus  │ │ RTL-SDR   │ │ Anti-spoof│           │
+│  └──────────┘ └───────────┘ └───────────┘           │
+│  ┌──────────┐ ┌───────────┐                          │
+│  │ GPIO     │ │ Cloudbuild│                          │  ← done / infra
+│  │ Lighting │ │ UI        │                          │
+│  └──────────┘ └───────────┘                          │
+└──────────────────────────────────────────────────────┘
+```
+
+#### Implementation Priority Table
+| Prio | Feature | Impact | Complexity | HW Needed | Status |
+|------|---------|--------|------------|-----------|--------|
+| 1 | **Kalman Position Predictor** | ★★★★★ | ★★☆☆☆ | None | ✅ Done |
+| 2 | **MAVLink ARM_STATUS** | ★★★★★ | ★★☆☆☆ | TX GPIO | ✅ Done |
+| 3 | **Ed25519 Auth (F3411-22a)** | ★★★★★ | ★★★☆☆ | None | ✅ Done |
+| 4 | **ESP-NOW Mesh** | ★★★★★ | ★★★☆☆ | None | 🔜 Next |
+| 5 | **OTA Update Server** | ★★★★☆ | ★★★☆☆ | Button GPIO | ✅ Done |
+| 6 | **Flash Encryption** | ★★★★☆ | ★★☆☆☆ | None (efuse) | 📥 Port from peinser |
+| 7 | **WiFi Telemetry Bridge** | ★★★★☆ | ★★☆☆☆ | Already have WiFi | 🟡 Partial |
+| 8 | **LoRa backup (SX1262)** | ★★★★☆ | ★★★☆☆ | SX1262 (~5€) | 🔜 Future |
+| 9 | **DroneCAN Input** | ★★★☆☆ | ★★★☆☆ | CAN transceiver (~3€) | ✅ Done |
+| 10 | **SD Card + geofence** | ★★★☆☆ | ★★☆☆☆ | SD slot | 🔜 Future |
+| 11 | **GPIO Lighting Outputs** | ★★★☆☆ | ★☆☆☆☆ | MOSFET driver | ✅ Done |
+| 12 | **WS2812 RGB LED (RMT)** | ★★☆☆☆ | ★☆☆☆☆ | None (1 GPIO) | ✅ Done |
+| 13 | **Dual-band 5 GHz** | ★★☆☆☆ | ★★☆☆☆ | ESP32-S3/C6 | 🟡 Hardware limit |
+| 14 | **Devcontainer + Makefile** | ★★☆☆☆ | ★☆☆☆☆ | None | 📥 Port from peinser |
+| 15 | **Cloudbuild Web UI** | ★★☆☆☆ | ★★★★☆ | None (GitHub infra) | 📥 Port from peinser |
+| 16 | **CAN Bus / ADSB / ML** | ★★☆☆☆ | ★★★★★ | Various | 🔜 Evaluate later |
+
+#### Detailed Innovation Ideas
+
+##### 1. ESP-NOW Mesh RID Relay ★★★★★ 🔜 Next
+- Drones relay RID messages between each other via ESP-NOW
+- Beyond-line-of-sight visibility via mesh peers
+- No commercial product offers mesh RID
+- Effort: ~4 days
+
+##### 2. Dual-band 2.4 + 5 GHz ★★★★☆ 🟡 Hardware limit
+- ESP32-C5/S3 supports 5 GHz
+- Less congested, more reliable in flight
+- No commercial RID uses 5 GHz today
+
+##### 3. WiFi Telemetry Bridge ★★★★☆ 🟡 Partial
+- Same WiFi interface serves as telemetry hotspot
+- Smartphone connects directly (no SIM, no cloud)
+- Bidirectional MAVLink via UDP/WebSocket
+
+##### 4. LoRa Long-range Backup (SX1262) ★★★★☆ 🔜 Future
+- SX1262 for 10+ km RID backup
+- Lost drone position receivable from ground
+- Extra HW: ~5€
+
+##### 5. SD Card Logging ★★★☆☆ 🔜 Future
+- MicroSD flight log: position, status, transmissions
+- Offline geofence from SD
+
+##### 6. Flash Encryption (eFuse) ★★★★☆ 📥 Port from peinser
+- AES-256 flash encryption on first boot
+- Protects NVS private key at rest
+- OTA works in encrypted mode
+
+##### 7. Devcontainer + Makefile Build System ★★★☆☆ 📥 Port from peinser
+- VS Code devcontainer with ESP-IDF
+- Makefile targets: build, flash, monitor, ota-flash
+- macOS serial bridge (socat)
+
+##### 8. Cloudbuild Web Configurator ★★★☆☆ 📥 Port from peinser
+- Browser → sdkconfig → GitHub Actions → ZIP
+- No local toolchain required
+
+##### 9. ADSB Receiver ★★★☆☆ 🔜 Evaluate
+- RTL-SDR captures ADSB from aircraft
+- Drone sees nearby traffic
+
+##### 10. Edge ML Anti-spoofing ★★☆☆☆ 🔜 Evaluate
+- GPS + WiFi RTT + IMU anti-spoofing
+- ESP32-S3 with ESP-NN
+
+#### Certification Path (for a real product)
+- **USA**: ASTM F3411 + F3586-22 lab test → FAA DoC → FCC certification
+- **EU**: Module B+C/H assessment → CE marking + EN 4709-002
+- **Minimum credibility**: ARM_STATUS failsafe, GNSS RTH, broadcast continuity, ANSI/CTA-2063-A SN, operator location, tamper-resistant eFuse
+
+#### Competitive Positioning
+| Dronetag does | We do better |
+|---|---|
+| BLE only | **WiFi + BLE** |
+| Mobile app only | **Web UI + CLI** |
+| Closed source | **Open source** |
+| No documented security | **ECDSA + eFuse lock** |
+| Fixed firmware | **OTA via web** (SHA-256) |
+| MAVLink only (DRI) | **MAVLink + MSP + NMEA** |
+| Finished product | **Extensible platform** (mesh, LoRa, SD, CAN) |
+
+---
+
 ## Priority Summary
 
 | Priority | Item | Location | Status |
@@ -884,7 +999,7 @@ RID_Hub/
 | ✅ DONE | GCC 15.2.0 fix: struct tag name in led_status.c | `led_status.c` | ✅ |
 | ✅ DONE | GCC 15.2.0 fix: heap_free/heap_total rename in cli.c | `cli.c` | ✅ |
 | ✅ DONE | GCC 15.2.0 fix: unused label removed in web_config.c | `web_config.c` | ✅ |
-| ✅ DONE | `docs/innovation_diy.md` — competitive analysis | `docs/innovation_diy.md` | ✅ |
+| ✅ DONE | ~~`docs/innovation_diy.md`~~ — competitive analysis (merged into this file) | `todolist/softwarestatus.md` | ❌ Deleted |
 | ✅ DONE | `docs/prototype_bom.md` — zero-solder BOM | `docs/prototype_bom.md` | ✅ |
 
 ---
@@ -951,49 +1066,51 @@ RID_Hub/
 | 56 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/src/rid_mavlink_usb.c` | 42 | ✅ |
 | 57 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/webui/config.html` | ~2234 | ✅ |
 | 58-137 | `ESP32_DRONE_REMOTE_ID_Firmware/components/esp_remote_id/mavlink/**/*.h/.xml` | ~80 files | 🔶 many unused |
-| 138 | `ESP_DRONE_REMOTEID_Analyzer/__init__.py` | 3 | ✅ |
-| 139 | `ESP_DRONE_REMOTEID_Analyzer/__main__.py` | 5 | ✅ |
-| 140 | `ESP_DRONE_REMOTEID_Analyzer/capture.py` | 176 | ✅ |
-| 141 | `ESP_DRONE_REMOTEID_Analyzer/decoder.py` | 510 | ✅ |
-| 142 | `ESP_DRONE_REMOTEID_Analyzer/server.py` | 197 | ✅ |
-| 143 | `ESP_DRONE_REMOTEID_Analyzer/rid_cli.py` | 115 | ✅ |
-| 144 | `ESP_DRONE_REMOTEID_Analyzer/gui.py` | 109 | ✅ |
-| 145 | `ESP_DRONE_REMOTEID_Analyzer/build.spec` | 56 | ✅ |
-| 146 | `ESP_DRONE_REMOTEID_Analyzer/requirements.txt` | 18 | ✅ |
-| 146b | `ESP_DRONE_REMOTEID_Analyzer/tools/__init__.py` | 3 | ✅ |
-| 146c | `ESP_DRONE_REMOTEID_Analyzer/tools/scanner_wifi_ble.py` | placeholder | 🟡 skeleton |
-| 146d | `ESP_DRONE_REMOTEID_Analyzer/tools/mesh_mapper.py` | placeholder | 🟡 skeleton |
-| 146e | `ESP_DRONE_REMOTEID_Analyzer/tools/meshtastic_bridge.py` | placeholder | 🟡 skeleton |
-| 146f | `ESP_DRONE_REMOTEID_Analyzer/tools/timing_analysis.py` | placeholder | 🟡 skeleton |
-| 146g | `ESP_DRONE_REMOTEID_Analyzer/tools/ble_validation.py` | placeholder | 🟡 skeleton |
-| 146h | `ESP_DRONE_REMOTEID_Analyzer/tools/serial_bridge.py` | placeholder | 🟡 skeleton |
-| 146i | `ESP_DRONE_REMOTEID_Analyzer/tools/nvs_provisioning.py` | placeholder | 🟡 skeleton |
-| 146j | `ESP_DRONE_REMOTEID_Analyzer/tools/public_key_verify.py` | placeholder | 🟡 skeleton |
-| 146k | `ESP_DRONE_REMOTEID_Analyzer/tools/openapi_spec.yaml` | 85 | ✅ |
-| 147 | `ESP_DRONE_REMOTEID_Analyzer/web/index.html` | 94 | ✅ |
-| 148 | `ESP_DRONE_REMOTEID_Analyzer/web/app.js` | 438 | ✅ |
-| 149 | `ESP_DRONE_REMOTEID_Analyzer/web/style.css` | 176 | ✅ |
-| 150 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
-| 151 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
-| 152 | `docs/config(demo).html` | ~2546 | ✅ |
-| 153 | `docs/manifest.json` | 57 | ✅ (3 targets: esp32/s3/c6) |
-| 154 | `docs/images/logo.svg` | — | ✅ |
-| 155 | `docs/images/logo con scritta.svg` | — | ✅ |
-| 156 | `docs/images/ardupilot_logo.webp` | — | ✅ |
-| 157 | `docs/images/betaflight_logo.svg` | — | ✅ |
-| 158 | `docs/images/inav_logo.png` | — | ✅ |
-| 159 | `docs/innovation_diy.md` | 294 | ✅ |
-| 160 | `docs/prototype_bom.md` | 68 | ✅ |
-| 161 | `.github/workflows/build.yml` | 66 | ✅ |
-| 162 | `.github/workflows/release.yml` | 308 | ✅ |
-| 163 | `.github/dependabot.yml` | 13 | ✅ |
-| 164 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
-| 165 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
-| 166 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
-| 167 | `.vscode/settings.json` | 30 | ✅ |
-| 168 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
-| 169 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
-| 170 | `README.md` | ~136 | ✅ |
-| 171 | `.gitignore` | 140 | ✅ |
-| 172 | `.gitattributes` | 40 | ✅ |
-| 173 | `todolist/softwarestatus.md` | — | ✅ (this file) |
+| 138 | `RID_Hub/main.js` | ~200 | ✅ (Electron main) |
+| 139 | `RID_Hub/package.json` | ~50 | ✅ |
+| 140 | `RID_Hub/preload.js` | ~15 | ✅ |
+| 141 | `RID_Hub/rid_hub/__init__.py` | — | ✅ |
+| 142 | `RID_Hub/rid_hub/__main__.py` | ~22 | ✅ (serve\|gui\|tool dispatch) |
+| 143 | `RID_Hub/rid_hub/capture.py` | ~176 | ✅ |
+| 144 | `RID_Hub/rid_hub/decoder.py` | ~510 | ✅ |
+| 145 | `RID_Hub/rid_hub/server.py` | ~197 | ✅ (WS stub) |
+| 146 | `RID_Hub/rid_hub/rid_cli.py` | ~115 | ✅ |
+| 147 | `RID_Hub/rid_hub/gui.py` | ~109 | ✅ |
+| 148 | `RID_Hub/rid_hub/requirements.txt` | ~18 | ✅ |
+| 149 | `RID_Hub/rid_hub/tools/__init__.py` | 3 | ✅ |
+| 150 | `RID_Hub/rid_hub/tools/scanner_wifi_ble.py` | placeholder | 🟡 skeleton |
+| 151 | `RID_Hub/rid_hub/tools/mesh_mapper.py` | placeholder | 🟡 skeleton |
+| 152 | `RID_Hub/rid_hub/tools/meshtastic_bridge.py` | placeholder | 🟡 skeleton |
+| 153 | `RID_Hub/rid_hub/tools/timing_analysis.py` | placeholder | 🟡 skeleton |
+| 154 | `RID_Hub/rid_hub/tools/ble_validation.py` | placeholder | 🟡 skeleton |
+| 155 | `RID_Hub/rid_hub/tools/serial_bridge.py` | placeholder | 🟡 skeleton |
+| 156 | `RID_Hub/rid_hub/tools/nvs_provisioning.py` | placeholder | 🟡 skeleton |
+| 157 | `RID_Hub/rid_hub/tools/public_key_verify.py` | placeholder | 🟡 skeleton |
+| 158 | `RID_Hub/rid_hub/tools/openapi_spec.yaml` | 85 | ✅ |
+| 159 | `RID_Hub/rid_hub/web/index.html` | ~94 | ✅ (Electron renderer) |
+| 160 | `RID_Hub/rid_hub/web/app.js` | ~438 | ✅ |
+| 161 | `RID_Hub/rid_hub/web/style.css` | ~176 | ✅ |
+| 162 | `docs/index.html` | ~901 | ✅ (inline, wiki split) |
+| 163 | `docs/guide.html` | ~1864 | ✅ (inline, technical wiki) |
+| 164 | `docs/config(demo).html` | ~2546 | ✅ |
+| 165 | `docs/manifest.json` | 57 | ✅ (3 targets: esp32/s3/c6) |
+| 166 | `docs/images/logo.svg` | — | ✅ |
+| 167 | `docs/images/logo con scritta.svg` | — | ✅ |
+| 168 | `docs/images/ardupilot_logo.webp` | — | ✅ |
+| 169 | `docs/images/betaflight_logo.svg` | — | ✅ |
+| 170 | `docs/images/inav_logo.png` | — | ✅ |
+| 171 | ~~`docs/innovation_diy.md`~~ | ~~294~~ | ❌ Deleted |
+| 172 | `docs/prototype_bom.md` | 68 | ✅ |
+| 173 | `.github/workflows/build.yml` | 66 | ✅ |
+| 174 | `.github/workflows/release.yml` | 308 | ✅ |
+| 175 | `.github/dependabot.yml` | 13 | ✅ |
+| 176 | `.github/ISSUE_TEMPLATE/bug_report.md` | 45 | ✅ |
+| 177 | `.github/ISSUE_TEMPLATE/feature_request.md` | 25 | ✅ |
+| 178 | `.github/PULL_REQUEST_TEMPLATE.md` | 38 | ✅ |
+| 179 | `.vscode/settings.json` | 30 | ✅ |
+| 180 | `.vscode/launch.json` | 10 | 🟢 gitignored, local only |
+| 181 | `.vscode/c_cpp_properties.json` | 20 | 🟢 gitignored, local only |
+| 182 | `README.md` | ~136 | ✅ |
+| 183 | `.gitignore` | 140 | ✅ |
+| 184 | `.gitattributes` | 40 | ✅ |
+| 185 | `todolist/softwarestatus.md` | — | ✅ (this file) |
