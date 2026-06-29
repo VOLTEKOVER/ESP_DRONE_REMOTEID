@@ -205,49 +205,45 @@ What we have that BS doesn't:
 - Offline geofence (no-fly zones loaded from SD)
 - Dronetag has no SD
 
-### 6. Ed25519 Authentication (F3411-22a) ★★★★★
+### 6. Ed25519 Authentication (F3411-22a) ★★★★★ ✅ IMPLEMENTED
 - Sign all 4 mandatory ODID messages with Ed25519 per broadcast cycle
 - 4 auth pages distributed alongside base messages
 - PKI hierarchy: CA root → device certificate → per-device key
 - NVS private key provisioning + optional compile-time embedded key
-- Already implemented in peinser/esp-remoteid — port to this codebase
-- No extra HW required (ESP32 has SHA256 + RNG)
+- Uses mbedTLS PK API, no extra HW required (ESP32 has SHA256 + RNG)
 
-### 7. MAVLink Bidirectional Status ★★★★★
+### 7. MAVLink Bidirectional Status ★★★★★ ✅ IMPLEMENTED
 - Transmit HEARTBEAT (component MAV_TYPE_ODID) back to flight controller
 - Transmit OPEN_DRONE_ID_ARM_STATUS (GOOD_TO_ARM / PRE_ARM_FAIL)
 - Enables ArduPilot DID pre-arm gating: no RID → no takeoff
-- Operator-location freshness loop: re-stamp fixed operator position autonomously
-- Requires TX UART GPIO (already present in config)
-- Already implemented in peinser/esp-remoteid
+- Operator-location freshness loop: re-stamp fixed operator position every 6s
+- Uses TX UART GPIO (already present in config)
 
-### 8. OTA Update Server ★★★★☆
+### 8. OTA Update Server ★★★★☆ ✅ IMPLEMENTED
 - Wi-Fi AP mode on trigger (GPIO button or always-on)
-- HTTP server with endpoints: /status, /update, /nvs, /rollback, /factory-reset
-- OTA dual-slot partition management (already have ota_0/ota_1 layout)
-- SHA-256 firmware validation (already mandatory in web_config.c)
+- HTTP server with endpoints: /update, /factory_reset, /rollback
+- OTA dual-slot partition management (ota_0/ota_1 layout)
+- SHA-256 firmware validation mandatory
 - AP MAC address randomization for privacy
-- Already implemented in peinser/esp-remoteid
 
-### 9. DroneCAN Input ★★★☆☆
+### 9. DroneCAN Input ★★★☆☆ ✅ IMPLEMENTED
 - TWAI/CAN controller receive DroneCAN frames
 - Decode uavcan.equipment.gnss.Fix2 for position
 - Decode custom com.peinser.remoteid.Identity for UAS/Operator ID
 - CAN transceiver required (~3€ external module)
-- Already implemented in peinser/esp-remoteid
 
-### 10. WS2812 RGB LED (RMT) ★★★☆☆
+### 10. WS2812 RGB LED (RMT) ★★★☆☆ ✅ IMPLEMENTED
 - Replace or augment LEDC PWM LED driver with addressable RGB
 - Single GPIO drives RGB LED with RMT waveform
 - Simplifies wiring (3 GPIOs → 1 GPIO)
 - Enables addressable patterns not possible with PWM
 - Already implemented in peinser/esp-remoteid
 
-### 11. External GPIO Lighting Outputs ★★★☆☆
+### 11. External GPIO Lighting Outputs ★★★☆☆ ✅ IMPLEMENTED
 - Up to 5 independently configurable trigger outputs
-- Patterns: solid, beacon 1Hz short/50%, single/double/triple strobe, fast strobe
+- Patterns: OFF, SOLID, BLINK_SLOW (1 Hz), BLINK_FAST (2 Hz), BLINK_ARMED, FLASH_ON_GPS
+- Configurable phase offsets per channel
 - Separate from onboard RGB — transistor/MOSFET drivers for aviation lights
-- Already implemented in peinser/esp-remoteid
 
 ### 12. Flash Encryption (eFuse) ★★★★☆
 - AES-256 flash encryption on first boot
@@ -294,7 +290,7 @@ What we have that BS doesn't:
 │  │ Beacon   │ │ /MSP/NMEA │ │ Hotspot   │ │ 4+5   │ │
 │  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
 │  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
-│  │ Kalman   │ │ Ed25519   │ │ MAVLink   │ │ OTA   │ │  ← new
+│  │ Kalman   │ │ Ed25519   │ │ MAVLink   │ │ OTA   │ │  ← done
 │  │ Predict  │ │ Auth      │ │ ARM_STATUS│ │ Server│ │
 │  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
 │  ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────┐ │
@@ -302,11 +298,11 @@ What we have that BS doesn't:
 │  │ Mesh     │ │ SX1262    │ │ Logging   │ │ Crypt │ │
 │  └──────────┘ └───────────┘ └───────────┘ └───────┘ │
 │  ┌──────────┐ ┌───────────┐ ┌───────────┐           │
-│  │ DroneCAN │ │ ADSB      │ │ Edge ML   │           │  ← nice to have
+│  │ DroneCAN │ │ ADSB      │ │ Edge ML   │           │  ← done / nice to have
 │  │ CAN bus  │ │ RTL-SDR   │ │ Anti-spoof│           │
 │  └──────────┘ └───────────┘ └───────────┘           │
 │  ┌──────────┐ ┌───────────┐                          │
-│  │ GPIO     │ │ Cloudbuild│                          │  ← infra
+│  │ GPIO     │ │ Cloudbuild│                          │  ← done / infra
 │  │ Lighting │ │ UI        │                          │
 │  └──────────┘ └───────────┘                          │
 └──────────────────────────────────────────────────────┘
@@ -356,17 +352,17 @@ If you ever want to turn the prototype into a product:
 | Prio | Feature | Impact | Complexity | HW Needed | Status |
 |------|---------|--------|------------|-----------|--------|
 | 1 | **Kalman Position Predictor** | ★★★★★ | ★★☆☆☆ | None | ✅ Just implemented |
-| 2 | **MAVLink ARM_STATUS** | ★★★★★ | ★★☆☆☆ | TX GPIO (already have) | 📥 Port from peinser |
-| 3 | **Ed25519 Auth (F3411-22a)** | ★★★★★ | ★★★☆☆ | None | 📥 Port from peinser |
-| 4 | **ESP-NOW Mesh** | ★★★★★ | ★★★☆☆ | None | 🔜 Next after Kalman |
-| 5 | **OTA Update Server** | ★★★★☆ | ★★★☆☆ | Button GPIO | 📥 Port from peinser |
+| 2 | **MAVLink ARM_STATUS** | ★★★★★ | ★★☆☆☆ | TX GPIO (already have) | ✅ Done |
+| 3 | **Ed25519 Auth (F3411-22a)** | ★★★★★ | ★★★☆☆ | None | ✅ Done |
+| 4 | **ESP-NOW Mesh** | ★★★★★ | ★★★☆☆ | None | 🔜 Next |
+| 5 | **OTA Update Server** | ★★★★☆ | ★★★☆☆ | Button GPIO | ✅ Done |
 | 6 | **Flash Encryption** | ★★★★☆ | ★★☆☆☆ | None (efuse) | 📥 Port from peinser |
 | 7 | **WiFi Telemetry Bridge** | ★★★★☆ | ★★☆☆☆ | Already have WiFi | 🟡 Partial |
 | 8 | **LoRa backup** | ★★★★☆ | ★★★☆☆ | SX1262 (~5€) | 🔜 Future |
-| 9 | **DroneCAN Input** | ★★★☆☆ | ★★★☆☆ | CAN transceiver (~3€) | 📥 Port from peinser |
+| 9 | **DroneCAN Input** | ★★★☆☆ | ★★★☆☆ | CAN transceiver (~3€) | ✅ Done |
 | 10 | **SD Card + geofence** | ★★★☆☆ | ★★☆☆☆ | SD slot | 🔜 Future |
-| 11 | **GPIO Lighting Outputs** | ★★★☆☆ | ★☆☆☆☆ | MOSFET driver | 📥 Port from peinser |
-| 12 | **WS2812 RGB LED (RMT)** | ★★☆☆☆ | ★☆☆☆☆ | None (1 GPIO) | 📥 Port from peinser |
+| 11 | **GPIO Lighting Outputs** | ★★★☆☆ | ★☆☆☆☆ | MOSFET driver | ✅ Done |
+| 12 | **WS2812 RGB LED (RMT)** | ★★☆☆☆ | ★☆☆☆☆ | None (1 GPIO) | ✅ Done |
 | 13 | **Dual-band 5 GHz** | ★★☆☆☆ | ★★☆☆☆ | ESP32-S3/C6 | 🟡 Hardware limit |
 | 14 | **Devcontainer + Makefile** | ★★☆☆☆ | ★☆☆☆☆ | None | 📥 Port from peinser |
 | 15 | **Cloudbuild Web UI** | ★★☆☆☆ | ★★★★☆ | None (GitHub infra) | 📥 Port from peinser |

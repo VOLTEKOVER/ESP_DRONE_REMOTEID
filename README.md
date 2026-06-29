@@ -18,7 +18,8 @@
 
 <p align="center">
   <b>ASTM F3411-22a</b> Open DroneID transmitter.<br>
-  Parses MAVLink · MSP · NMEA · broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>.<br>
+  Parses MAVLink · MSP · NMEA · DroneCAN · broadcasts via <b>WiFi Beacon + NAN + BLE 4.0/5.0</b>.<br>
+  Features Kalman filter, Ed25519 auth, OTA, MAVLink ARM_STATUS, WS2812 LED, GPIO lighting.<br>
   Targets: ESP32, ESP32-S3, ESP32-C6.<br>
   See the <a href="https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/">online wiki</a> for wiring, flashing, and configuration.
 </p>
@@ -46,13 +47,17 @@
 
 | | |
 |---|---|
-| **Protocols** | MAVLink (incl. ArduPilot ODID), MSP, NMEA — auto-detect |
+| **Protocols** | MAVLink (incl. ArduPilot ODID), MSP, NMEA, DroneCAN — auto-detect |
 | **Radio** | WiFi Beacon + WiFi NAN + BLE 4.0 + BLE 5.0 Coded PHY |
-| **GPS source** | Flight controller (MAVLink/MSP/NMEA) or direct GPS module |
-| **Web UI** | Built-in AP + REST API + live telemetry |
-| **OTA updates** | Upload firmware over WiFi with SHA-256 verification |
-| **Config** | 26+ parameters: UAS ID, rates, power, public keys, lock levels |
-| **Security** | 3 lock levels (normal / signed / eFuse permanent) |
+| **GPS source** | Flight controller (MAVLink/MSP/NMEA/DroneCAN) or direct GPS module |
+| **Position filter** | Kalman 1D×3 (lat/lon/alt) with velocity prediction, 3s timeout |
+| **Authentication** | Ed25519 signing (F3411-22a), 4 auth pages per cycle |
+| **MAVLink out** | HEARTBEAT (MAV_TYPE_ODID) + ARM_STATUS + operator-location loop |
+| **OTA updates** | Wi-Fi AP mode HTTP server with SHA-256 verification |
+| **Web UI** | Built-in AP + REST API + live telemetry + CLI terminal |
+| **Config** | 50+ parameters: UAS ID, rates, power, public keys, auth, lock levels, lighting |
+| **Security** | 3 lock levels (normal / ECDSA signed / eFuse permanent) |
+| **Lighting** | WS2812 RGB LED (RMT) + 5-ch GPIO lighting, 6 patterns |
 | **Demo** | [Offline demo page](https://VOLTEKOVER.github.io/ESP_DRONE_REMOTEID/config(demo).html) |
 
 ## Communication Protocols
@@ -62,16 +67,18 @@
 | **Input** (position) | **MAVLink v2** | FC → ESP | ArduPilot/PX4: `GPS_RAW_INT`, `GLOBAL_POSITION_INT`, `HEARTBEAT`, `OPEN_DRONE_ID_*` |
 | | **MSP** | FC → ESP | Betaflight/iNAV: `MSP_RAW_GPS` (106), `MSP_ATTITUDE` (108), `MSP_STATUS` (101) |
 | | **NMEA 0183** | GPS → ESP | `$GPGGA`, `$GNGGA`, `$GPRMC`, `$GNRMC`, `$GPVTG`, `$GNVTG` |
+| | **DroneCAN / CAN bus** | FC → ESP | TWAI decode `Fix2` lat/lon/alt/speed/heading, AHRS solution |
 | **Output** (broadcast RID) | **WiFi Beacon** (802.11 mgmt) | ESP → Air | ASTM F3411-22a over WiFi Beacon |
 | | **WiFi NAN** | ESP → Air | Service Discovery Frame NAN |
 | | **BLE 4.0 Legacy** | ESP → Air | Bluetooth 4.0 advertising, non-connectable |
 | | **BLE 5.0 Coded PHY** (LR) | ESP → Air | Bluetooth 5.0 Long Range, `PHY_CODED` (S3/C6) |
 | **Config/control** | **HTTP / Web UI** | Browser ↔ ESP | AP-mode `192.168.4.1`, REST API, live telemetry |
-| | **Serial CLI** (UART0) | Terminal ↔ ESP | 14 commands: `help`, `status`, `config`, `patrol`, `transmit`, ... |
+| | **Serial CLI** (UART0) | Terminal ↔ ESP | 15 commands: `help`, `status`, `config`, `patrol`, `transmit`, `kalman`, ... |
 | | **NVS storage** | ESP → Flash | Persistent configuration storage |
+| **Config/control** | **GPIO Lighting** | ESP → LEDs | 5-ch configurable patterns, phase offsets |
+| | **WS2812 RGB LED** | ESP → LED | Addressable RGB via RMT, HSV/RGB/brightness |
 | **Future** | **ESP-NOW mesh** | Drone ↔ Drone | RID relay between drones (TODO) |
 | | **LoRa SX1262** | ESP → Air | Backup RID 10+ km (TODO) |
-| | **DroneCAN / CAN bus** | FC → ESP | Drone CAN bus reading (TODO) |
 
 ## Hardware
 
@@ -114,17 +121,27 @@ idf.py build
 ESP_DRONE_REMOTEID/
 ├── ESP32_DRONE_REMOTE_ID_Firmware/  # ESP-IDF project
 │   ├── main/                        # app_main entry point
-│   ├── components/esp_remote_id/    # Core: protocol detect, web UI, NVS config
-│   │   ├── src/                     # Source files
-│   │   ├── include/                 # Headers
-│   │   ├── webui/config.html        # Embedded web interface
+│   ├── components/esp_remote_id/    # Core: protocol detect, web UI, NVS config, Kalman, auth, OTA
+│   │   ├── src/                     # 23 source files (ESP-IDF C)
+│   │   ├── include/                 # 20 headers
+│   │   │   ├── rid_kalman.h         # 1D×3 Kalman filter
+│   │   │   ├── rid_auth.h           # Ed25519 auth signing
+│   │   │   ├── rid_ota.h            # OTA update server
+│   │   │   ├── rid_dronecan.h       # DroneCAN CAN bus input
+│   │   │   ├── rid_mavlink_tx.h     # MAVLink heartbeat out
+│   │   │   ├── rid_mavlink_usb.h    # MAVLink USB CDC transport
+│   │   │   ├── led_ws2812.h         # WS2812 RGB LED RMT driver
+│   │   │   └── rid_lighting.h       # 5-ch GPIO lighting
+│   │   ├── webui/config.html        # Embedded web interface (~1520 lines)
 │   │   └── mavlink/                 # MAVLink v2 dialect headers
 │   └── partitions*.csv              # OTA partition layouts
-├── ESP_DRONE_REMOTEID_Analyzer/     # Python analyzer (standalone)
+├── ESP_DRONE_REMOTEID_Analyzer/     # Python analyzer (standalone) + tools/
+│   └── tools/                       # Ground tools: scanner, bridge, provision, verify
 ├── docs/                            # GitHub Pages site
 │   ├── index.html                   # WebSerial flasher + wiki
+│   ├── guide.html                   # Technical wiki (sections 3–16)
 │   ├── config(demo).html            # Offline config UI demo
-│   ├── innovation_diy.md            # Feature comparison + innovation ideas
+│   ├── innovation_diy.md            # Feature comparison + innovation roadmap
 │   ├── prototype_bom.md             # Recommended hardware BOM
 │   ├── manifest.json                # Firmware manifest (auto-generated by CI)
 │   └── images/                      # Logo assets
