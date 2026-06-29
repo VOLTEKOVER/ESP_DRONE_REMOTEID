@@ -8,25 +8,24 @@
 <meta name="description" content="Configuration and management tool for ESP32 Drone Remote ID">
 <title>ESP DRONE REMOTEID — Configuration (DEMO)</title>
 <style>
-:root{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
-@media(prefers-color-scheme:dark){
-:root{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
-}
+[data-theme="light"]{--bg:#f2f2f2;--card-bg:#fff;--card-border:#d4d4d4;--txt:#222;--txt-sec:#666;--txt-muted:#999;--line:#ddd;--hover:#f0f0f0;--input-bg:#fff;--input-border:#d0d0d0;--shadow:rgba(0,0,0,.06);--accent:#222}
 [data-theme="dark"]{--bg:#121212;--card-bg:#1e1e1e;--card-border:#333;--txt:#e0e0e0;--txt-sec:#aaa;--txt-muted:#777;--line:#333;--hover:#2a2a2a;--input-bg:#2a2a2a;--input-border:#444;--shadow:rgba(0,0,0,.2);--accent:#fff}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100dvh;overflow:hidden}
 html{background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:99998;border:6px solid #9c27b0}
 body::after{content:'DEMO';position:fixed;top:8px;right:8px;z-index:99999;background:#9c27b0;color:#fff;font-size:11px;font-weight:700;letter-spacing:1.5px;padding:4px 12px;border-radius:4px;font-family:'Segoe UI',system-ui,sans-serif;pointer-events:none}
+[data-theme="light"] html{background-image:radial-gradient(ellipse at 20% 50%,rgba(21,101,192,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(46,125,50,.04) 0%,transparent 50%)}
 [data-theme="dark"] html{background-image:radial-gradient(ellipse at 20% 50%,rgba(66,165,245,.05) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(102,187,106,.05) 0%,transparent 50%)}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);padding:8px 16px;display:flex;flex-direction:column;position:relative}
 #side-swipe-zone{position:fixed;left:0;top:0;bottom:0;width:24px;z-index:100;cursor:pointer;display:none}
-.logo-txt{font-size:1.25em;font-weight:700;letter-spacing:-.3px;background:linear-gradient(135deg,#1565c0,#2e7d32);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-[data-theme="dark"] .logo-txt{background:linear-gradient(135deg,#42a5f5,#66bb6a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-txt{font-size:1.25em;font-weight:700;letter-spacing:-.3px;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="light"] .logo-txt{background:linear-gradient(135deg,#1565c0,#2e7d32)}
+[data-theme="dark"] .logo-txt{background:linear-gradient(135deg,#42a5f5,#66bb6a)}
 .logo-txt .sub{font-weight:400;font-size:.5em;display:block;letter-spacing:1px;color:var(--txt-muted);-webkit-text-fill-color:var(--txt-muted)}
-@media(prefers-color-scheme:dark){.tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}}[data-theme="dark"] .tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}
-@media(prefers-color-scheme:dark){.tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}}[data-theme="dark"] .tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}
-@media(prefers-color-scheme:dark){.tag-na{background:#1e1e1e;color:#666;border-color:#333}}[data-theme="dark"] .tag-na{background:#1e1e1e;color:#666;border-color:#333}
+[data-theme="light"] .tag-stable{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}[data-theme="dark"] .tag-stable{background:#152d15;color:#5a9e5a;border-color:#2e5a2e}
+[data-theme="light"] .tag-beta{background:#fff8e1;color:#f57f17;border-color:#ffe082}[data-theme="dark"] .tag-beta{background:#2a2000;color:#e0b000;border-color:#665000}
+[data-theme="light"] .tag-na{background:#f5f5f5;color:#999;border-color:#ddd}[data-theme="dark"] .tag-na{background:#1e1e1e;color:#666;border-color:#333}
 .hdr{background:var(--card-bg);border-radius:10px;margin:0 0 6px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow);flex-shrink:0;font-size:1.05em}
 .hdr .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt)}
 .hdr .brand h1{font-size:1.15em;font-weight:600;letter-spacing:-.3px}
@@ -57,8 +56,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);
 #splash .spinner{width:24px;height:24px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:splashSpin .8s linear infinite;margin-bottom:10px}
 @keyframes splashSpin{to{transform:rotate(360deg)}}
 #splash .bar-wrap{width:200px;height:3px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:6px}
-#splash .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#1565c0,#2e7d32);border-radius:3px;animation:splashBar 2.8s ease forwards}
-[data-theme="dark"] #splash .bar-fill{background:linear-gradient(90deg,#42a5f5,#66bb6a)}
+[data-theme="light"] #splash .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#1565c0,#2e7d32);border-radius:3px;animation:splashBar 2.8s ease forwards}
+[data-theme="dark"] #splash .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#42a5f5,#66bb6a);border-radius:3px;animation:splashBar 2.8s ease forwards}
 #splash .step-text{font-size:.7em;color:var(--txt-sec);min-height:1.3em;transition:opacity .3s}
 @keyframes splashBar{0%{width:0%}12%{width:18%}35%{width:18%}45%{width:42%}65%{width:42%}75%{width:70%}85%{width:70%}100%{width:100%}}
 .val-st{display:inline-block;width:16px;text-align:center;font-size:.78em;margin-left:4px;vertical-align:middle;flex-shrink:0}
@@ -103,8 +102,8 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .modal-actions .btn-cancel:hover{background:var(--card-border)}
 .modal-actions .btn-danger{background:#c62828;color:#fff}
 .modal-actions .btn-danger:hover{background:#e53935}
-.modal-actions .btn{background:var(--accent);color:#fff}.modal-actions .btn:hover{opacity:.85}
-[data-theme="dark"] .modal-actions .btn{background:#333}
+[data-theme="light"] .modal-actions .btn{background:var(--accent);color:#fff}.modal-actions .btn:hover{opacity:.85}
+[data-theme="dark"] .modal-actions .btn{background:#333;color:#fff}
 .st-icon{display:inline-flex;align-items:center;font-size:.8em;opacity:.5;transition:opacity .2s}
 .st-icon.active{opacity:1}
 .st-icon.armed{color:#2e7d32}
@@ -131,10 +130,10 @@ input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 }
 @keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
 .hdr-actions{display:flex;align-items:center;gap:6px}
-.btn-save-all{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;letter-spacing:.3px;transition:background .2s;white-space:nowrap}
+[data-theme="light"] .btn-save-all{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.76em;font-weight:500;letter-spacing:.3px;transition:background .2s;white-space:nowrap}
+[data-theme="dark"] .btn-save-all{background:#333;color:#fff}
 .btn-save-all:hover{opacity:.8}
 .btn-save-all.loading{opacity:.6;pointer-events:none}
-[data-theme="dark"] .btn-save-all{background:#333;color:#fff}
 @media(max-width:600px){.hdr{padding:6px 8px;font-size:.85em}.hdr-actions .btn-save-all{font-size:.65em;padding:4px 8px}.hdr-btn{font-size:.65em;padding:3px 6px}}
 .card{background:var(--card-bg);border-radius:12px;padding:24px;border:1px solid var(--card-border);box-shadow:0 1px 3px var(--shadow)}
 .card h2{font-size:.85em;color:var(--txt);margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.3px;flex-shrink:0}
@@ -146,11 +145,11 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,
 .hint{font-size:.66em;color:var(--txt-muted);margin:2px 0 0}
 .errmsg{font-size:.66em;color:#c62828;margin:1px 0 0;display:none}
 input.error+.errmsg,select.error+.errmsg{display:block}
-.btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;width:100%;font-size:.78em;font-weight:500;margin-top:10px;transition:background .2s;letter-spacing:.3px;flex-shrink:0}
+[data-theme="light"] .btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;width:100%;font-size:.78em;font-weight:500;margin-top:10px;transition:background .2s;letter-spacing:.3px;flex-shrink:0}
+[data-theme="dark"] .btn{background:#333;color:#fff}
 .btn:hover{opacity:.85}
 .btn:active{transform:scale(.98)}
 .btn.loading{opacity:.7;pointer-events:none}
-[data-theme="dark"] .btn{background:#333;color:#fff}
 .btn-sm{background:var(--hover);color:var(--txt);border:1px solid var(--line);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.7em;margin-top:6px;width:auto;transition:background .2s;flex-shrink:0}
 .btn-sm:hover{background:var(--card-border)}
 .btn-danger{background:transparent;color:#c00;border:1px solid rgba(198,40,40,.2);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:.72em;margin-top:6px;width:100%;transition:background .2s;text-align:center;flex-shrink:0}
@@ -187,7 +186,7 @@ hr{border:none;border-top:1px solid var(--line);margin:8px 0;flex-shrink:0}
 .hdr-btn.github{background:transparent;color:var(--txt-muted);border:none;padding:5px 8px;font-size:.72em}
 .hdr-btn.github:hover{color:var(--txt);background:transparent}
 .hdr-btn.danger{color:#c62828}
-.hdr-btn.danger:hover{background:#fbe9e7;border-color:#ef9a9a}
+[data-theme="light"] .hdr-btn.danger:hover{background:#fbe9e7;border-color:#ef9a9a}
 [data-theme="dark"] .hdr-btn.danger:hover{background:#2d1515;border-color:#c66}
 code{background:var(--hover);padding:2px 6px;border-radius:3px;font-size:.9em;color:var(--txt)}
 .tag{display:inline-block;padding:1px 7px;border-radius:3px;font-size:.65em;font-weight:600;letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
@@ -202,8 +201,8 @@ fieldset.beta{opacity:.6;border-color:#ffe082}
 fieldset.beta input,fieldset.beta select{pointer-events:auto}
 fieldset.disabled{opacity:.4;pointer-events:none}
 
-.disclaimer{text-align:center;margin:0 0 6px;padding:8px 14px;background:#fff3e0;border:1px solid #e65100;border-radius:8px;font-size:.64em;color:#bf360c;line-height:1.5;flex-shrink:0;border-left:4px solid #e65100}
-@media(prefers-color-scheme:dark){.disclaimer{background:#2a1400;border-color:#bf360c;color:#ff8a65}}[data-theme="dark"] .disclaimer{background:#2a1400;border-color:#bf360c;color:#ff8a65}
+[data-theme="light"] .disclaimer{text-align:center;margin:0 0 6px;padding:8px 14px;background:#fff3e0;border:1px solid #e65100;border-radius:8px;font-size:.64em;color:#bf360c;line-height:1.5;flex-shrink:0;border-left:4px solid #e65100}
+[data-theme="dark"] .disclaimer{text-align:center;margin:0 0 6px;padding:8px 14px;background:#2a1400;border:1px solid #bf360c;border-radius:8px;font-size:.64em;color:#ff8a65;line-height:1.5;flex-shrink:0;border-left:4px solid #e65100}
 .disclaimer strong{color:#c62828}
 .toast-center{position:fixed;top:50%;left:50%;z-index:9999;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:90%;max-width:400px}
 .toast{padding:12px 20px;border-radius:8px;font-size:.85em;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.15);pointer-events:auto;opacity:0;transform:translateY(-8px);transition:opacity .25s ease,transform .25s ease;width:100%;text-align:center;font-weight:500}
@@ -242,14 +241,14 @@ fieldset.disabled{opacity:.4;pointer-events:none}
 .term-input-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--txt);padding:4px 8px;border-radius:4px;font-size:.7em;font-family:inherit;outline:0}
 .term-input-row input:focus{border-color:var(--accent)}
 
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:#f5f5f5}
-::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#aaa}
+[data-theme="light"] ::-webkit-scrollbar{width:8px;height:8px}
+[data-theme="light"] ::-webkit-scrollbar-track{background:#f5f5f5}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:#aaa}
+[data-theme="dark"] ::-webkit-scrollbar{width:8px;height:8px}
 [data-theme="dark"] ::-webkit-scrollbar-track{background:#1e1e1e}
-[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#444}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:#555}
-[data-theme="dark"] .term-output::-webkit-scrollbar-track{background:#252525}
 .term-input-row input::placeholder{color:#555}
 
 /* ---------- Tab system ---------- */
@@ -439,7 +438,6 @@ fieldset{padding:6px 8px}
 <nav class="sidebar" id="sidebar">
     <div class="nav-group-label">Monitor</div>
 <button class="nav-item active" data-tab="dashboard" onclick="setView('dashboard')"><span class="nav-icon">&#x1f4ca;</span><span class="nav-label">Dashboard</span></button>
-<button class="nav-item" data-tab="map" onclick="setView('map')"><span class="nav-icon">&#x1f5fa;</span><span class="nav-label">Map</span></button>
 <div class="nav-group-label">Configuration</div>
 <button class="nav-item" data-tab="identity" onclick="setView('identity')"><span class="nav-icon">&#x1f9d1;</span><span class="nav-label">Identity</span></button>
 <button class="nav-item" data-tab="transmission" onclick="setView('transmission')"><span class="nav-icon">&#x1f4e1;</span><span class="nav-label">Transmission</span></button>
@@ -487,7 +485,7 @@ fieldset{padding:6px 8px}
 <div class="dc-label">&#x1f4cd; Position</div>
 <div class="dc-val" id="dash-lat">-</div>
 <div class="dc-sub" id="dash-lon">-</div>
-<div class="dc-sub" id="dash-map-link" style="display:none;margin-top:2px"><a href="#" target="_blank" id="dash-map-a" style="font-size:.75em;color:var(--accent)">&#x1f5fa; Open in Maps</a></div>
+
 </div>
 <div class="dash-card" id="dash-move-card">
 <div class="dc-label">&#x1f3c3; Movement</div>
@@ -1012,29 +1010,6 @@ Live telemetry and serial console from the ESP32 Remote ID transmitter. The cons
 </div>
 </div>
 
-<!-- MAP -->
-<div id="tab-map" class="tab-pane">
-<div class="card">
-<h2><span class="ico">&#x1f5fa;</span> Live Map <span class="tag tag-beta">Beta</span></h2>
-<div class="guide" onclick="toggleGuide(this)">
-<b>Real-time position</b> &mdash; Shows drone and operator (home) positions updated live from telemetry. The drone icon follows GPS updates from the flight controller. Use the toolbox to export the current track as KML.
-</div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-<button class="btn-sm" id="map-fit-btn" onclick="fitMap()" style="padding:3px 10px">&#x1f5b3; Fit All</button>
-<button class="btn-sm" onclick="exportKml()" style="padding:3px 10px">&#x1f4e5; Export KML</button>
-<span class="hdr-chip" style="font-size:.72em;padding:2px 8px"><span class="dot" id="map-gps-dot"></span> GPS: <span id="map-gps-stat">--</span></span>
-<span class="hdr-chip" style="font-size:.72em;padding:2px 8px">&#x1f4cd; Home: <span id="map-home-dist">--</span></span>
-</div>
-<div id="map-container" style="height:460px;border-radius:8px;border:1px solid var(--card-border);background:var(--input-bg);position:relative;overflow:hidden">
-<canvas id="map-canvas" width="800" height="460" style="width:100%;height:100%;position:absolute;inset:0;z-index:2"></canvas>
-<div id="map-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--txt-muted);font-size:.9em;gap:8px;z-index:1">
-<div style="font-size:2em">&#x1f5fa;</div>
-<div>Waiting for GPS position data...</div>
-<div style="font-size:.72em">Connect to the drone and ensure GPS lock</div>
-</div>
-</div>
-</div>
-</div>
 
 <!-- COMPLIANCE -->
 <div id="tab-compliance" class="tab-pane">
@@ -2013,11 +1988,6 @@ function updateDashboard(s){
   $('dash-proto-sub').textContent=s.protocol===0?'No data received':'Flight controller connected';
   $('dash-lat').textContent=s.lat?s.lat.toFixed(6):'---';
   $('dash-lon').textContent=s.lon?s.lon.toFixed(6):'---';
-  var mapLink=$('dash-map-link'),mapA=$('dash-map-a');
-  if(mapLink&&mapA){
-    if(s.lat&&s.lon){mapLink.style.display='block';mapA.href='https://www.openstreetmap.org/?mlat='+s.lat+'&mlon='+s.lon+'#map=15/'+s.lat+'/'+s.lon}
-    else{mapLink.style.display='none'}
-  }
   $('dash-alt').textContent=s.alt?s.alt.toFixed(1)+' m':'---';
   $('dash-speed').textContent=s.speed!==undefined?s.speed.toFixed(1)+' m/s ('+(s.heading!==undefined?s.heading+'\u00b0':'---')+')':'---';
   $('dash-tx-total').textContent='Total: '+(s.tx_total||0).toLocaleString();
@@ -2176,7 +2146,6 @@ setInterval(function(){
           var ffw=$('footer-fw');
           if(ffw&&s.fw_version)ffw.textContent=s.fw_version;
           updateDashboard(s);
-          updateMap(s);
           updateCompliance();
           pushLogEntry(s);
           updateSensorData(s);
@@ -2233,22 +2202,21 @@ if(savedView && savedView!=='dashboard'){
 /* ---------- Init presets ---------- */
 getPresetList();
 
-/* ---------- Dark mode toggle ---------- */
+/* ---------- Theme toggle ---------- */
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('rid_theme',t);
+}
 (function(){
   var t=localStorage.getItem('rid_theme');
-  if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){
-    document.documentElement.setAttribute('data-theme','dark');
+  if(t!=='light'&&t!=='dark'){
+    t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
   }
+  setTheme(t);
 })();
 function toggleDark(){
   var d=document.documentElement;
-  if(d.getAttribute('data-theme')==='dark'){
-    d.removeAttribute('data-theme');
-    localStorage.setItem('rid_theme','light');
-  }else{
-    d.setAttribute('data-theme','dark');
-    localStorage.setItem('rid_theme','dark');
-  }
+  setTheme(d.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 function toggleConsole(){
   consoleVisible=!consoleVisible;
@@ -2256,87 +2224,6 @@ function toggleConsole(){
   var btn=$('st-bar-console-btn');
   if(btn)btn.style.opacity=consoleVisible?'1':'.4';
   localStorage.setItem('rid_console',consoleVisible?'1':'');
-}
-
-/* ---------- Live Map (canvas-based, no deps) ---------- */
-var mapPoints=[],mapHomeLat=null,mapHomeLon=null,mapDroneLat=null,mapDroneLon=null;
-function updateMap(s){
-  var ph=$('map-placeholder');if(ph)ph.style.display='none';
-  drawMiniMap();
-  updateMapUI();
-  if(s.lat===undefined||s.lon===undefined)return;
-  var lat=parseFloat(s.lat),lon=parseFloat(s.lon);
-  if(!lat&&!lon)return;
-  mapDroneLat=lat;mapDroneLon=lon;
-  if(!mapHomeLat&&!mapHomeLon){mapHomeLat=lat;mapHomeLon=lon;$('map-home-dist').textContent='0m'}
-  mapPoints.push({lat:lat,lon:lon,t:Date.now()});
-  if(mapPoints.length>300)mapPoints.shift();
-  drawMiniMap();
-  updateMapUI();
-}
-function drawMiniMap(){
-  var c=$('map-canvas');if(!c)return;
-  var ctx=c.getContext('2d'),w=c.width,h=c.height;
-  ctx.clearRect(0,0,w,h);
-  drawMapBg(ctx,w,h);
-  if(mapPoints.length<1){
-    ctx.fillStyle='#888';ctx.font='13px sans-serif';ctx.textAlign='center';
-    ctx.fillText('No GPS data yet — position will appear here',w/2,h/2-10);
-    ctx.font='10px sans-serif';ctx.fillStyle='#aaa';
-    ctx.fillText('Connect flight controller and wait for GPS fix',w/2,h/2+12);
-    ctx.textAlign='start';
-    if(mapHomeLat!==null&&mapDroneLat===null){
-      ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.arc(w/2,h/2-30,5,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('HOME',w/2-12,h/2-36);
-    }
-    return
-  }
-  var lats=mapPoints.map(function(p){return p.lat}),lons=mapPoints.map(function(p){return p.lon});
-  var minLat=Math.min.apply(null,lats),maxLat=Math.max.apply(null,lats);
-  var minLon=Math.min.apply(null,lons),maxLon=Math.max.apply(null,lons);
-  var pad=0.0005,dr=(maxLat-minLat)||0.001,dl=(maxLon-minLon)||0.001;
-  minLat-=pad;maxLat+=pad;minLon-=pad;maxLon+=pad;
-  var scaleX=w/(maxLon-minLon),scaleY=h/(maxLat-minLat);
-  function px(p){return{x:(p.lon-minLon)*scaleX,y:h-(p.lat-minLat)*scaleY}}
-  ctx.lineWidth=2;ctx.strokeStyle='#1565c0';ctx.beginPath();
-  mapPoints.forEach(function(p,i){var pt=px(p);i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y)});
-  ctx.stroke();
-  if(mapHomeLat!==null){
-    var hp=px({lat:mapHomeLat,lon:mapHomeLon});
-    ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.arc(hp.x,hp.y,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('HOME',hp.x-12,hp.y-8);
-  }
-  if(mapDroneLat!==null){
-    var dp=px({lat:mapDroneLat,lon:mapDroneLon});
-    ctx.fillStyle='#c62828';ctx.beginPath();ctx.arc(dp.x,dp.y,6,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.fillText('DRONE',dp.x-14,dp.y-10);
-  }
-}
-function drawMapBg(ctx,w,h){
-  ctx.strokeStyle='#333';ctx.lineWidth=.5;ctx.globalAlpha=.15;
-  for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
-  for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
-  ctx.globalAlpha=1;
-  ctx.fillStyle='#555';ctx.font='9px sans-serif';ctx.fillText('N',w-16,14);
-  ctx.beginPath();ctx.moveTo(w-20,18);ctx.lineTo(w-16,6);ctx.lineTo(w-12,18);ctx.closePath();ctx.fillStyle='#555';ctx.fill();
-}
-function updateMapUI(){
-  if(mapHomeLat!==null&&mapDroneLat!==null){
-    var R=6371000,dLat=(mapDroneLat-mapHomeLat)*Math.PI/180,dLon=(mapDroneLon-mapHomeLon)*Math.PI/180;
-    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(mapHomeLat*Math.PI/180)*Math.cos(mapDroneLat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-    var dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
-    $('map-home-dist').textContent=dist+'m';
-  }
-  $('map-gps-stat').textContent=mapDroneLat!==null?mapDroneLat.toFixed(5)+', '+mapDroneLon.toFixed(5):'--';
-}
-function fitMap(){drawMiniMap()}
-function exportKml(){
-  if(mapPoints.length<2){showMsg('Not enough track points to export',1);return}
-  var kml='<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>ESP Drone Track</name><Placemark><LineString><coordinates>';
-  mapPoints.forEach(function(p){kml+=p.lon+','+p.lat+',0 '});
-  kml=kml.trim()+'</coordinates></LineString></Placemark></Document></kml>';
-  var b=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='esp_drone_track.kml';a.click();
 }
 
 /* ---------- Compliance Checklist ---------- */
