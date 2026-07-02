@@ -5,6 +5,56 @@
 
 ---
 
+## 🎯 Priority TODO (from AI Code Review)
+
+### 🔴 CRITICAL — Security & Correctness (Week 1-2)
+- [ ] **JSON parser → cJSON** (`web_config.c:102-139`) — Replace naive `strstr()` with proper JSON library
+- [ ] **Message Pack submessage decoding** (`mavlink_parser.c:235-247`) — Implement full ODID submessage unpack
+- [ ] **Task watchdog** (`esp_remote_id.c:627`) — Add `esp_task_wdt_reset()` in main loop
+- [ ] **Rate limiting on signature verification** (`web_config.c:306-375`) — Token bucket for brute-force prevention
+- [ ] **Base64 padding validation** (`web_config.c:275-304`) — Strict padding enforcement
+- [ ] **BLE TX power implementation** (`ble_tx.c:195`) — `ble_tx_set_power()` ignores `dbm` parameter
+- [ ] **OTA timeout** (`rid_ota.c:192-194`) — Prevent infinite OTA loop with 10min timeout
+
+### 🟡 HIGH — Quality & Robustness (Week 3-4)
+- [ ] **Absolute GPS timeout** (`esp_remote_id.c:577-580`) — Log stale GPS regardless of Kalman state
+- [ ] **CLI config set** (`cli.c`) — Add `config set <key> <value>` command
+- [ ] **Differential factory reset** (`rid_ota.c:105`) — Preserve auth keys, only erase config
+- [ ] **populate_uas_data deduplication** (`wifi_tx.c`) — Extract shared function to `odid_common.c`
+- [ ] **Dual-core pinning** — Core 0 (WiFi TX) / Core 1 (BLE + UI)
+- [ ] **BLE 5.0 LR hardware check** (`ble_tx.c`) — Runtime capability detection
+
+### 🟢 MEDIUM — Features & Polish (Week 5-6)
+- [ ] **ESP-NOW mesh relay** — Multi-hop range extension for RID
+- [ ] **LoRa backup (SX1262)** — 10+ km emergency RID link
+- [ ] **SD Card + geofence logging** — Flight log recovery + no-fly zones
+- [ ] **CLI command history** — Circular buffer for last 10 commands
+- [ ] **Kalman covariance export** — Diagnostic API for covariance matrix
+- [ ] **Stats tracking** — Counters for TX failures, parse errors, signatures
+- [ ] **RGB LED brightness Kconfig** — Menuconfig for WS2812 brightness
+- [ ] **Startup delay Kconfig** — Configurable boot delay for serial monitor attach
+
+### ✅ DONE — Recently Completed
+- [x] Kalman position predictor (1Dx3 lat/lon/alt w/ velocity)
+- [x] WS2812 RGB LED via RMT (standalone HSV/RGB/brightness)
+- [x] Ed25519 auth (F3411-22a) — mbedTLS PK sign, multi-page encoding
+- [x] OTA Update Server — Wi-Fi AP + HTTP /update /factory_reset /rollback
+- [x] DroneCAN Input — TWAI receive, Fix2 decode
+- [x] MAVLink USB Serial/JTAG transport
+- [x] MAVLink ARM_STATUS — HEARTBEAT out on UART
+- [x] GPIO Lighting Outputs — 5-channel, 6 patterns, phase offsets
+- [x] Identity readiness gate — block TX until UAS ID + Operator ID set
+- [x] Self-ID + Auth message relay from MAVLink
+- [x] MAVLink MESSAGE_PACK unpacking
+- [x] BLE TX power control API
+- [x] Demo GPS patrol mode
+- [x] Dark mode + responsive web UI
+- [x] CI green on all 3 targets (esp32/s3/c6)
+
+---
+
+---
+
 ## `ESP32_DRONE_REMOTE_ID_Firmware/` — Firmware Root
 
 ### `CMakeLists.txt` (18 lines)
